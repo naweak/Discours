@@ -1,0 +1,122 @@
+/* "Light" CSS style based on "base.css" */
+
+:root
+{
+  /*
+  --post-background: red;
+  --reply-background: blue;
+  */
+  
+  --post_background: transparent;
+  --reply_background: transparent;
+  --post_with_replies_padding: 10px; /* should be 10px */
+}
+
+body
+{
+  background: #edeef0;
+}
+
+a
+{
+  color: #2a5885;
+}
+
+a.description
+{
+  color: #2a5885 !important;
+  font-size: 1em !important;
+}
+
+.description a
+{
+  color: #2a5885;
+}
+
+post
+{
+  background: var(--post-background);
+  border-radius: 0px !important;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding: var(--post_with_replies_padding);
+}
+
+post_with_replies
+{
+  display: block;
+  box-shadow: 0 1px 0 0 #d7d8db, 0 0 0 1px #e3e4e8;
+  background: white;
+  margin: 25px 0 0; /* 15px */
+  border-radius: 4px;
+}
+
+expand
+{
+  color: #55677d;
+  background: #f0f2f5;
+  margin-bottom: 0px;
+  border-radius: 0px !important; /* 2px */
+}
+
+.hr
+{
+  border-top: 1px solid #e7e8ec !important;
+}
+
+a.topic_title
+{
+  font-size: 1.15em !important;
+}
+
+reply
+{
+    /*border: none !important;*/
+    background: var(--reply-background) !important;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: var(--post_with_replies_padding);
+    margin-top: 0px;
+}
+
+input.reply
+{
+  box-sizing: border-box;
+  width: 100%;
+  border-width: 0px;
+}
+
+textarea_container
+{
+  display: block;
+  padding: var(--post_with_replies_padding);
+}
+
+textarea_container > input
+{
+  display: none;
+  margin-top: 1em;
+}
+
+textarea.reply
+{
+  display: block;
+  height: 1.7em;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+
+  border: none;
+  overflow: auto;
+  outline: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  resize: none;
+}
+
+.submit
+{
+  background-color: #008CBA;
+}

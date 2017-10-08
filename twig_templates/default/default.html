@@ -1,0 +1,351 @@
+{% block noscript %}
+{% if root is defined %}
+<noscript>
+  <content>
+    <post_with_replies style="text-align:center; font-weight:bold;">
+      Ваш браузер не поддерживает JavaScript!
+    </post_with_replies>
+  </content>
+</noscript>
+{% endif %}
+{% endblock %}
+
+{% block topic_with_replies %}
+{% if topic is defined %}
+  <post_with_replies>
+    <post>
+      <!--<a class="description topic_title" href="/topic/{{ topic.post_id }}">Тема #{{ topic.post_id }}</a>-->
+      
+      <div class="topic_header">
+        <a href="/">Главная</a> &#8594; <a href="/topic/{{ topic.post_id }}">
+        Тема #{{ topic.post_id }}
+        </a>
+      </div>
+      
+      <text>
+        {{ topic.text_formatted|raw }}
+      </text>
+      
+      <div style="font-size:0.75em; margin-top:0.5em; padding:0px;">
+        <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }});">Ответить</a>
+      </div>
+    </post>
+    
+    {% if topic.replies|length > replies_to_show %}
+      <expand onclick='show_omitted({{ topic.post_id }});'>
+        Показать все {{ topic.replies|length }} ответов
+      </expand>
+    
+      <omitted_replies id='omitted_{{ topic.post_id }}'>
+    {% elseif topic.replies|length != 0 %}
+      <div class="hr"></div>
+    {% endif %}
+    
+    {% for reply in topic.replies %}
+        
+      {{ block("reply") }}
+        
+      <div class="hr"></div>
+    
+      {% if topic.replies|length > replies_to_show and loop.index0 == topic.replies|length - replies_to_show - 1 %}
+      </omitted_replies>
+      {% endif %}
+    
+    {% endfor %}
+    
+    {% if topic.replies|length == 0 %}
+    <div class="hr"></div>
+    {% endif %}
+    
+    <form class="reply_form" method="post" action="">
+      <input type="hidden" name="parent_topic" id="parent_topic" value="{{ topic.post_id }}">
+      
+      <input type="hidden" name="text" value="">
+
+      <textarea_container>
+        <div contenteditable="true" class="contenteditable" id="text_{{ topic.post_id }}" placeholder="Написать ответ..."></div>
+
+        <!--
+        <textarea style="font-size: 15px; height: 15.5px; line-height: 15px; margin-bottom:0px;" class="reply" name="text" id="text_{{ topic.post_id }}" placeholder="Написать ответ..."></textarea>
+        -->
+
+        <input type="submit" name="submit" value="Отправить">
+      </textarea_container>
+    </form>
+    
+  </post_with_replies>
+{% endif %}
+{% endblock %}
+
+{% block reply %}
+{% if reply is defined %}
+  <reply>
+    <!--<div style="padding:0px;">
+      Анонимно
+    </div>-->
+    
+    <text>
+      {{ reply.text_formatted|raw }}
+    </text>
+    
+    <div style="font-size:0.75em; margin-top:0.5em; padding:0px;">
+      #{{ loop.index0+1 }}&nbsp;&#8729;&nbsp;<a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ loop.index0+1 }});">Ответить</a>
+    </div>
+  </reply>
+{% endif %}
+{% endblock %}
+
+{% block new_topic_form %}
+{% if root is defined %}
+      <content>
+      <post_with_replies style="padding:10px;">
+        <form method="post" action="/">
+          <!--<div class="new_post">Создание новой темы</div>-->
+          <input type="hidden" name="parent_topic" id="parent_topic" value="">
+          <!--<input type="text" class="new_post" placeholder="Тема поста">-->
+          <textarea name="text" class="new_post" placeholder="Введите текст"></textarea>
+          <div align="right"><input type="submit" class="submit" style="margin-right:1px;" name="submit" value="Отправить"></div>
+        </form>
+      </post_with_replies>
+      </content>
+{% endif %}
+{% endblock %}
+
+{# ######################################################## #}
+
+{% set root = true %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Meta -->
+    <meta charset="UTF-8">
+    <meta name="keywords" content="анонимный форум,дискурс"/>
+    <meta name="description" content="Дискурс — это самый свободный форум русскоязычного интернета."/>
+    <!-- /Meta -->
+    
+    <title>Дискурс — анонимный форум</title>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    
+    <!-- Bulma -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/twig_templates/default/bulma.css">
+    <!-- /Bulma -->
+    
+    <link href="https://fonts.googleapis.com/css?family=Arimo" rel="stylesheet">
+    
+    <link href="/twig_templates/default/default.css" rel="stylesheet">
+    <script src="/twig_templates/default/default.js"></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui">
+  </head>
+
+  <body>
+
+    {{ block("noscript") }}
+    
+    <nav class="navbar is-transparent">
+       <div class="navbar-brand">
+          <a class="navbar-item" href="/">
+          <!--<img src="http://bulma.io/images/bulma-logo.png" alt="Дискурс" width="112" height="28">-->
+            <div style="font-size:1.25em;font-weight:bold!important;">Discou.rs</div>
+          </a>
+
+          <div class="navbar-burger burger" id="burger" onclick="toggleBurger()" data-target="navMenuTransparentExample">
+             <span></span>
+             <span></span>
+             <span></span>
+          </div>
+       </div>
+       <div id="navMenuTransparentExample" class="navbar-menu">
+          <div class="navbar-start">
+
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link is-active">
+                Борды
+                </a>
+                <div class="navbar-dropdown is-boxed">
+                   <a class="navbar-item" href="/">
+                   Все посты
+                   </a>
+                   <a class="navbar-item" href="/good">
+                   Хорошие посты
+                   </a>
+                </div>
+             </div>
+
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link is-active">
+                Инфо
+                </a>
+                <div class="navbar-dropdown is-boxed">
+                   <a class="navbar-item" href="/principles">
+                   Принципы
+                   </a>
+                   <a class="navbar-item" href="/modlog">
+                   Модлог
+                   </a>
+                   <a class="navbar-item" href="/topic/510">
+                   Постинг картинок
+                   </a>
+                   <a class="navbar-item" href="https://wiki.1chan.ca/Discou.rs" target="_blank">
+                   Статья на Колчевики
+                   </a>
+                </div>
+             </div>
+
+          </div>
+          <div class="navbar-end">
+              <style type="text/css">
+              #bell::after {display:none;}
+              #bell {padding-right:16px;}
+              </style>
+             <!--<div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link is-active" id="bell">
+                A
+                </a>
+                <div class="navbar-dropdown is-boxed" style="left:-265px; width:300px;">
+                  test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test<br>
+                  test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test<br>
+                  test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test<br>
+                  test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test<br>
+                  test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test<br>
+                  test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test<br>
+                </div>
+             </div>-->
+             <div class="navbar-item">
+               <div class="field is-grouped">
+                 <p class="control">
+                    <a class="button" href="/new-topic">
+                      <!--<span class="icon">
+                        <i class="fa fa-plus-square"></i>
+                      </span>-->
+                      <span>Новая тема</span>
+                    </a>
+                  </p>
+                </div>
+              </div>
+          </div>
+       </div>
+    </nav>
+    
+    <style type="text/css">
+    #mobile_menu{z-index:1000000; font-weight:bold; font-size:0.8em; width:100%; background:#f1f1f1;  position:absolute; text-align:center; font-size:12px;}
+    #mobile_menu ul {margin: 0; padding: 0; list-style-type: none; list-style-image: none;}
+    #mobile_menu li {display: block;   padding:15px 0 15px 0; border-bottom:#dddddd 1px solid;}
+    #mobile_menu li:hover{display: block;    background:#ffffff; padding:15px 0 15px 0; border-bottom:#dddddd 1px solid;}
+    #mobile_menu ul li a { text-decoration:none;  margin: 0px; color:#666;}
+    #mobile_menu ul li a:hover {  color: #666; text-decoration:none;}
+    #mobile_menu a{text-decoration:none; color:#666;}
+    #mobile_menu a:hover{text-decoration:none; color:#666;}
+    </style>
+
+    <div style="display:none;" id="mobile_menu">
+      <ul>
+        <a href="javascript:;"><li>LINK ONE</li></a>
+        <a href="javascript:;"><li>LINK TWO</li></a>
+        <a href="javascript:;"><li>LINK THREE</li></a>
+        <a href="javascript:;"><li>LINK FOUR</li></a>
+        <a href="javascript:;"><li>LINK FIVE</li></a>
+      </ul>
+    </div>
+    
+    <script type="text/javascript">
+      const toggleBurger = () =>
+      {
+        let burgerIcon = document.getElementById('burger');
+        //let dropMenu = document.getElementById('teamList'); // null
+
+        if (burgerIcon.classList.contains('is-active'))
+        {
+          document.getElementById("mobile_menu").style.display = "none";
+        }
+
+        else
+        {
+          document.getElementById("mobile_menu").style.display = "block";
+        }
+
+        burgerIcon.classList.toggle('is-active');
+        //dropMenu.classList.toggle('is-active');
+      };
+    </script>
+    
+<!--<content>
+<nav class="breadcrumb" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="/">Дискурс</a></li>
+    <li class="is-active"><a aria-current="page">Тема #123</a></li>
+  </ul>
+</nav>
+</content>-->
+
+      {% if not topic_id and not display_new_topic_form %}
+      <!--
+      <a class="header_small" style="display:none;" href="/">Добро пожаловать</a>
+      <a class="header" href="/">Добро пожаловать на Дискурс</a>
+      -->  
+      <content class="description" style="margin-top:12.5px; text-align:justify;">
+        <b>Дискурс</b> — это самый свободный форум русскоязычного интернета.
+        Если вам интересно, вы можете немного почитать <a href="/principles" target="_blank">о нашем проекте</a>.
+        <!--<br>
+        <br>-->
+        Для связи с администрацией используйте
+        <a href="https://t.me/discoursanonymous" target="_blank">конференцию</a> или
+        <a href="https://t.me/zefirov" target="_blank">ЛС</a> в Telegram
+        или специальную&nbsp;<a href="/topic/68" target="_blank">тему</a>.
+        <!--<br>
+        <br>-->
+        <!--На данный момент у нас есть: <a href="https://discou.rs/topic/510" target="_blank">постинг&nbsp;картинок</a>,
+        <a href="/modlog" target="_blank">модлог</a>,
+        <a href="/good" target="_blank">каталог качественных тем</a>,
+        <a href="https://wiki.1chan.ca/Discou.rs" target="_blank">статья&nbsp;на&nbsp;Колчевики</a>,
+        <a href="https://t.me/discours_posts" target="_blank">канал</a> в Telegram и
+        <a href="https://github.com/DiscoursProject/Discours" target="_blank">GitHub</a>.-->
+        Можно посмотреть <a href="/modlog" target="_blank">модлог</a> или исходный код на <a href="https://github.com/DiscoursProject/Discours" target="_blank">GitHub</a>.
+      </content>
+      {% endif %}
+    
+      {% if posting_error %}
+        <content>
+          <post_with_replies>
+            <post>
+              <div style="text-align:center;color:red;">{{ posting_error }}</div>
+
+              Ваш пост:<br>
+              {{ declined_text|raw }}
+            </post>
+          </post_with_replies>
+        </content>
+      {% endif %}
+    
+      {% if display_new_topic_form %}
+        {{ block("new_topic_form") }}
+      {% endif %}
+    
+      {% if topics %}
+        <content>
+        {% for topic in topics %}
+          {{ block("topic_with_replies") }}
+        {% endfor %}
+        </content>
+    
+        {% if limit == default_limit and not topic_id %}
+        <content>
+          <post_with_replies>
+            <post style="text-align:center;">
+              На страницы отображены последние {{ limit }} тем. <a href="?show_all">Посмотреть все.</a>
+            </post>
+          </post_with_replies>
+        </content>
+        {% endif %}
+    
+      {% endif %}
+    
+      <footer>
+        Страница сгенерирована шаблонизатором twig
+      </footer>
+    
+  </body>
+</html>
