@@ -11,6 +11,7 @@ require "post.php";
 //echo @file_get_contents("twig_templates/default.css");
 
 $default_limit = 25;
+$replies_to_show = 3;
 
 $limit = $default_limit;
 
@@ -24,6 +25,7 @@ $t = "";
 if (isset($_GET["topic"]))
 {
   $topic_id = intval($_GET["topic"]);
+  $replies_to_show = 9999;
   $t = "AND post_id = ".$topic_id;
 }
         
@@ -71,7 +73,7 @@ $twig_data = array
 (
   "topics" => $topics,
   
-  "replies_to_show" => 3,
+  "replies_to_show" => $replies_to_show,
   "default_limit" => $default_limit,
   "limit" => $limit
 );
