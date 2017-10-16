@@ -1,11 +1,7 @@
 <?php
-/*require_once "config.php";
-require_once "connect.php";
-require_once "library.php";*/
-
 // This script is executed from forum.php
 
-$ip = mysql_real_escape_string($client_ip);
+$ip = mysql_real_escape_string($GLOBALS["client_ip"]);
 $time = time();
 
 $is_banned = false;
@@ -14,7 +10,12 @@ $sql = mysql_query("SELECT * FROM bans WHERE ip = '$ip'"); // add 'expires'!
 if (mysql_num_rows($sql))
 {
   $is_banned = true;
+  
+  $ban_row = mysql_fetch_assoc($sql);
+  $ban_id = $ban_row["ban_id"];
 }
+
+//send_message_to_telegram_channel("@".TELEGRAM_CHANNEL, "is_banned: $is_banned", TELEGRAM_TOKEN);
 
 if (isset($_POST["submit"]))
 {
@@ -59,12 +60,8 @@ if (isset($_POST["submit"]))
         $error = "Вы создаете темы слишком часто!";
       }
     }
-
-    /*if (preg_match("/[^a-zA-Z0-9абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖИЙЗКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ_\-— .:;!?\/+-><)(\][*&\"'\n\r]/u", $text, $matches))
-    {
-        $error = "В строке содержатся недопустимые символы! Пожалуйста, свяжитесь с администрацией в Telegram-конференции (ссылка выше).<br><br>Недопустимый символ: " . strip_tags($matches[0]);
-    }*/
-
+  
+    /* Somehow accepts one-letter strings like "a" */
     if (mb_strlen($text) < 3)
     {
         $error = "Текст слишком короткий!";
@@ -84,7 +81,7 @@ if (isset($_POST["submit"]))
         $text = mysql_real_escape_string($text);
         $creation_time = time();
         $ord = round(microtime(true) * 1000);
-        $ip = $_SERVER["HTTP_CF_CONNECTING_IP"];
+        //$ip = $_SERVER["HTTP_CF_CONNECTING_IP"];
 
         mysql_query("INSERT INTO posts (post_id, parent_topic, creation_time, ip, ord, text) VALUES ('', '$parent_topic', '$creation_time', '$ip', '$ord', '$text')");
 
@@ -114,6 +111,8 @@ if (isset($_POST["submit"]))
         $text_for_telegram = $_POST["text"];
         $text_for_telegram = str_replace("\r", "", $text_for_telegram);
         $text_for_telegram = str_replace("\n", " ", $text_for_telegram);
+      
+        //$text_for_telegram .= " *bold text* ";
 
         $r = 10;
         $telegram_message .= "\n".str_repeat("-", $r)."\n".mb_strimwidth($text_for_telegram, 0, 200, "...", "utf-8")."\n".str_repeat("-", $r)."\n";
@@ -138,6 +137,6 @@ if (isset($_POST["submit"]))
 
 if ($is_banned)
 {
-  echo "<div style='text-align:center;font-weight:bold;'>Ваш IP находится в бан-листе. Для разбана обратитесь в телеграм-конференцию.</div>";
+  echo "<div style='text-align:center;font-weight:bold;'>Ваш IP находится в бан-листе (#$ban_id). Для разбана обратитесь в телеграм-конференцию.</div>";
 }
 ?>

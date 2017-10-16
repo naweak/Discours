@@ -1,8 +1,6 @@
 <?php
-session_start();
-require "config.php";
-require "connect.php";
-require "library.php";
+require "../config.php";
+require_bundle();
 
 if (isset($_POST["submit"]))
 {
@@ -21,6 +19,39 @@ if (is_mod())
 {
   $message = "You are mod!";
 }
+
+ob_start();
+?>
+<h1>Вход</h1>
+
+<content style="text-align:center;">
+<?php
+if (isset($message))
+{
+  echo $message;
+}
+?>
+</content>
+
+<content style="text-align:center;">
+    <form action="" method="post">
+        <input type="password" name="password" value=""><br>
+        <input type="submit" name="submit" value="Отправить">
+        <input type="submit" name="logout" value="Выход">
+    </form>
+</content>
+<?php
+$html = ob_get_contents();
+ob_end_clean();
+
+$twig_data = array
+(
+  "html" => $html
+);
+
+echo render($twig_data);
+
+exit();
 ?>
 
 <!DOCTYPE html>

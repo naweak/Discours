@@ -14,11 +14,14 @@
 {% if topic is defined %}
   <post_with_replies>
     <post>
-      <!--<a class="description topic_title" href="/topic/{{ topic.post_id }}">Тема #{{ topic.post_id }}</a>-->
+      {% if is_mod %}
+      <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
+      <div class="delete" style="float:right;" onclick="delete_post({{ topic.post_id }});"></div>
+      {% endif %}
       
       <div class="topic_header">
         <a href="/">Главная</a> &#8594; <a href="/topic/{{ topic.post_id }}">
-        Тема #{{ topic.post_id }}
+        <!--Тема #{{ topic.post_id }}--> Тема без заголовка
         </a>
       </div>
       
@@ -63,11 +66,12 @@
       <input type="hidden" name="text" value="">
 
       <textarea_container>
-        <div contenteditable="true" class="contenteditable" id="text_{{ topic.post_id }}" placeholder="Написать ответ..."></div>
-
+        
         <!--
-        <textarea style="font-size: 15px; height: 15.5px; line-height: 15px; margin-bottom:0px;" class="reply" name="text" id="text_{{ topic.post_id }}" placeholder="Написать ответ..."></textarea>
+        <div contenteditable="true" class="contenteditable" id="text_{{ topic.post_id }}" placeholder="Написать ответ..."></div>
         -->
+
+        <textarea style="padding-top: 2px; font-size: 15px; line-height: 15px; height:20px; margin-bottom:0px;" class="reply" name="text" id="text_{{ topic.post_id }}" placeholder="Написать ответ..."></textarea>
 
         <input type="submit" name="submit" value="Отправить">
       </textarea_container>
@@ -84,6 +88,11 @@
       Анонимно
     </div>-->
     
+    {% if is_mod %}
+    <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
+    <div class="delete" style="float:right;" onclick="delete_post({{ topic.post_id }});"></div>
+    {% endif %}
+    
     <text>
       {{ reply.text_formatted|raw }}
     </text>
@@ -99,12 +108,18 @@
 {% if root is defined %}
       <content>
       <post_with_replies style="padding:10px;">
-        <form method="post" action="/">
+        <form class="new_topic_form" method="post" action="/">
           <!--<div class="new_post">Создание новой темы</div>-->
           <input type="hidden" name="parent_topic" id="parent_topic" value="">
           <!--<input type="text" class="new_post" placeholder="Тема поста">-->
           <textarea name="text" class="new_post" placeholder="Введите текст"></textarea>
-          <div align="right"><input type="submit" class="submit" style="margin-right:1px;" name="submit" value="Отправить"></div>
+          <div style="float:left; margin-top:3px;">
+            <!--<a href="/topic/4050" target="_blank">Прикрепить&nbsp;картинку</a>-->
+            <input type="checkbox" id="picrandom">&nbsp;<label for="picrandom">Прикрепить картинку</label><Br>
+          </div>
+          <div align="right">
+            <input type="submit" class="submit" style="margin-right:1px;" name="submit" value="Новая тема">
+          </div>
         </form>
       </post_with_replies>
       </content>
@@ -149,7 +164,7 @@
        <div class="navbar-brand">
           <a class="navbar-item" href="/">
           <!--<img src="http://bulma.io/images/bulma-logo.png" alt="Дискурс" width="112" height="28">-->
-            <div style="font-size:1.25em;font-weight:bold!important;">Discou.rs</div>
+            <div style="font-size:1.25em;font-weight:bold!important;">Дискурс</div>
           </a>
 
           <div class="navbar-burger burger" id="burger" onclick="toggleBurger()" data-target="navMenuTransparentExample">
@@ -161,7 +176,7 @@
        <div id="navMenuTransparentExample" class="navbar-menu">
           <div class="navbar-start">
 
-            <div class="navbar-item has-dropdown is-hoverable">
+            <!--<div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link is-active">
                 Борды
                 </a>
@@ -173,11 +188,11 @@
                    Хорошие посты
                    </a>
                 </div>
-             </div>
+             </div>-->
 
             <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link is-active">
-                Инфо
+                О проекте
                 </a>
                 <div class="navbar-dropdown is-boxed">
                    <a class="navbar-item" href="/principles">
@@ -186,11 +201,34 @@
                    <a class="navbar-item" href="/modlog">
                    Модлог
                    </a>
-                   <a class="navbar-item" href="/topic/510">
+                   <a class="navbar-item" href="/topic/4050">
                    Постинг картинок
                    </a>
                    <a class="navbar-item" href="https://wiki.1chan.ca/Discou.rs" target="_blank">
                    Статья на Колчевики
+                   </a>
+                   <a class="navbar-item" href="https://www.similarweb.com/website/discou.rs" target="_blank">
+                   Статистика
+                   </a>
+                   <a class="navbar-item" href="https://github.com/DiscoursProject/Discours" target="_blank">
+                   Исходный код на GitHub
+                   </a>
+                </div>
+             </div>
+            
+             <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link is-active">
+                Контакты
+                </a>
+                <div class="navbar-dropdown is-boxed">
+                   <a class="navbar-item" href="https://discou.rs/topic/68">
+                   Тема для обратной связи
+                   </a>
+                   <a class="navbar-item" href="https://t.me/discoursanonymous" target="_blank">
+                   Конференция в Telegram
+                   </a>
+                   <a class="navbar-item" href="https://t.me/zefirov" target="_blank">
+                   ЛС в Telegram
                    </a>
                 </div>
              </div>
@@ -214,18 +252,15 @@
                   test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test&nbsp;test<br>
                 </div>
              </div>-->
-             <div class="navbar-item">
+             <!--<div class="navbar-item">
                <div class="field is-grouped">
                  <p class="control">
-                    <a class="button" href="/new-topic">
-                      <!--<span class="icon">
-                        <i class="fa fa-plus-square"></i>
-                      </span>-->
+                    <a class="button is-info" href="/new-topic">
                       <span>Новая тема</span>
                     </a>
                   </p>
                 </div>
-              </div>
+              </div>-->
           </div>
        </div>
     </nav>
@@ -243,11 +278,7 @@
 
     <div style="display:none;" id="mobile_menu">
       <ul>
-        <a href="javascript:;"><li>LINK ONE</li></a>
-        <a href="javascript:;"><li>LINK TWO</li></a>
-        <a href="javascript:;"><li>LINK THREE</li></a>
-        <a href="javascript:;"><li>LINK FOUR</li></a>
-        <a href="javascript:;"><li>LINK FIVE</li></a>
+        <a href="/new-topic"><li>Новая тема</li></a>
       </ul>
     </div>
     
@@ -272,44 +303,53 @@
       };
     </script>
     
-<!--<content>
-<nav class="breadcrumb" aria-label="breadcrumbs">
-  <ul>
-    <li><a href="/">Дискурс</a></li>
-    <li class="is-active"><a aria-current="page">Тема #123</a></li>
-  </ul>
-</nav>
-</content>-->
+    <!--<content>
+    <post_with_replies>
+    <post>
+    <nav class="breadcrumb" aria-label="breadcrumbs">
+      <ul>
+        <li><a href="/">Дискурс</a></li>
+        <li class="is-active"><a aria-current="page">Тема #123</a></li>
+      </ul>
+    </nav>
+    </post>
+    </post_with_replies>
+    </content>-->
 
-      {% if not topic_id and not display_new_topic_form %}
+      {% if not topic_id and not display_new_topic_form and not html %}
       <!--
       <a class="header_small" style="display:none;" href="/">Добро пожаловать</a>
       <a class="header" href="/">Добро пожаловать на Дискурс</a>
       -->  
       <content class="description" style="margin-top:12.5px; text-align:justify;">
         <b>Дискурс</b> — это самый свободный форум русскоязычного интернета.
-        Если вам интересно, вы можете немного почитать <a href="/principles" target="_blank">о нашем проекте</a>.
+        Если вам интересно, вы можете немного почитать <a href="/principles" target="_blank">о&nbsp;нашем&nbsp;проекте</a>.
         <!--<br>
         <br>-->
+        
         Для связи с администрацией используйте
         <a href="https://t.me/discoursanonymous" target="_blank">конференцию</a> или
         <a href="https://t.me/zefirov" target="_blank">ЛС</a> в Telegram
         или специальную&nbsp;<a href="/topic/68" target="_blank">тему</a>.
+        
         <!--<br>
         <br>-->
-        <!--На данный момент у нас есть: <a href="https://discou.rs/topic/510" target="_blank">постинг&nbsp;картинок</a>,
+        <!--На данный момент у нас есть: <a href="https://discou.rs/topic/4050" target="_blank">постинг&nbsp;картинок</a>,
         <a href="/modlog" target="_blank">модлог</a>,
         <a href="/good" target="_blank">каталог качественных тем</a>,
         <a href="https://wiki.1chan.ca/Discou.rs" target="_blank">статья&nbsp;на&nbsp;Колчевики</a>,
         <a href="https://t.me/discours_posts" target="_blank">канал</a> в Telegram и
         <a href="https://github.com/DiscoursProject/Discours" target="_blank">GitHub</a>.-->
-        Можно посмотреть <a href="/modlog" target="_blank">модлог</a> или исходный код на <a href="https://github.com/DiscoursProject/Discours" target="_blank">GitHub</a>.
+        
+        <!--Можно посмотреть <a href="/modlog" target="_blank">модлог</a> или <a href="https://github.com/DiscoursProject/Discours" target="_blank">исходный&nbsp;код</a> на GitHub.-->
       </content>
       {% endif %}
     
-      <content class="description" style="margin-top:12.5px; text-align:justify;">
+      {{ html|raw }}
+    
+      <!--<content class="description" style="margin-top:12.5px; text-align:justify;">
         <b>Сейчас мы тестируем новый frontend-движок, поэтому в случае проблем с постингом пишите, пожалуйста, в специальную <a href="http://inach.org/b/res/408541.html" target="_blank">тему</a> на Иначе.</b>
-      </content>
+      </content>-->
     
       {% if posting_error %}
         <content>
@@ -324,7 +364,7 @@
         </content>
       {% endif %}
     
-      {% if display_new_topic_form %}
+      {% if display_new_topic_form or (not html and not topic_id) %}
         {{ block("new_topic_form") }}
       {% endif %}
     
@@ -348,7 +388,7 @@
       {% endif %}
     
       <footer>
-        Страница сгенерирована шаблонизатором twig
+        From discou.rs with love!
       </footer>
     
   </body>

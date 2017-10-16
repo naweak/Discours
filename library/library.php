@@ -1,21 +1,22 @@
 <?php
 date_default_timezone_set("Europe/Kaliningrad"); // bag in server settings, in fact it's Moscow time
 
-$client_ip = $_SERVER["REMOTE_ADDR"];
+//$client_ip = $_SERVER["REMOTE_ADDR"];
 
-$client_ip = $_SERVER["HTTP_CF_CONNECTING_IP"];
 if (!isset($_SERVER["HTTP_CF_CONNECTING_IP"]))
 {
 	die("Cloudflare not detected!");
 }
 
-function render ($twig_data, $twig_filesystem)
+$GLOBALS["client_ip"] = $_SERVER["HTTP_CF_CONNECTING_IP"];
+
+function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM)
 {
 	/* Filter 'include' tag! */
 
 	$twig_template = "default";
 
-	require_once "vendor/autoload.php";
+	require_once ROOT_DIR."/vendor/autoload.php";
 	$loader = new Twig_Loader_Filesystem($twig_filesystem);
 	$twig = new Twig_Environment($loader);
 	return $twig->render("$twig_template.html", $twig_data);
@@ -52,17 +53,21 @@ function markup ($text)
     //$text = preg_replace("/&lt;b&gt;(.*?)&lt;\/b&gt;/i", "<b>$1</b>", $text);
     // new lines are not supported
     $text = preg_replace("/&lt;b&gt;([^\n]*?)&lt;\/b&gt;/iu", "<b>$1</b>", $text);
+		$text = preg_replace("/\*\*([^\n]*?)\*\*/iu", "<b>$1</b>", $text);
+	
 		$text = preg_replace("/&lt;i&gt;([^\n]*?)&lt;\/i&gt;/iu", "<i>$1</i>", $text);
+		$text = preg_replace("/\*([^\n]*?)\*/iu", "<i>$1</i>", $text);
+	
   
     // RGhost
-    $text = preg_replace("/^http(s)?:\/\/rgho.st\/([a-zA-Z0-9]{6,10})((<br>| )*)/u", "<img class='embedded' src='HTTPS://rgho.st/$2/thumb.png'>", $text, 1);
+    //$text = preg_replace("/^http(s)?:\/\/rgho.st\/([a-zA-Z0-9]{6,10})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://rgho.st/$2/thumb.png'>", $text, 1);
 
     // Tinypic
-    $text = preg_replace("/^http(s)?:\/\/i([0-9]{1,3}).tinypic.com\/([a-zA-Z0-9.]{5,15})((<br>| )*)/u", "<img class='embedded' src='HTTPS://i$2.tinypic.com/$3'>", $text, 1);
+    //$text = preg_replace("/^http(s)?:\/\/i([0-9]{1,3}).tinypic.com\/([a-zA-Z0-9.]{5,15})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i$2.tinypic.com/$3'>", $text, 1);
   
     // Imgur
-    $text = preg_replace("/^http(s)?:\/\/imgur.com\/([a-zA-Z0-9]{5,15})((<br>| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
-    $text = preg_replace("/^http(s)?:\/\/i.imgur.com\/([a-zA-Z0-9]{5,15}).([a-z]{3})((<br>| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
+    $text = preg_replace("/^http(s)?:\/\/imgur.com\/([a-zA-Z0-9]{5,15})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
+    $text = preg_replace("/^http(s)?:\/\/i.imgur.com\/([a-zA-Z0-9]{5,15}).([a-z]{3})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
   
 		// Links
     $text = preg_replace('!(((f|ht)tp(s)?://)[-a-zA-Zа-яА-Я()0-9@:%_+.~#?&;//=]+)!u', '<a href="$1" target="_blank">$1</a>', $text);
@@ -87,6 +92,7 @@ function send_message_to_telegram_channel ($chatID, $message, $token)
 {
     $url = "https://api.telegram.org/bot" . $token . "/sendMessage?chat_id=@" . $chatID;
     $url = $url . "&text=" . urlencode($message);
+		$url = $url . "&disable_web_page_preview=true";
     $ch = curl_init();
     $optArray = array(
             CURLOPT_URL => $url,

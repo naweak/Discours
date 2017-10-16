@@ -1,8 +1,6 @@
 <?php
-session_start();
-require "config.php";
-require "connect.php";
-require "library.php";
+require "../config.php";
+require_bundle();
 
 if (!is_mod())
 {
@@ -11,7 +9,7 @@ if (!is_mod())
 
 $filename='db_'.time().'.sql';
 
-$cmd = "(mysqldump discours --user=".MYSQL_USERNAME." --password=".MYSQL_PASSWORD." --single-transaction > absolute/$filename) 2>&1";
+$cmd = "(mysqldump discours --user=".MYSQL_USERNAME." --password=".MYSQL_PASSWORD." --single-transaction > ../absolute/$filename) 2>&1";
 
 //echo $cmd."<br>";
 

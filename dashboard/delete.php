@@ -1,8 +1,6 @@
 <?php
-session_start();
-require "config.php";
-require "connect.php";
-require "library.php";
+require "../config.php";
+require_bundle();
 
 if (!is_mod())
 {
@@ -48,7 +46,7 @@ if (isset($_POST["submit"]))
         $expires = strtotime("+100 years");
         mysql_query("INSERT INTO bans (ban_id, ip, expires) VALUES ('', '$ip', '$expires')");
         
-        echo "USER BANNED!<br>";
+        echo "USER BANNED ($ip)!<br>";
       }
       
       mysql_query("INSERT INTO modlog (action_id, mod_id, timestamp, post_id, text_sample, ip, reason)
@@ -110,7 +108,7 @@ if (isset($_POST["submit"]))
         <form action="" method="post">
         <input type="checkbox" name="ban_user" id="checkbox1"> <label for="checkbox1">Ban user?</label>
         <br>
-        <input type="checkbox" name="delete_all_by_user" id="checkbox2"> <label for="checkbox2">Delete all posts by this user (anti-WIPE only)</label>
+        <input type="checkbox" name="delete_all_by_user" id="checkbox2"> <label for="checkbox2">Delete all posts by this user (anti-WIPE only) (MAKE +- 24 H ONLY!!!)</label>
         <br>
         <input type="text" name="reason" placeholder="Reason" value="вайп">
         <br>

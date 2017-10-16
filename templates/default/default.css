@@ -29,9 +29,10 @@ and (max-width : 700px)
 	
 	.description
 	{
+		display: none !important;
 		margin-top: 0px !important;
-		padding-left:  9px !important;
-		padding-right: 9px !important;
+		padding-left:  10px !important;
+		padding-right: 10px !important;
 	}
 	
 	content
@@ -42,6 +43,7 @@ and (max-width : 700px)
 	post_with_replies
 	{
 		margin-top: 12.5px !important;
+		border-radius: 0px !important;
 	}
 	
 	a.header
@@ -325,10 +327,11 @@ footnote.post_age
 
 img.embedded
 {
+	float: left;
 	max-width: 125px;
 	max-height: 125px;
-	float: left;
-	margin-right: 10px;
+	margin-right: 12px;
+	margin-top: 5px;
 }
 
 .submit

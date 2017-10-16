@@ -1,46 +1,27 @@
+DirectoryIndex forum.php
 Options -Indexes
-
-DirectoryIndex forum_twig.php
-
 php_value display_errors 1
 php_value error_log /tmp/php.log
-
 RewriteEngine on
 
 #####################################
 
 # make redirects shorter
 
+RewriteRule ^topic/([a-z0-9._-]+)$ ?topic=$1 [END]
+RewriteRule ^news/([a-z0-9._-]+)$ ?topic=$1 [END]
+
+RewriteRule ^login$ dashboard/login.php [END]
+RewriteRule ^delete$ dashboard/delete.php [END]
+RewriteRule ^backup$ dashboard/backup.php [END]
+
 #####################################
 
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^new-topic$ pages/new-topic.php [END]
+RewriteRule ^new-topic$ pages/new-topic.php [END] # remove
 
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^modlog$ pages/modlog.php [END]
-
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^principles$ pages/principles.php [END]
-
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^faq$ pages/faq.php [END]
-
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^post$ /post.php [END]
-
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^good$ /?good [END]
 
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^topic/([a-z0-9._-]+)$ ?topic=$1 [END]
-
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^news/([a-z0-9._-]+)$ ?topic=$1 [END]
+#RewriteRule ^faq$ pages/faq.php [END]
+#RewriteRule ^post$ /post.php [END]

@@ -1,10 +1,12 @@
 <?php
-session_start();
 require "config.php";
-require "connect.php";
-require "library.php";
 
-require "post.php";
+require_bundle();
+
+if (isset($_POST["submit"]))
+{
+  require LIB_DIR."/post.php";
+}
 
 ##### SANDBOX MODE!!!
 
@@ -75,7 +77,9 @@ $twig_data = array
   
   "replies_to_show" => $replies_to_show,
   "default_limit" => $default_limit,
-  "limit" => $limit
+  "limit" => $limit,
+  
+  "is_mod" => is_mod()
 );
 
 if (isset($topic_id))
@@ -105,8 +109,10 @@ if (isset($declined_text))
 
 $twig_template = "default";
 
-require_once "vendor/autoload.php";
+/*require_once "vendor/autoload.php";
 $loader = new Twig_Loader_Filesystem("twig_templates/$twig_template/");
 $twig = new Twig_Environment($loader);
-echo $twig->render("$twig_template.html", $twig_data);
+echo $twig->render("$twig_template.html", $twig_data);*/
+
+echo render($twig_data);
 ?>
