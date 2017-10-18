@@ -72,7 +72,7 @@ function markup ($text)
 		// Links
     $text = preg_replace('!(((f|ht)tp(s)?://)[-a-zA-Zа-яА-Я()0-9@:%_+.~#?&;//=]+)!u', '<a href="$1" target="_blank">$1</a>', $text);
 
-    $lines = explode("<br>", $text);
+    /*$lines = explode("<br>", $text);
     
     if (count($lines) > $lines_to_show) // trim text
     {
@@ -83,7 +83,7 @@ function markup ($text)
       $text .= "<div style='display:none; padding:0px;'>";
       $text .= implode("<br>", array_slice($lines, $lines_to_show, 999));
       $text .= "</div>";
-    }
+    }*/
   
     return $text;
 }

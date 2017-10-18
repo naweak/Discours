@@ -4,15 +4,24 @@
 $ip = mysql_real_escape_string($GLOBALS["client_ip"]);
 $time = time();
 
+# passcodes
+if(!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
+{    
+  $error = "Пожалуйста, используйте IPv4.";
+}
+
 $is_banned = false;
 
 $sql = mysql_query("SELECT * FROM bans WHERE ip = '$ip'"); // add 'expires'!
 if (mysql_num_rows($sql))
 {
-  $is_banned = true;
-  
   $ban_row = mysql_fetch_assoc($sql);
   $ban_id = $ban_row["ban_id"];
+  
+  $is_banned = true;
+  $ban_notification = "Ваш IP находится в бан-листе (бан #$ban_id). Для разбана обратитесь в телеграм-конференцию.";
+  
+  $posting_error = $ban_notification;
 }
 
 //send_message_to_telegram_channel("@".TELEGRAM_CHANNEL, "is_banned: $is_banned", TELEGRAM_TOKEN);
@@ -30,7 +39,15 @@ if (isset($_POST["submit"]))
   
     if ($is_banned)
     {
-      $error = "Ваш IP находится в бан-листе";
+      $error = $ban_notification;
+    }
+  
+    $allowed_host = $_SERVER['SERVER_NAME'];
+    $host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
+
+    if(substr($host, 0 - strlen($allowed_host)) != $allowed_host)
+    {
+      $error = "Некорректный HTTP-referer!";
     }
 
     if ($parent_topic) // reply to topic
@@ -43,21 +60,25 @@ if (isset($_POST["submit"]))
             $error = "Parent topic not found";
         }
       
-        $sql = mysql_query("SELECT * FROM posts WHERE ip = '$ip' AND ($time-creation_time) < 30");
+        $reply_delay = 30;
+        $sql = mysql_query("SELECT ($reply_delay-($time-creation_time)) FROM posts WHERE ip = '$ip' AND ($time-creation_time) < $reply_delay");
       
         if (mysql_num_rows($sql))
         {
+          $row = mysql_fetch_row($sql);
           $error = "Вы отвечаете в темы слишком часто!";
         }
     }
   
     else // new topic
     {
-      $sql = mysql_query("SELECT * FROM posts WHERE parent_topic = 0 AND ip = '$ip' AND ($time-creation_time) < 30*60");
+      $new_topic_delay = 30*60;
+      $sql = mysql_query("SELECT ($new_topic_delay-($time-creation_time)) FROM posts WHERE parent_topic = 0 AND ip = '$ip' AND ($time-creation_time) < $new_topic_delay");
       
       if (mysql_num_rows($sql))
       {
-        $error = "Вы создаете темы слишком часто!";
+        $row = mysql_fetch_row($sql);
+        $error = "Вы создаете темы слишком часто (осталось ждать {$row[0]} сек.)";
       }
     }
   
@@ -125,7 +146,7 @@ if (isset($_POST["submit"]))
         $posting_error = $error; // will be passed to twig
         $declined_text = $text;
       
-        echo "<span style='color:red;'>$error</span>";
+        //echo "<span style='color:red;'>$error</span>";
 
         if ($parent_topic)
         {
@@ -135,8 +156,8 @@ if (isset($_POST["submit"]))
     }
 }
 
-if ($is_banned)
+/*if ($is_banned)
 {
   echo "<div style='text-align:center;font-weight:bold;'>Ваш IP находится в бан-листе (#$ban_id). Для разбана обратитесь в телеграм-конференцию.</div>";
-}
+}*/
 ?>

@@ -10,11 +10,14 @@
 {% endif %}
 {% endblock %}
 
+{# TOPIC WITH REPLIES BLOCK #}
+
 {% block topic_with_replies %}
 {% if topic is defined %}
   <post_with_replies>
     <post>
       {% if is_mod %}
+      <!-- different code for post and reply! -->
       <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
       <div class="delete" style="float:right;" onclick="delete_post({{ topic.post_id }});"></div>
       {% endif %}
@@ -29,12 +32,26 @@
         {{ topic.text_formatted|raw }}
       </text>
       
+      <!--<hr style="margin:0px;">
+      
       <div style="font-size:0.75em; margin-top:0.5em; padding:0px;">
         <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }});">Ответить</a>
-      </div>
+      </div>-->
+      
     </post>
     
+    <hr style="margin:0px;">
+    
+    <div style="font-size:1em; margin-top:0.35em; margin-bottom:0.42em;  padding-left: var(--post_with_replies_padding);">
+      <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }});">
+        <i class="fa fa-comments-o" aria-hidden="true"></i>
+        Ответить
+      </a>
+    </div>
+    
     {% if topic.replies|length > replies_to_show %}
+      <hr style="margin:0px;"> <!-- -->
+    
       <expand onclick='show_omitted({{ topic.post_id }});'>
         Показать все {{ topic.replies|length }} ответов
       </expand>
@@ -89,8 +106,9 @@
     </div>-->
     
     {% if is_mod %}
-    <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
-    <div class="delete" style="float:right;" onclick="delete_post({{ topic.post_id }});"></div>
+    <!-- different code for post and reply! -->
+    <form method="post" action="/delete" id="{{ reply.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
+    <div class="delete" style="float:right;" onclick="delete_post({{ reply.post_id }});"></div>
     {% endif %}
     
     <text>
@@ -112,10 +130,15 @@
           <!--<div class="new_post">Создание новой темы</div>-->
           <input type="hidden" name="parent_topic" id="parent_topic" value="">
           <!--<input type="text" class="new_post" placeholder="Тема поста">-->
-          <textarea name="text" class="new_post" placeholder="Введите текст"></textarea>
+          <textarea name="text" class="new_post" placeholder="Введите текст">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
           <div style="float:left; margin-top:3px;">
-            <!--<a href="/topic/4050" target="_blank">Прикрепить&nbsp;картинку</a>-->
-            <input type="checkbox" id="picrandom">&nbsp;<label for="picrandom">Прикрепить картинку</label><Br>
+            <!--<input type="checkbox" id="picrandom">&nbsp;<label for="picrandom">Прикрепить картинку</label><Br>-->
+            
+            <select id="picrandom">
+              <option value="">Без картинки</option>
+              <option value="yoba">YOBA</option>
+              <option value="criminal_raccoon">Енот</option>
+            </select>
           </div>
           <div align="right">
             <input type="submit" class="submit" style="margin-right:1px;" name="submit" value="Новая тема">
@@ -145,13 +168,13 @@
     
     <!-- Bulma -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/twig_templates/default/bulma.css">
+    <link rel="stylesheet" href="/templates/default/bulma.css">
     <!-- /Bulma -->
     
     <link href="https://fonts.googleapis.com/css?family=Arimo" rel="stylesheet">
     
-    <link href="/twig_templates/default/default.css" rel="stylesheet">
-    <script src="/twig_templates/default/default.js"></script>
+    <link href="/templates/default/default.css" rel="stylesheet">
+    <script src="/templates/default/default.js"></script>
     
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui">
   </head>
@@ -167,11 +190,11 @@
             <div style="font-size:1.25em;font-weight:bold!important;">Дискурс</div>
           </a>
 
-          <div class="navbar-burger burger" id="burger" onclick="toggleBurger()" data-target="navMenuTransparentExample">
+          <!--<div class="navbar-burger burger" id="burger" onclick="toggleBurger()" data-target="navMenuTransparentExample">
              <span></span>
              <span></span>
              <span></span>
-          </div>
+          </div>-->
        </div>
        <div id="navMenuTransparentExample" class="navbar-menu">
           <div class="navbar-start">
@@ -265,7 +288,7 @@
        </div>
     </nav>
     
-    <style type="text/css">
+    <!--<style type="text/css">
     #mobile_menu{z-index:1000000; font-weight:bold; font-size:0.8em; width:100%; background:#f1f1f1;  position:absolute; text-align:center; font-size:12px;}
     #mobile_menu ul {margin: 0; padding: 0; list-style-type: none; list-style-image: none;}
     #mobile_menu li {display: block;   padding:15px 0 15px 0; border-bottom:#dddddd 1px solid;}
@@ -301,7 +324,7 @@
         burgerIcon.classList.toggle('is-active');
         //dropMenu.classList.toggle('is-active');
       };
-    </script>
+    </script>-->
     
     <!--<content>
     <post_with_replies>
@@ -322,15 +345,17 @@
       <a class="header" href="/">Добро пожаловать на Дискурс</a>
       -->  
       <content class="description" style="margin-top:12.5px; text-align:justify;">
-        <b>Дискурс</b> — это самый свободный форум русскоязычного интернета.
+        <b>Дискурс</b> — анонимный форум, где каждый может высказывать свое мнение не опасаясь критики, а также просто дурачиться, троллить или втирать дичь с видом знатока.
+        Список тем находится снизу, и любой желающий может поучаствовать в обсуждении.
+        <!--Регистрироваться для этого не нужно, поэтому можно начать прямо сейчас!-->
+        
+        <!--<b>Дискурс</b> — это самый свободный форум русскоязычного интернета.
         Если вам интересно, вы можете немного почитать <a href="/principles" target="_blank">о&nbsp;нашем&nbsp;проекте</a>.
-        <!--<br>
-        <br>-->
         
         Для связи с администрацией используйте
         <a href="https://t.me/discoursanonymous" target="_blank">конференцию</a> или
         <a href="https://t.me/zefirov" target="_blank">ЛС</a> в Telegram
-        или специальную&nbsp;<a href="/topic/68" target="_blank">тему</a>.
+        или специальную&nbsp;<a href="/topic/68" target="_blank">тему</a>.-->
         
         <!--<br>
         <br>-->
@@ -357,8 +382,10 @@
             <post>
               <div style="text-align:center;color:red;">{{ posting_error }}</div>
 
-              Ваш пост:<br>
-              {{ declined_text|raw }}
+              {% if declined_text %}
+                Ваш пост:<br>
+                {{ declined_text|raw }}
+              {% endif %}
             </post>
           </post_with_replies>
         </content>
@@ -379,7 +406,7 @@
         <content>
           <post_with_replies>
             <post style="text-align:center;">
-              На странице отображены последние {{ limit }} тем. <a href="?show_all">Посмотреть все.</a>
+              На странице отображены последние {{ limit }} тем. <a href="?show_all">Посмотреть&nbsp;все.</a>
             </post>
           </post_with_replies>
         </content>

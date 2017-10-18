@@ -3,10 +3,10 @@ require "config.php";
 
 require_bundle();
 
-if (isset($_POST["submit"]))
-{
-  require LIB_DIR."/post.php";
-}
+#if (isset($_POST["submit"]))
+#{
+require LIB_DIR."/post.php"; # display message if banned ($posting_error)
+#}
 
 ##### SANDBOX MODE!!!
 
@@ -99,7 +99,7 @@ if (isset($declined_text))
   /*$declined_text = str_replace("&", "&amp;", $declined_text);
   $declined_text = str_replace("<", "&lt;", $declined_text);
   $declined_text = str_replace(">", "&gt;", $declined_text);*/
-  $declined_text = str_replace("\n", "<br>", $declined_text);
+  //$declined_text = str_replace("\n", "<br>", $declined_text);
   
   $twig_data["declined_text"] = $declined_text;
 }

@@ -7,6 +7,8 @@ if (!is_mod())
   die("Restricted");
 }
 
+/* DO NOT DELETE FROM DB, JUST FLAG AS DELETED!!! */
+
 if (isset($_POST["submit"]))
 {
   $post_id = intval($_POST["post_id"]);

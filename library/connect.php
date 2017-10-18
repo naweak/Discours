@@ -26,6 +26,11 @@ function mysql_num_rows ($query)
   return mysqli_num_rows($query);
 }
 
+function mysql_fetch_row ($query)
+{
+  return mysqli_fetch_row($query);
+}
+
 function mysql_fetch_assoc ($query)
 {
   return mysqli_fetch_assoc($query);
