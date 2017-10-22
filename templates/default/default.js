@@ -44,20 +44,6 @@ $(document).ready(function ()
 	
 		$(".new_topic_form").submit(function()
 		{
-			/*if (document.getElementById("picrandom").checked)
-			{
-				var items =
-				[
-					"https://i.imgur.com/mawE2yH.jpg",
-					"https://i.imgur.com/LClCpx1.jpg",
-					"https://i.imgur.com/TH3e4wX.jpg",
-					"https://i.imgur.com/ei0mg7L.jpg"
-				];
-				var item = items[Math.floor(Math.random()*items.length)];
-				
-				$("textarea.new_post").val(item + "\n" + $("textarea.new_post").val());
-			}*/
-
 			if ($("#picrandom").val())
 			{
 				var random_sticker_set_name = $("#picrandom").val();

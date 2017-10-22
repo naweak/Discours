@@ -17,8 +17,6 @@ RewriteRule ^backup$ dashboard/backup.php [END]
 
 #####################################
 
-RewriteRule ^new-topic$ pages/new-topic.php [END] # remove
-
 RewriteRule ^modlog$ pages/modlog.php [END]
 RewriteRule ^principles$ pages/principles.php [END]
 RewriteRule ^good$ /?good [END]

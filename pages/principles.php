@@ -4,7 +4,7 @@ require_bundle();
 
 ob_start();
 ?>
-<style type="text/css">
+<!--<style type="text/css">
     h1 {
         display: block;
         font-size: 2em;
@@ -24,7 +24,7 @@ ob_start();
         margin-right: 0;
         font-weight: bold;
     }
-</style>
+</style>-->
 
 <h1>Принципы Дискурса</h1>
 
@@ -96,6 +96,4 @@ $twig_data = array
 );
 
 echo render($twig_data);
-
-exit();
 ?>

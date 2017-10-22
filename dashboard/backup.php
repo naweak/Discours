@@ -7,7 +7,7 @@ if (!is_mod())
   die("Restricted");
 }
 
-$filename='db_'.time().'.sql';
+$filename='discours_'.time().'.sql';
 
 $cmd = "(mysqldump discours --user=".MYSQL_USERNAME." --password=".MYSQL_PASSWORD." --single-transaction > ../absolute/$filename) 2>&1";
 

@@ -3,14 +3,7 @@ require "config.php";
 
 require_bundle();
 
-#if (isset($_POST["submit"]))
-#{
-require LIB_DIR."/post.php"; # display message if banned ($posting_error)
-#}
-
-##### SANDBOX MODE!!!
-
-//echo @file_get_contents("twig_templates/default.css");
+require LIB_DIR."/post.php";
 
 $default_limit = 25;
 $replies_to_show = 3;
@@ -31,12 +24,12 @@ if (isset($_GET["topic"]))
   $t = "AND post_id = ".$topic_id;
 }
         
-if (isset($_GET["good"]))
+/*if (isset($_GET["good"]))
 {
   $good_posts = array(68, 659, 579, 748, 761, 746, 639, 959, 966, 1115, 1139);
           
   $t = "AND post_id IN (".join(", ", $good_posts).")";
-}
+}*/
 
 $topics_sql = mysql_query("SELECT * FROM posts WHERE parent_topic = 0 $t ORDER BY ord DESC LIMIT $limit");
 
@@ -63,7 +56,7 @@ while ($topic_row = mysql_fetch_assoc($topics_sql))
              array
              (
                "post_id" => $topic_row["post_id"],
-               //"text" => $row["text"],
+               "title_formatted" => ($topic_row["title"] != "") ? anti_xss($topic_row["title"]) : "Без темы",
                "text_formatted" => markup($topic_row["text"]),
                
                "replies" => $replies
@@ -94,25 +87,11 @@ if (isset($posting_error))
 
 if (isset($declined_text))
 {
-  //$declined_text = trim($declined_text, "\n");
   $declined_text = anti_xss($declined_text);
-  /*$declined_text = str_replace("&", "&amp;", $declined_text);
-  $declined_text = str_replace("<", "&lt;", $declined_text);
-  $declined_text = str_replace(">", "&gt;", $declined_text);*/
-  //$declined_text = str_replace("\n", "<br>", $declined_text);
-  
   $twig_data["declined_text"] = $declined_text;
 }
 
 /* ----------------------------- */
-/* Filter 'include' tag! */
-
-$twig_template = "default";
-
-/*require_once "vendor/autoload.php";
-$loader = new Twig_Loader_Filesystem("twig_templates/$twig_template/");
-$twig = new Twig_Environment($loader);
-echo $twig->render("$twig_template.html", $twig_data);*/
 
 echo render($twig_data);
 ?>
