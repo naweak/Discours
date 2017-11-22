@@ -1,21 +1,45 @@
 <?php
 date_default_timezone_set("Europe/Kaliningrad"); // bug in server settings, in fact it's Moscow time
 
-if (!isset($_SERVER["HTTP_CF_CONNECTING_IP"]))
+/*if (!isset($_SERVER["HTTP_CF_CONNECTING_IP"]))
 {
 	die("Cloudflare not detected!");
 }
 
-$GLOBALS["client_ip"] = $_SERVER["HTTP_CF_CONNECTING_IP"];
+$GLOBALS["client_ip"] = $_SERVER["HTTP_CF_CONNECTING_IP"];*/
+
+function microtime_from_start ()
+{
+	global $start_microtime;
+	echo microtime(true)-$start_microtime;
+}
 
 function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM)
 {
 	$twig_template = "default";
+	
+	if (!JS_CACHING)
+	{
+		$twig_data["js"]  = @file_get_contents(ROOT_DIR."/templates/default/default.js");
+	}
+	
+	if (!CSS_CACHING)
+	{
+		$twig_data["css"] = @file_get_contents(ROOT_DIR."/templates/default/default.css");
+	}
 
 	require_once ROOT_DIR."/vendor/autoload.php";
 	$loader = new Twig_Loader_Filesystem($twig_filesystem);
 	$twig = new Twig_Environment($loader);
 	return $twig->render("$twig_template.html", $twig_data);
+}
+
+function render_from_string ($template, $data)
+{
+	require_once ROOT_DIR."/vendor/autoload.php";
+	$templates = array("template" => $template);
+	$twig = new Twig_Environment(new Twig_Loader_Array($templates));
+	echo $twig->render("template", $data);
 }
 
 function anti_xss ($text)
@@ -43,11 +67,14 @@ function markup ($text)
     $text = str_replace("\n", "<br>\n", $text);
   
     // new lines are not supported
-    $text = preg_replace("/&lt;b&gt;([^\n]*?)&lt;\/b&gt;/iu", "<b>$1</b>", $text);
+		// include [tag][/tag] tags!!!
+    $text = preg_replace("/&lt;b&gt;([^\n]*?)&lt;\/b&gt;/iu", "<b>$1</b>", $text); // bold
 		$text = preg_replace("/\*\*([^\n]*?)\*\*/iu", "<b>$1</b>", $text);
 	
-		$text = preg_replace("/&lt;i&gt;([^\n]*?)&lt;\/i&gt;/iu", "<i>$1</i>", $text);
+		$text = preg_replace("/&lt;i&gt;([^\n]*?)&lt;\/i&gt;/iu", "<i>$1</i>", $text); // italic
 		$text = preg_replace("/\*([^\n]*?)\*/iu", "<i>$1</i>", $text);
+	
+		$text = preg_replace("/&lt;u&gt;([^\n]*?)&lt;\/u&gt;/iu", "<u>$1</u>", $text); // underline
 	
     // Imgur
     $text = preg_replace("/^http(s)?:\/\/imgur.com\/([a-zA-Z0-9]{5,15})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
@@ -56,6 +83,14 @@ function markup ($text)
 		// Links
     $text = preg_replace('!(((f|ht)tp(s)?://)[-a-zA-Zа-яА-Я()0-9@:%_+.~#?&;//=]+)!u', '<a href="$1" target="_blank">$1</a>', $text);
   
+		// Smiles
+		$text = preg_replace("/:(sheez):/iu", "<img src='https://1chan.ca/img/$1.png' width='30px' height='30px'>", $text);
+		$text = preg_replace("/:(rage):/iu", "<img src='https://1chan.ca/img/$1.png' width='28px' height='30px'>", $text);
+	
+		// Smiles (animated)
+		$text = preg_replace("/:(nyan):/iu", "<img src='https://1chan.ca/img/$1.gif' width='40px' height='40px'>", $text);
+		$text = preg_replace("/:(popka):/iu", "<img src='https://1chan.ca/img/$1.gif' width='45px' height='35px'>", $text);
+	
     return $text;
 }
 

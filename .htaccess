@@ -6,20 +6,40 @@ RewriteEngine on
 
 #####################################
 
-# make redirects shorter
+# Phalcon:
 
+RewriteRule ^(login)$ phalcon/dashboard?page=$1
+RewriteRule ^(delete)$ phalcon/dashboard?page=$1
+RewriteRule ^(backup)$ phalcon/dashboard?page=$1
+
+RewriteRule ^(twig)$ phalcon/page?page=$1
+
+RewriteRule ^(about)$ phalcon/page?page=$1
+RewriteRule ^(principles)$ phalcon/page?page=$1
+RewriteRule ^(modlog)$ phalcon/page?page=$1
+RewriteRule ^(faq)$ phalcon/page?page=$1
+RewriteRule ^(contact)$ phalcon/page?page=$1
+RewriteRule ^(developers)$ phalcon/page?page=$1
+
+# Forum:
 RewriteRule ^topic/([a-z0-9._-]+)$ ?topic=$1 [END]
 RewriteRule ^news/([a-z0-9._-]+)$ ?topic=$1 [END]
 
-RewriteRule ^login$ dashboard/login.php [END]
-RewriteRule ^delete$ dashboard/delete.php [END]
-RewriteRule ^backup$ dashboard/backup.php [END]
+RewriteRule ^ph$ https://discou.rs/ph/ [R]
+RewriteRule ^ph/$ ?forum=2 [END]
 
-#####################################
+# Pages:
+# RewriteRule ^twig$ pages/twig.php [END]
 
-RewriteRule ^modlog$ pages/modlog.php [END]
-RewriteRule ^principles$ pages/principles.php [END]
-RewriteRule ^good$ /?good [END]
+# RewriteRule ^about$ pages/about.php [END]
+# RewriteRule ^principles$ pages/principles.php [END]
+# RewriteRule ^modlog$ pages/modlog.php [END]
+# RewriteRule ^faq$ pages/faq.php [END]
+# RewriteRule ^contact$ pages/contact.php [END]
+## RewriteRule ^developers$ pages/developers.php [END]
+# RewriteRule ^editor$ pages/editor.php [END]
 
-#RewriteRule ^faq$ pages/faq.php [END]
-#RewriteRule ^post$ /post.php [END]
+# Dashboard:
+# RewriteRule ^login$ dashboard/login.php [END]
+# RewriteRule ^delete$ dashboard/delete.php [END]
+# RewriteRule ^backup$ dashboard/backup.php [END]

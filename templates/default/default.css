@@ -40,6 +40,16 @@ and (max-width : 700px)
 		width: 100% !important;
 	}
 	
+	.new_topic_form_container
+	{
+		display: none;
+	}
+	
+	.display_new_topic_form_container
+	{
+		display: block !important;
+	}
+	
 	post_with_replies
 	{
 		margin-top: 12.5px !important;
@@ -229,9 +239,12 @@ a.topic_title
 
 .topic_header
 {
-	font-size: 1.15em;
+	/*font-size: 1.15em;*/
 	padding: 0px;
-	margin-bottom: 0.5em;
+	/*margin-bottom: 0.5em;*/
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
 post, expand
@@ -338,6 +351,13 @@ img.embedded
 	float: left;
 	max-width: 125px;
 	max-height: 125px;
+	margin-right: 12px;
+	margin-top: 5px;
+}
+
+img.topic_thumb
+{
+	float: left;
 	margin-right: 12px;
 	margin-top: 5px;
 }
@@ -466,4 +486,9 @@ textarea.reply
 	-webkit-box-shadow: 0px 1px 5px 0px #d1d1d1;
 	-moz-box-shadow: 0px 1px 5px 0px #d1d1d1;
 	box-shadow: 0px 1px 5px 0px #d1d1d1;
+}
+
+.controls
+{
+	display:none;
 }

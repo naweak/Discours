@@ -1,7 +1,7 @@
 <?php
 require "config.php";
-
 require_bundle();
+require_phalcon();
 
 require LIB_DIR."/post.php";
 
@@ -15,25 +15,33 @@ if (isset($_GET["show_all"]))
   $limit = 100; // will be replaced by pagination
 }
 
-$t = "";
+$forum_id = 1;
+
+if (isset($_GET["forum"]))
+{
+  $forum_id = intval($_GET["forum"]);
+}
+
+$query_annex = "";
 
 if (isset($_GET["topic"]))
 {
   $topic_id = intval($_GET["topic"]);
   $replies_to_show = 9999;
-  $t = "AND post_id = ".$topic_id;
+  $query_annex .= " AND post_id = $topic_id ";
 }
-        
-/*if (isset($_GET["good"]))
-{
-  $good_posts = array(68, 659, 579, 748, 761, 746, 639, 959, 966, 1115, 1139);
-          
-  $t = "AND post_id IN (".join(", ", $good_posts).")";
-}*/
 
-$topics_sql = mysql_query("SELECT * FROM posts WHERE parent_topic = 0 $t ORDER BY ord DESC LIMIT $limit");
+else
+{
+  $query_annex .= " AND forum_id = '$forum_id'";
+}
+
+$topics_sql = mysql_query("SELECT * FROM posts WHERE parent_topic = 0 $query_annex ORDER BY ord DESC LIMIT $limit");
 
 $topics = array();
+
+//$VotingController = new VotingController();
+//$LikeController   = new LikeController();
 
 while ($topic_row = mysql_fetch_assoc($topics_sql))
 {
@@ -47,7 +55,9 @@ while ($topic_row = mysql_fetch_assoc($topics_sql))
                array
                (
                  "post_id" => $reply_row["post_id"],
-                 "text_formatted" => markup($reply_row["text"])
+                 "text_formatted" => markup($reply_row["text"]),
+                 
+                 //"like_html" => $LikeController->html($reply_row["post_id"]),
                )
               );
   }
@@ -56,8 +66,16 @@ while ($topic_row = mysql_fetch_assoc($topics_sql))
              array
              (
                "post_id" => $topic_row["post_id"],
-               "title_formatted" => ($topic_row["title"] != "") ? anti_xss($topic_row["title"]) : "Без темы",
+               "forum_id" => $topic_row["forum_id"],
+               "title_formatted" => ($topic_row["title"] != "") ? str_replace(" ", "&nbsp;", anti_xss($topic_row["title"])) : "Тема без заголовка",
+               "name_formatted" => anti_xss($topic_row["name"]),
+               
+               //"voting_html" => $VotingController->html($topic_row["post_id"]),
+               
                "text_formatted" => markup($topic_row["text"]),
+               
+               "file_url" => $topic_row["file_url"],
+               "thumb_url" => $topic_row["thumb_url"],
                
                "replies" => $replies
              )
@@ -71,6 +89,7 @@ $twig_data = array
   "replies_to_show" => $replies_to_show,
   "default_limit" => $default_limit,
   "limit" => $limit,
+  "forum_id" => $forum_id,
   
   "is_mod" => is_mod()
 );
@@ -91,7 +110,30 @@ if (isset($declined_text))
   $twig_data["declined_text"] = $declined_text;
 }
 
+$twig_data["phalcon_url"] = PHALCON_URL;
+
 /* ----------------------------- */
 
-echo render($twig_data);
+$template_id = 0;
+
+if (isset($_POST["template_id"]))
+{
+  $template_id = intval($_POST["template_id"]);
+}
+
+if ($template_id)
+{
+  $sql = mysql_query("SELECT * FROM templates WHERE template_id = '$template_id'");
+  
+  if (mysql_num_rows($sql))
+  {
+    $row = mysql_fetch_assoc($sql);
+    echo render_from_string ($row["html"], $twig_data);
+  }
+}
+
+else
+{
+  echo render($twig_data);
+}
 ?>

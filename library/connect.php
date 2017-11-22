@@ -1,9 +1,9 @@
 <?php
 /* Dirty hack, will switch to PDO or some other library later */
 
-function mysql_connect ($server, $username, $password)
+function mysql_connect ($host, $username, $password)
 {
-  return mysqli_connect($server, $username, $password);
+  return mysqli_connect($host, $username, $password);
 }
 
 function mysql_select_db ($db)
@@ -53,7 +53,7 @@ if (!defined("MYSQL_USERNAME"))
   die("Please edit config.php file (rename config_example.php)!");
 }
 
-$GLOBALS["mysql_connection"] = mysql_connect(MYSQL_SERVER, MYSQL_USERNAME, MYSQL_PASSWORD);
+$GLOBALS["mysql_connection"] = mysql_connect(MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD);
 
 if (!$GLOBALS["mysql_connection"])
 {

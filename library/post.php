@@ -6,6 +6,7 @@ $time = time();
 
 $reply_delay     = 5;
 $new_topic_delay = 30*60;
+$max_chars = 15000;
 
 // passcodes
 if(!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
@@ -33,20 +34,36 @@ if (mysql_num_rows($sql))
 //send_message_to_telegram_channel("@".TELEGRAM_CHANNEL, "is_banned: $is_banned", TELEGRAM_TOKEN);
 
 if (isset($_POST["submit"]))
-{
-    $max_chars = 15000;
+{ 
+    $forum_id = intval($_POST["forum_id"]);
   
-    $text = $_POST["text"];
     $parent_topic = intval($_POST["parent_topic"]);
   
-    if (!$parent_topic)
+    $text = $_POST["text"];
+  
+    if ($forum_id != 1 and $forum_id != 2)
     {
-      $title = $_POST["title"];
+      $error = "Incorrect forum_id!";
+    }
+  
+    if ($parent_topic)
+    {
+      $title = "";
     }
   
     else
     {
-      $title = "";
+      $title = $_POST["title"];
+    }
+  
+    if (isset($_POST["name"]))
+    {
+      $name = $_POST["name"];
+    }
+  
+    else
+    {
+      $name = "";
     }
 
     $error = null;
@@ -111,14 +128,20 @@ if (isset($_POST["submit"]))
     }
   
     // Title:
-    if (mb_strlen($title) < 6 and $title != "") // title
+    if (mb_strlen($title) < 3 and $title != "") // title
     {
-        $error = "Заголовок слишком короткий (<6)!";
+        $error = "Заголовок слишком короткий (<3)!";
     }
   
     if (mb_strlen($title) > 255) // title
     {
         $error = "Заголовок слишком длинный (>255)!";
+    }
+  
+    // Name:
+    if (mb_strlen($name) > 20)
+    {
+        $error = "Имя слишком длинное!";
     }
   
     //$error = "Wipe!";
@@ -129,11 +152,12 @@ if (isset($_POST["submit"]))
         //echo "inserting...";
         $title = mysql_real_escape_string($title);
         $text = mysql_real_escape_string($text);
+        $name = mysql_real_escape_string($name);
         $creation_time = time();
         $ord = round(microtime(true) * 1000);
         //$ip = $_SERVER["HTTP_CF_CONNECTING_IP"];
 
-        mysql_query("INSERT INTO posts (post_id, parent_topic, creation_time, ip, ord, text, title) VALUES ('', '$parent_topic', '$creation_time', '$ip', '$ord', '$text', '$title')");
+        mysql_query("INSERT INTO posts (post_id, forum_id, parent_topic, creation_time, ip, ord, text, title, name) VALUES ('', '$forum_id', '$parent_topic', '$creation_time', '$ip', '$ord', '$text', '$title', '$name')");
 
         if ($parent_topic)
         {
@@ -167,7 +191,15 @@ if (isset($_POST["submit"]))
         $r = 10;
         $telegram_message .= "\n".str_repeat("-", $r)."\n".mb_strimwidth($text_for_telegram, 0, 200, "...", "utf-8")."\n".str_repeat("-", $r)."\n";
       
-        send_message_to_telegram_channel("@".TELEGRAM_CHANNEL, $telegram_message, TELEGRAM_TOKEN);
+        if ($parent_topic)
+        {
+          //send_message_to_telegram_channel("@".TELEGRAM_CHANNEL, $telegram_message, TELEGRAM_TOKEN);
+        }
+   
+        else
+        {
+          send_message_to_telegram_channel("@discours", $telegram_message, TELEGRAM_TOKEN);
+        }
     }
 
     else

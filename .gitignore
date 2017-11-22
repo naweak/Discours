@@ -2,8 +2,13 @@
 config.php
 
 # Contains database dumps:
+.backup/
 absolute/
+phalcon/
 
 vendor/
 test.php
 test.html
+
+upload.php
+editor.php

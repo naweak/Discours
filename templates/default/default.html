@@ -1,3 +1,4 @@
+{# # NOSCRIPT ############################################# #}
 {% block noscript %}
 {% if root is defined %}
 <noscript>
@@ -10,11 +11,25 @@
 {% endif %}
 {% endblock %}
 
+{# ##################### STICKERS_DROPDOWN #}
+{% block stickers_dropdown %}
+{% if root is defined %}
+<select class="picrandom">
+  <option value="">Без картинки</option>
+  <option value="yoba">YOBA</option>
+  <option value="criminal_raccoon">Енот</option>
+  <option value="shizik">Шизик</option>
+  <option value="cat">Кот</option>
+  <option value="pepe">Pepe</option>
+</select>
+{% endif %}
+{% endblock %}
+
 {# TOPIC WITH REPLIES BLOCK #}
 
 {% block topic_with_replies %}
-{% if topic is defined %}
-  <post_with_replies>
+{% if root is defined %}
+  <post_with_replies class="{{ topic.post_id }}">
     <post>
       {% if is_mod %}
       <!-- different code for post and reply! -->
@@ -23,28 +38,47 @@
       {% endif %}
       
       <div class="topic_header">
-        <a href="/">Главная</a> &#8594; <a href="/topic/{{ topic.post_id }}">
-        {{ topic.title_formatted }}
-        </a>
+        <!--<a href="/">Главная</a>&nbsp;&#8594;&nbsp;-->
+        <a href="/topic/{{ topic.post_id }}" style="display: inline-block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: calc(100% - 80px);">{{ topic.title_formatted|raw }}</a>
+        
+        <!--<div style="float:right;padding-top:0px;">
+          {{ topic.voting_html|raw }}
+        </div>-->     
       </div>
       
+      <!--
+      <a href="/topic/{{ topic.post_id }}" style="max-width:100%; overflow: hidden; whitespace: nowrap; text-overflow: ellipsis;">{{ topic.title_formatted|raw }}</a>
+      -->      
+
       <text>
+        {% if topic.file_url %}
+        <a href="{{ topic.file_url }}" target="_blank">
+          <img class="topic_thumb" src="{{ topic.thumb_url }}">
+        </a>
+        {% endif %}
+        
         {{ topic.text_formatted|raw }}
+        
+        {% if (topic.name_formatted != "") %}
+        <br>
+        <span style="color:blue;">Автор подписался как {{ topic.name_formatted }}</span>
+        {% endif %}
       </text>
       
     </post>
     
-    <hr style="margin:0px;">
+    <!--<hr style="margin:0px;">
     
     <div style="font-size:1em; margin-top:0.35em; margin-bottom:0.42em;  padding-left: var(--post_with_replies_padding);">
       <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }});">
         <i class="fa fa-comments-o" aria-hidden="true"></i>
         Ответить
       </a>
-    </div>
+    </div>-->
     
+    <replies>
     {% if topic.replies|length > replies_to_show %}
-      <hr style="margin:0px;">
+      <!--<hr style="margin:0px;">-->
     
       <expand onclick='show_omitted({{ topic.post_id }});'>
         Показать все {{ topic.replies|length }} ответов
@@ -68,10 +102,14 @@
     {% endfor %}
     
     {% if topic.replies|length == 0 %}
-    <div class="hr"></div>
+      <div class="hr"></div>
     {% endif %}
+    </replies>
     
-    <form class="reply_form" method="post" action="">
+    <!--<form class="reply_form" method="post" action="">-->
+    <form class="reply_form" method="post" action="{{ phalcon_url }}/posting/post">
+      <input type="hidden" name="forum_id" value="{{ topic.forum_id }}">
+      
       <input type="hidden" name="parent_topic" id="parent_topic" value="{{ topic.post_id }}">
       
       <input type="hidden" name="text" value="">
@@ -79,7 +117,11 @@
       <textarea_container>
         <textarea style="padding-top: 2px; font-size: 15px; line-height: 15px; height:20px; margin-bottom:0px;" class="reply" name="text" id="text_{{ topic.post_id }}" placeholder="Написать ответ..."></textarea>
 
-        <input type="submit" name="submit" value="Отправить">
+        <div class="controls" style="margin-top: 7px;">
+          <input type="submit" name="submit" style="margin-top:0px;" value="Отправить">
+          
+          <input name="userfile" type="file">
+        </div>
       </textarea_container>
     </form>
     
@@ -88,7 +130,7 @@
 {% endblock %}
 
 {% block reply %}
-{% if reply is defined %}
+{% if root is defined %}
   <reply>
     {% if is_mod %}
     <!-- different code for post and reply! -->
@@ -97,34 +139,56 @@
     {% endif %}
     
     <text>
+      {% if reply.file_url %}
+        <a href="{{ topic.file_url }}" target="_blank">
+          <img class="reply_thumb" src="{{ reply.thumb_url }}">
+        </a>
+      {% endif %}
+      
       {{ reply.text_formatted|raw }}
     </text>
     
     <div style="font-size:0.75em; margin-top:0.5em; padding:0px;">
-      #{{ loop.index0+1 }}&nbsp;&#8729;&nbsp;<a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ loop.index0+1 }});">Ответить</a>
+      #{{ loop.index0+1 }}&nbsp;&#8729;&nbsp;<a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ loop.index0+1 }});">Ответить</a><!--&nbsp;&#8729;&nbsp;{{ reply.like_html|raw }}-->
     </div>
   </reply>
 {% endif %}
 {% endblock %}
 
+{# ######################################################## #}
+{# # NEW TOPIC FORM ####################################### #}
+{# ######################################################## #}
 {% block new_topic_form %}
 {% if root is defined %}
-      <content>
-      <post_with_replies style="padding:10px;">
-        <form class="new_topic_form" method="post" action="/">
+      <content class="display_new_topic_form_container" style="display:none;">
+        <post_with_replies>
+          <post style="text-align:center; cursor:pointer; font-weight:bold;"
+                onclick="$('.new_topic_form_container').css('display', 'block');">
+            Создать новую тему
+          </post>
+        </post_with_replies>
+      </content>
+
+      <content class="new_topic_form_container">
+      <post_with_replies style="padding:10px; margin-top:15px;">
+        <form class="new_topic_form" method="post" action="{{ phalcon_url }}/posting/post">
+          <input type="hidden" name="forum_id" value="{{ forum_id }}">
+          
           <input type="hidden" name="parent_topic" id="parent_topic" value="">
           
-          <input type="text" name="title" placeholder="Тема поста" style="font-size:15px;width:100%;padding: 3px 5px;border: 1px solid #e6e6e6;outline: none;">
+          <input type="text" name="title" placeholder="Введите заголовок" style="font-size:15px;width:100%;padding: 3px 5px;border: 1px solid #e6e6e6;outline: none;">
+          
+          {% if forum_id != 1 %}
+          <input type="text" name="name" maxlength="20" placeholder="Введите имя (не обязательно)" style="font-size:15px;width:100%;padding: 3px 5px;border: 1px solid #e6e6e6;outline: none; margin-top:5px;">
+          {% endif %}
           
           <textarea name="text" class="new_post" placeholder="Введите текст">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
           <div style="float:left; margin-top:3px;">
-            <select id="picrandom">
-              <option value="">Без картинки</option>
-              <option value="yoba">YOBA</option>
-              <option value="criminal_raccoon">Енот</option>
-            </select>
+            {{ block("stickers_dropdown") }}
+            <input name="userfile" type="file">
           </div>
           <div align="right">
+            <!--<input type="button" class="submit" style="margin-right:1px;" value="test" onclick="clear_new_topic_form();">-->
             <input type="submit" class="submit" style="margin-right:1px;" name="submit" value="Новая тема">
           </div>
         </form>
@@ -135,8 +199,8 @@
 
 {# ######################################################## #}
 
-{% set root = true %}
-
+{% block page %}
+{% if root is defined %}
 <!DOCTYPE html>
 <html>
   <head>
@@ -150,6 +214,10 @@
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     
+    <!-- Twig.js -->
+    <script src="https://cdn.bootcss.com/twig.js/0.8.9/twig.js"></script>
+    <!-- /Twig.js -->
+    
     <!-- Bulma -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="/templates/default/bulma.css">
@@ -157,14 +225,22 @@
     
     <link href="https://fonts.googleapis.com/css?family=Arimo" rel="stylesheet">
     
-    <link href="/templates/default/default.css" rel="stylesheet">
+    {% if js %}
+    <script type="text/javascript">{{ js|raw }}</script>
+    {% else %}
     <script src="/templates/default/default.js"></script>
+    {% endif %}
+    
+    {% if css %}
+    <style type="text/css">{{ css|raw }}</style>
+    {% else %}
+    <link href="/templates/default/default.css" rel="stylesheet">
+    {% endif %}
     
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui">
   </head>
 
   <body>
-
     {{ block("noscript") }}
     
     <nav class="navbar is-transparent">
@@ -175,50 +251,36 @@
        </div>
        <div id="navMenuTransparentExample" class="navbar-menu">
           <div class="navbar-start">
-
-            <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link is-active">
-                О проекте
-                </a>
-                <div class="navbar-dropdown is-boxed">
-                   <a class="navbar-item" href="/principles">
-                   Принципы
-                   </a>
-                   <a class="navbar-item" href="/modlog">
-                   Модлог
-                   </a>
-                   <a class="navbar-item" href="/topic/4050">
-                   Постинг картинок
-                   </a>
-                   <a class="navbar-item" href="https://wiki.1chan.ca/Discou.rs" target="_blank">
-                   Статья на Колчевики
-                   </a>
-                   <a class="navbar-item" href="https://www.similarweb.com/website/discou.rs" target="_blank">
-                   Статистика
-                   </a>
-                   <a class="navbar-item" href="https://github.com/DiscoursProject/Discours" target="_blank">
-                   Исходный код на GitHub
-                   </a>
-                </div>
-             </div>
             
              <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link is-active">
-                Контакты
+                Форумы
                 </a>
                 <div class="navbar-dropdown is-boxed">
-                   <a class="navbar-item" href="https://discou.rs/topic/68">
-                   Тема для обратной связи
+                   <a class="navbar-item" href="/">
+                   Главная
                    </a>
-                   <a class="navbar-item" href="https://t.me/discoursanonymous" target="_blank">
-                   Конференция в Telegram
-                   </a>
-                   <a class="navbar-item" href="https://t.me/zefirov" target="_blank">
-                   ЛС в Telegram
+                   <a class="navbar-item" href="/ph/">
+                   Философия
                    </a>
                 </div>
              </div>
-
+             <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link is-active">
+                Справка
+                </a>
+                <div class="navbar-dropdown is-boxed">
+                   <a class="navbar-item" href="/about">
+                   О проекте
+                   </a>
+                   <a class="navbar-item" href="/faq">
+                   FAQ
+                   </a>
+                   <a class="navbar-item" href="/contact">
+                   Контакты
+                   </a>
+                </div>
+             </div>
           </div>
           <div class="navbar-end">
               <style type="text/css">
@@ -230,10 +292,15 @@
     </nav>
 
       {% if not topic_id and not display_new_topic_form and not html %}
-      <content class="description" style="margin-top:12.5px; text-align:justify;">
+    
+      {% if forum_id == 2 %}
+      <h2>/ph/ — Философия</h2>
+      {% endif %}
+    
+      <!--<content class="description" style="margin-top:12.5px; text-align:justify;">
         <b>Дискурс</b> — анонимный форум, где каждый может высказывать свое мнение не опасаясь критики, а также просто дурачиться, троллить или втирать дичь с видом знатока.
-        Список тем находится снизу, и любой желающий может поучаствовать в обсуждении.
-      </content>
+        Список тем находится снизу, и любой желающий может поучаствовать в обсуждении 👻
+      </content>-->
       {% endif %}
     
       {{ html|raw }}
@@ -253,12 +320,12 @@
         </content>
       {% endif %}
     
-      {% if display_new_topic_form or (not html and not topic_id) %}
+      {% if display_new_topic_form or (html == false and topic_id == false) %}
         {{ block("new_topic_form") }}
       {% endif %}
     
       {% if topics %}
-        <content>
+        <content id="topics">
         {% for topic in topics %}
           {{ block("topic_with_replies") }}
         {% endfor %}
@@ -279,6 +346,17 @@
       <footer>
         From discou.rs with love!
       </footer>
-    
   </body>
 </html>
+{% endif %}
+{% endblock %}
+
+{# ######################################################## #}
+
+{% set root = true %}
+
+{% if block is defined %}
+  {{ block(block) }}
+{% else %}
+{{ block("page") }}
+{% endif %}

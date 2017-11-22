@@ -14,6 +14,38 @@ var sticker_sets =
 		"https://i.imgur.com/bvZbYFm.jpg",
 		"https://i.imgur.com/CrmRfz2.jpg",
 	],
+	
+	"shizik":
+	[
+		"https://i.imgur.com/6ud2js5.png",
+		"https://i.imgur.com/Fzuv9RA.png",
+		"https://i.imgur.com/nJ49DUX.png",
+		"https://i.imgur.com/Vgifgpw.png",
+		"https://i.imgur.com/rT1ne7l.png",
+	],
+	
+	"cat":
+	[
+		"https://i.imgur.com/Bv7pvJP.png",
+		"https://i.imgur.com/cXmLp8s.png",
+		"https://i.imgur.com/8IjWzcm.png",
+		"https://i.imgur.com/B7XxsfA.png",
+		"https://i.imgur.com/mBIXv3i.png",
+	],
+	
+	"pepe":
+	[
+		"https://i.imgur.com/YylBAkR.png",
+		"https://i.imgur.com/wAEJMFB.png",
+		"https://i.imgur.com/I8XMdRj.png",
+		"https://i.imgur.com/Ox2iOf6.png",
+		"https://i.imgur.com/2wFHrwO.png",
+		"https://i.imgur.com/vmx3Lv5.png",
+		"https://i.imgur.com/HcpU0pH.png",
+		"https://i.imgur.com/l2XpWAZ.png",
+		"https://i.imgur.com/5KW90qE.png",
+		"https://i.imgur.com/0YD4bwt.png",
+	],
 };
 
 $(document).ready(function ()
@@ -21,6 +53,11 @@ $(document).ready(function ()
 		document.title = "Дискурс";
 	
     on_resize();
+	
+		$.get("/twig", function(data)
+    {
+    	window.template = data;
+    });
 
     $("img.embedded").css("cursor", "pointer");
     $("img.embedded").click(function () {
@@ -34,23 +71,246 @@ $(document).ready(function ()
       $(this).next().css("display", "block");
     });
 
+		// if hidden, it's impossible to select a picture before writing text
     $(reply_form_selector).focusout(function ()
     {
         if ($(this).val() === "")
         {
-            $(this).next().css("display", "none");
+        	$(this).next().css("display", "none");
         }
     });
 	
+		function get_form_data (element)
+		{
+			var form_data = {};
+			var fields = $(element).serializeArray();
+			$(fields).each(function(i, field)
+			{
+				form_data[field.name] = field.value;
+			});
+			return form_data;
+		}
+	
 		$(".new_topic_form").submit(function()
 		{
-			if ($("#picrandom").val())
+			var picrandom = $(this).find(".picrandom");
+			if (picrandom.val())
 			{
-				var random_sticker_set_name = $("#picrandom").val();
+				var random_sticker_set_name = $(picrandom).val();
 				var index_in_sticker_set = Math.floor(Math.random()*sticker_sets[random_sticker_set_name].length);
 				var random_sticker = sticker_sets[random_sticker_set_name][index_in_sticker_set];
 				
 				$("textarea.new_post").val(random_sticker + "\n" + $("textarea.new_post").val());
+			}
+		});
+	
+		$(".reply_form").submit(function()
+		{
+			var text = $(this).find("textarea").val();
+			var first_line = text.split('\n')[0];
+			var regex = /^:([a-zA-Z0-9]+):$/ig;
+			var matches = regex.exec(first_line);
+			if (matches && matches[1] && typeof sticker_sets[matches[1]] !== "undefined")
+			{
+				var random_sticker_set_name = matches[1];
+				var index_in_sticker_set = Math.floor(Math.random()*sticker_sets[random_sticker_set_name].length);
+				var random_sticker = sticker_sets[random_sticker_set_name][index_in_sticker_set];
+				var textarea = $(this).find("textarea");
+				
+				var value = $(textarea).val().split(/\n+/g);
+				value.shift();
+				$(textarea).val(value.join("\n"));
+				
+				textarea.val(random_sticker + "\n" + textarea.val());
+			}
+		});
+	
+		function ajax_form (args)
+		{
+			function on_submit()
+			{
+				var form = this;
+				//var form_data = get_form_data(form);
+				if (!FormData)
+				{
+					alert("Обнови браузер!");
+					return false;
+				}
+				
+				if (typeof on_submit.args.before !== "undefined")
+				{
+					on_submit.args.before(form);
+				}
+				
+				var form_data = new FormData($(this)[0]);
+				if (typeof window.submit !== "undefined")
+				{
+					form_data[window.submit] = true;
+					delete window.submit;
+				}
+				//form_data["ajax"] = true;
+				form_data.append("ajax", true);
+				console.log("Form data for submission:");
+				console.log(form_data);
+				on_submit.args.success.form = form;
+				$.ajax
+				({
+					url: this.action,
+					method: "POST",
+					
+					xhr: function()
+					{
+						var xhr = new window.XMLHttpRequest();
+
+						xhr.upload.addEventListener("progress", function(evt)
+						{
+							if (evt.lengthComputable)
+							{
+								var percentComplete = evt.loaded / evt.total;
+								percentComplete = parseInt(percentComplete * 100);
+								console.log(percentComplete);
+
+								if (percentComplete === 100)
+								{
+
+								}
+
+							}
+						}, false);
+
+						return xhr;
+					},
+					
+					data: form_data,
+					contentType:false,
+          cache: false,
+          processData:false,
+					
+					success: on_submit.args.success
+				});
+				return false;
+			}
+			on_submit.args = args;
+			$(args.selector).submit(on_submit);
+		}
+	
+		ajax_form
+		({
+			"selector": ".voting_form",
+			"success": function success (data)
+			{
+				console.log("Server response:");
+				console.log(data);
+				data = $.parseJSON(data);
+				if (typeof data.result !== "undefined")
+				{
+					$(success.form).find("span").html(data.result);
+					
+					if (data.result > 0)
+					{
+						$(success.form).find("span").css("color", "green");
+					}
+					
+					if (data.result == 0)
+					{
+						$(success.form).find("span").css("color", "inherit");
+					}
+					
+					if (data.result < 0)
+					{
+						$(success.form).find("span").css("color", "red");
+					}
+				}
+			}
+		});
+												 
+		ajax_form
+		({
+			"selector": ".like_form",
+			"success": function success (data)
+			{
+				console.log("Server response:");
+				console.log(data);
+				data = $.parseJSON(data);
+				if (typeof data.result !== "undefined")
+				{
+					$(success.form).find("span").html(data.result+"&nbsp;");
+					$(success.form).find("a").css("font-weight", "bold");
+				}
+			}
+		});
+	
+		ajax_form
+		({
+			"selector": ".new_topic_form",
+			"success": function success (data)
+			{
+				console.log("Server response:");
+				console.log(data);
+				data = $.parseJSON(data);
+				if (typeof data.topic !== "undefined")
+				{
+					// prepend thread
+					//alert("success");
+					var twig_data =
+					{
+						"block": "topic_with_replies",
+						"topic": data.topic
+					};
+
+					var rendered = render(twig_data);
+					$("#topics").prepend(rendered);
+					
+					// clear form
+					clear_new_topic_form();
+				}
+				else
+				{
+					// reset picrandom
+					$(".new_topic_form").find(".picrandom").val($(".new_topic_form").find(".picrandom option:first").val());
+					
+					alert(data.error);
+				}
+			}
+		});
+	
+		// Reply form
+		ajax_form
+		({
+			"selector": ".reply_form",
+			"before" : function before (form)
+			{
+				$(form).find("input[type='submit']").prop("disabled", true);
+			},
+			"success": function success (data)
+			{
+				var form = success.form;
+				console.log("Server response:");
+				console.log(data);
+				data = $.parseJSON(data);
+				if (typeof data.reply !== "undefined")
+				{
+					// append reply
+					var twig_data =
+					{
+						"block": "reply",
+						"reply": data.reply
+					};
+					var rendered = render(twig_data);
+					rendered += "<div class='hr'></div>";
+					$("post_with_replies."+data.reply.parent_topic).find("replies").append(rendered);
+					
+					// clear form
+					$("post_with_replies."+data.reply.parent_topic).find("textarea").val("");
+					
+					// resize textarea
+					$("post_with_replies."+data.reply.parent_topic).find("textarea").trigger("paste");
+				}
+				else
+				{
+					alert(data.error);
+				}
+				$(form).find("input[type='submit']").prop("disabled", false);
 			}
 		});
 
@@ -71,6 +331,28 @@ $(document).ready(function ()
 });
 
 /* Functions: */
+
+function render(data)
+{
+	var twig = Twig.twig;
+	var template = twig
+	({
+		data: window.template
+	});
+	var output = template.render(data);
+	return output;
+}
+
+function clear_new_topic_form ()
+{
+	$(".new_topic_form").find("[name='title']").val("");
+	$(".new_topic_form").find("[name='name']").val("");
+	$(".new_topic_form").find("[name='text']").val("");
+	$(".new_topic_form").find(".picrandom").val($(".new_topic_form").find(".picrandom option:first").val());
+	
+	// resize textarea
+	$(".new_topic_form").find("[name='text']").trigger("paste");
+}
 
 function reply_to_topic(topic_id, reply_id, index)
 {
