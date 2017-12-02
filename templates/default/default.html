@@ -39,7 +39,12 @@
       
       <div class="topic_header">
         <!--<a href="/">Главная</a>&nbsp;&#8594;&nbsp;-->
-        <a href="/topic/{{ topic.post_id }}" style="display: inline-block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: calc(100% - 80px);">{{ topic.title_formatted|raw }}</a>
+        <a href="/topic/{{ topic.post_id }}" style="display: inline-block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: calc(100% - 80px);">
+          {{ topic.title_formatted|raw }}
+          {% if topic.sticky %}
+          <span style='color:red;'>[тема закреплена]</span>
+          {% endif %}
+        </a>
         
         <!--<div style="float:right;padding-top:0px;">
           {{ topic.voting_html|raw }}
@@ -80,7 +85,7 @@
     {% if topic.replies|length > replies_to_show %}
       <!--<hr style="margin:0px;">-->
     
-      <expand onclick='show_omitted({{ topic.post_id }});'>
+      <expand onclick='show_omitted({{ topic.post_id }});' id="show_omitted_{{ topic.post_id }}">
         Показать все {{ topic.replies|length }} ответов
       </expand>
     
@@ -140,7 +145,7 @@
     
     <text>
       {% if reply.file_url %}
-        <a href="{{ topic.file_url }}" target="_blank">
+        <a href="{{ reply.file_url }}" target="_blank">
           <img class="reply_thumb" src="{{ reply.thumb_url }}">
         </a>
       {% endif %}
@@ -149,8 +154,9 @@
     </text>
     
     <div style="font-size:0.75em; margin-top:0.5em; padding:0px;">
-      #{{ loop.index0+1 }}&nbsp;&#8729;&nbsp;<a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ loop.index0+1 }});">Ответить</a><!--&nbsp;&#8729;&nbsp;{{ reply.like_html|raw }}-->
+      #{{ reply.order_in_topic }}&nbsp;&#8729;&nbsp;<a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ loop.index0+1 }});">Ответить</a><!--&nbsp;&#8729;&nbsp;{{ reply.like_html|raw }}-->
     </div>
+    
   </reply>
 {% endif %}
 {% endblock %}
@@ -163,7 +169,7 @@
       <content class="display_new_topic_form_container" style="display:none;">
         <post_with_replies>
           <post style="text-align:center; cursor:pointer; font-weight:bold;"
-                onclick="$('.new_topic_form_container').css('display', 'block');">
+                onclick="$('.new_topic_form_container').css('display', 'block');$(this).css('display', 'none');">
             Создать новую тему
           </post>
         </post_with_replies>
@@ -184,11 +190,15 @@
           
           <textarea name="text" class="new_post" placeholder="Введите текст">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
           <div style="float:left; margin-top:3px;">
-            {{ block("stickers_dropdown") }}
-            <input name="userfile" type="file">
+            <!--{{ block("stickers_dropdown") }}-->
+            <input id="topic_userfile" name="userfile" type="file">
+            <span class="filename"></span>
+            
+            <!--<label for="topic_userfile"><input type="button" value="Выбрать файл"></label>-->
           </div>
           <div align="right">
             <!--<input type="button" class="submit" style="margin-right:1px;" value="test" onclick="clear_new_topic_form();">-->
+            
             <input type="submit" class="submit" style="margin-right:1px;" name="submit" value="Новая тема">
           </div>
         </form>
@@ -211,6 +221,20 @@
     <!-- /Meta -->
     
     <title>Дискурс — анонимный форум</title>
+    
+    {% if forum_id == 2 %}
+    <style type='text/css'>
+      html, body
+      {
+        background-image: url(https://www.yoogiscloset.com/media/wysiwyg/7MonogramDetail.jpg) !important;
+      }
+      
+      h2
+      {
+        color: white !important;
+      }
+    </style>
+    {% endif %}
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     
@@ -238,6 +262,8 @@
     {% endif %}
     
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui">
+    
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
   </head>
 
   <body>
@@ -293,14 +319,10 @@
 
       {% if not topic_id and not display_new_topic_form and not html %}
     
-      {% if forum_id == 2 %}
-      <h2>/ph/ — Философия</h2>
-      {% endif %}
+        {% if forum_id == 2 %}
+        <h2>/ph/ — Философия</h2>
+        {% endif %}
     
-      <!--<content class="description" style="margin-top:12.5px; text-align:justify;">
-        <b>Дискурс</b> — анонимный форум, где каждый может высказывать свое мнение не опасаясь критики, а также просто дурачиться, троллить или втирать дичь с видом знатока.
-        Список тем находится снизу, и любой желающий может поучаствовать в обсуждении 👻
-      </content>-->
       {% endif %}
     
       {{ html|raw }}
@@ -335,7 +357,7 @@
         <content>
           <post_with_replies>
             <post style="text-align:center;">
-              На странице отображены последние {{ limit }} тем. <a href="?show_all">Посмотреть&nbsp;все.</a>
+              На странице отображены самые свежие темы. <a href="?show_all">Посмотреть&nbsp;все.</a>
             </post>
           </post_with_replies>
         </content>

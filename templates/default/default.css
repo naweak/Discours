@@ -17,15 +17,29 @@
 	outline: 0px solid transparent;
 }
 
+/*******************/
 /* Mobile version: */
+/*******************/
 @media only screen
 and (max-width : 700px)
 {
-	/*body
+	.embedded, .topic_thumb, .reply_thumb
 	{
-		padding-left:  7px !important;
-		padding-right: 7px !important;
-	}*/
+		/*display: block !important;
+		float: none !important;*/
+		max-width: 25% !important;
+		margin-right: 15px !important;
+	}
+	
+	.topic_thumb
+	{
+		max-width: 45% !important;
+	}
+	
+	text
+	{
+		/*font-size: 18px !important;*/
+	}
 	
 	.description
 	{
@@ -78,12 +92,26 @@ and (max-width : 700px)
 		text-align: justify !important;
 	}
 	
-	/*body
+	footer
 	{
-		margin-left:  0px !important;
-		margin-right: 0px !important;
+		display: none;
 	}
-	*/
+	
+	.navbar
+	{
+		background: #5581a2;
+	}
+	
+	.navbar-item
+	{
+		color: white;
+	}
+	
+	.topic_header
+	{
+		font-size: 1.2em;
+		margin-bottom: 5px;
+	}
 }
 
 @media only screen
@@ -239,7 +267,7 @@ a.topic_title
 
 .topic_header
 {
-	/*font-size: 1.15em;*/
+	/*font-size: 1.2em;*/
 	padding: 0px;
 	/*margin-bottom: 0.5em;*/
 	overflow: hidden;
@@ -277,10 +305,11 @@ expand
 
 .expand_text
 {
-	background: #eee;
-	margin-top: 0.5em;
-	text-align: center;
+	/*background: #eee;*/
+	/*margin-top: 0.5em;*/
+	/*text-align: center;*/
 	cursor: pointer;
+	padding: 0px;
 }
 
 .hr
@@ -362,6 +391,15 @@ img.topic_thumb
 	margin-top: 5px;
 }
 
+img.reply_thumb
+{
+	float: left;
+	margin-right: 12px;
+	margin-top: 5px;
+	
+	/*max-width: 100px;*/
+}
+
 .submit
 {
 	background-color: #008CBA;
@@ -417,11 +455,13 @@ textarea.reply
 {
 	display: block;
 	/*height: 1.7em;*/
-	height: 28px;
+	/*height: 28px;*/
+	height: 21px;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
 	border: none;
+	/*border: 1px grey solid !important;*/
 	overflow: auto;
 	outline: none;
 	-webkit-box-shadow: none;
@@ -431,7 +471,8 @@ textarea.reply
 	
 	font-size: 15px;
 	font-family: inherit;
-	margin-bottom: -9px;
+	/*margin-bottom: -9px;*/
+	margin-top: 0px;
 }
 
         div.new_post

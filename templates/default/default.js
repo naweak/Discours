@@ -74,10 +74,10 @@ $(document).ready(function ()
 		// if hidden, it's impossible to select a picture before writing text
     $(reply_form_selector).focusout(function ()
     {
-        if ($(this).val() === "")
+        /*if ($(this).val() === "")
         {
         	$(this).next().css("display", "none");
-        }
+        }*/
     });
 	
 		function get_form_data (element)
@@ -194,7 +194,7 @@ $(document).ready(function ()
 			$(args.selector).submit(on_submit);
 		}
 	
-		ajax_form
+		/*ajax_form
 		({
 			"selector": ".voting_form",
 			"success": function success (data)
@@ -238,13 +238,18 @@ $(document).ready(function ()
 					$(success.form).find("a").css("font-weight", "bold");
 				}
 			}
-		});
+		});*/
 	
 		ajax_form
 		({
 			"selector": ".new_topic_form",
+			"before" : function before (form)
+			{
+				$(form).find("input[type='submit']").prop("disabled", true);
+			},
 			"success": function success (data)
 			{
+				var form = success.form;
 				console.log("Server response:");
 				console.log(data);
 				data = $.parseJSON(data);
@@ -271,6 +276,7 @@ $(document).ready(function ()
 					
 					alert(data.error);
 				}
+				$(form).find("input[type='submit']").prop("disabled", false);
 			}
 		});
 	
@@ -301,7 +307,9 @@ $(document).ready(function ()
 					$("post_with_replies."+data.reply.parent_topic).find("replies").append(rendered);
 					
 					// clear form
-					$("post_with_replies."+data.reply.parent_topic).find("textarea").val("");
+					var textarea = $("post_with_replies."+data.reply.parent_topic).find("textarea");
+					textarea.val("");
+					autosize.update(textarea);
 					
 					// resize textarea
 					$("post_with_replies."+data.reply.parent_topic).find("textarea").trigger("paste");
@@ -314,13 +322,17 @@ $(document).ready(function ()
 			}
 		});
 
-		textarea_autoresize(reply_form_selector);
+		// Textarea autoresize
+		//textarea_autoresize(reply_form_selector);
+		autosize(document.querySelectorAll(reply_form_selector));
+		//$(reply_form_selector).trigger('autosize');
 	
 		$("text").each(function(index)
 		{
 			var height = $(this).height();
-			var display_height = 310;
-			var expand_html = "<div class='expand_text' onclick='expand_previous(this);'>Развернуть текст поста</div>";
+			//var display_height = 310;
+			var display_height = 200;
+			var expand_html = "<a class='expand_text' onclick='expand_previous(this);'>Показать текст полностью</a>";
 			
 			if (height > display_height)
 			{
@@ -349,6 +361,7 @@ function clear_new_topic_form ()
 	$(".new_topic_form").find("[name='name']").val("");
 	$(".new_topic_form").find("[name='text']").val("");
 	$(".new_topic_form").find(".picrandom").val($(".new_topic_form").find(".picrandom option:first").val());
+	$(".new_topic_form").find("[name='userfile']").val("");
 	
 	// resize textarea
 	$(".new_topic_form").find("[name='text']").trigger("paste");
@@ -356,25 +369,45 @@ function clear_new_topic_form ()
 
 function reply_to_topic(topic_id, reply_id, index)
 {
-		var contenteditable = $("#text_"+topic_id);
-
-		if (typeof reply_id !== "undefined")
-		{
-			var quote_text = ">Ответ на пост #"+index;
-			
-			contenteditable.html(quote_text+"\n"+contenteditable.html());
-			contenteditable.focus();
-			contenteditable.trigger("keypress");
-
-			var pos = quote_text.length + 1;
-			contenteditable.selectRange(pos,pos);
-		}
+	console.log("reply_to_topic triggered");
 	
+	var contenteditable = $("#text_"+topic_id);
+
+	if (typeof reply_id !== "undefined")
+	{
+		var quote_text = ">Ответ на пост #"+index;
+			
+		contenteditable.html(quote_text+"\n"+contenteditable.html());
+
+		var pos = quote_text.length + 1;
+		contenteditable.selectRange(pos,pos);
+		
+		/* Copied from Autoresize Plugin */
+		var ta = contenteditable[0];
+		const style = window.getComputedStyle(ta, null);
+		if (style.boxSizing === 'content-box')
+		{
+			heightOffset = -(parseFloat(style.paddingTop)+parseFloat(style.paddingBottom));
+		}
 		else
 		{
-			contenteditable.focus();
-			contenteditable.trigger("keypress");
+			heightOffset = parseFloat(style.borderTopWidth)+parseFloat(style.borderBottomWidth);
 		}
+		if (isNaN(heightOffset))
+		{
+			heightOffset = 0;
+		}
+		var endHeight = ta.scrollHeight+heightOffset;
+		contenteditable.css("height", endHeight);
+		/* /Copied from Autoresize Plugin */
+	}
+	
+	/*else
+	{
+		//autosize.update(contenteditable);
+		//contenteditable.focus();
+		//contenteditable.trigger("keypress");
+	}*/
 }
 
 function delete_post(post_id)
@@ -388,9 +421,11 @@ function expand_previous (element)
 	$(element).remove();
 }
 
-function show_omitted(post_id)
+function show_omitted (post_id)
 {
-    $("#omitted_" + post_id).css("display", "block");
+	$("#show_omitted_" + post_id).css("display", "none");
+	$("#show_omitted_" + post_id).after("<div class='hr'></div>");
+  $("#omitted_" + post_id).css("display", "block");
 }
 
 function textarea_action (e)
@@ -457,3 +492,11 @@ $.fn.selectRange = function(start, end)
         }
     });
 };
+
+/*!
+	Autosize 4.0.0
+	license: MIT
+	http://www.jacklmoore.com/autosize
+*/
+
+!function(e,t){if("function"==typeof define&&define.amd)define(["exports","module"],t);else if("undefined"!=typeof exports&&"undefined"!=typeof module)t(exports,module);else{var n={exports:{}};t(n.exports,n),e.autosize=n.exports}}(this,function(e,t){"use strict";function n(e){function t(){var t=window.getComputedStyle(e,null);"vertical"===t.resize?e.style.resize="none":"both"===t.resize&&(e.style.resize="horizontal"),s="content-box"===t.boxSizing?-(parseFloat(t.paddingTop)+parseFloat(t.paddingBottom)):parseFloat(t.borderTopWidth)+parseFloat(t.borderBottomWidth),isNaN(s)&&(s=0),l()}function n(t){var n=e.style.width;e.style.width="0px",e.offsetWidth,e.style.width=n,e.style.overflowY=t}function o(e){for(var t=[];e&&e.parentNode&&e.parentNode instanceof Element;)e.parentNode.scrollTop&&t.push({node:e.parentNode,scrollTop:e.parentNode.scrollTop}),e=e.parentNode;return t}function r(){var t=e.style.height,n=o(e),r=document.documentElement&&document.documentElement.scrollTop;e.style.height="";var i=e.scrollHeight+s;return 0===e.scrollHeight?void(e.style.height=t):(e.style.height=i+"px",u=e.clientWidth,n.forEach(function(e){e.node.scrollTop=e.scrollTop}),void(r&&(document.documentElement.scrollTop=r)))}function l(){r();var t=Math.round(parseFloat(e.style.height)),o=window.getComputedStyle(e,null),i="content-box"===o.boxSizing?Math.round(parseFloat(o.height)):e.offsetHeight;if(i!==t?"hidden"===o.overflowY&&(n("scroll"),r(),i="content-box"===o.boxSizing?Math.round(parseFloat(window.getComputedStyle(e,null).height)):e.offsetHeight):"hidden"!==o.overflowY&&(n("hidden"),r(),i="content-box"===o.boxSizing?Math.round(parseFloat(window.getComputedStyle(e,null).height)):e.offsetHeight),a!==i){a=i;var l=d("autosize:resized");try{e.dispatchEvent(l)}catch(e){}}}if(e&&e.nodeName&&"TEXTAREA"===e.nodeName&&!i.has(e)){var s=null,u=e.clientWidth,a=null,c=function(){e.clientWidth!==u&&l()},p=function(t){window.removeEventListener("resize",c,!1),e.removeEventListener("input",l,!1),e.removeEventListener("keyup",l,!1),e.removeEventListener("autosize:destroy",p,!1),e.removeEventListener("autosize:update",l,!1),Object.keys(t).forEach(function(n){e.style[n]=t[n]}),i.delete(e)}.bind(e,{height:e.style.height,resize:e.style.resize,overflowY:e.style.overflowY,overflowX:e.style.overflowX,wordWrap:e.style.wordWrap});e.addEventListener("autosize:destroy",p,!1),"onpropertychange"in e&&"oninput"in e&&e.addEventListener("keyup",l,!1),window.addEventListener("resize",c,!1),e.addEventListener("input",l,!1),e.addEventListener("autosize:update",l,!1),e.style.overflowX="hidden",e.style.wordWrap="break-word",i.set(e,{destroy:p,update:l}),t()}}function o(e){var t=i.get(e);t&&t.destroy()}function r(e){var t=i.get(e);t&&t.update()}var i="function"==typeof Map?new Map:function(){var e=[],t=[];return{has:function(t){return e.indexOf(t)>-1},get:function(n){return t[e.indexOf(n)]},set:function(n,o){e.indexOf(n)===-1&&(e.push(n),t.push(o))},delete:function(n){var o=e.indexOf(n);o>-1&&(e.splice(o,1),t.splice(o,1))}}}(),d=function(e){return new Event(e,{bubbles:!0})};try{new Event("test")}catch(e){d=function(e){var t=document.createEvent("Event");return t.initEvent(e,!0,!1),t}}var l=null;"undefined"==typeof window||"function"!=typeof window.getComputedStyle?(l=function(e){return e},l.destroy=function(e){return e},l.update=function(e){return e}):(l=function(e,t){return e&&Array.prototype.forEach.call(e.length?e:[e],function(e){return n(e,t)}),e},l.destroy=function(e){return e&&Array.prototype.forEach.call(e.length?e:[e],o),e},l.update=function(e){return e&&Array.prototype.forEach.call(e.length?e:[e],r),e}),t.exports=l});

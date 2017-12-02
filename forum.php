@@ -56,6 +56,11 @@ while ($topic_row = mysql_fetch_assoc($topics_sql))
                (
                  "post_id" => $reply_row["post_id"],
                  "text_formatted" => markup($reply_row["text"]),
+                 "file_url" => $reply_row["file_url"],
+                 "thumb_url" => $reply_row["thumb_url"],
+                 
+                 //"date_formatted" => time_format($reply_row["creation_time"]),
+                 "order_in_topic" => $reply_row["order_in_topic"],
                  
                  //"like_html" => $LikeController->html($reply_row["post_id"]),
                )
@@ -76,6 +81,7 @@ while ($topic_row = mysql_fetch_assoc($topics_sql))
                
                "file_url" => $topic_row["file_url"],
                "thumb_url" => $topic_row["thumb_url"],
+               //"sticky" => ($topic_row["post_id"] == 10670) ? true : false,
                
                "replies" => $replies
              )

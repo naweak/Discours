@@ -67,14 +67,16 @@ function markup ($text)
     $text = str_replace("\n", "<br>\n", $text);
   
     // new lines are not supported
-		// include [tag][/tag] tags!!!
     $text = preg_replace("/&lt;b&gt;([^\n]*?)&lt;\/b&gt;/iu", "<b>$1</b>", $text); // bold
 		$text = preg_replace("/\*\*([^\n]*?)\*\*/iu", "<b>$1</b>", $text);
+		$text = preg_replace("/\[b\]([^\n]*?)\[\/b\]/iu", "<b>$1</b>", $text);
 	
 		$text = preg_replace("/&lt;i&gt;([^\n]*?)&lt;\/i&gt;/iu", "<i>$1</i>", $text); // italic
 		$text = preg_replace("/\*([^\n]*?)\*/iu", "<i>$1</i>", $text);
+		$text = preg_replace("/\[i\]([^\n]*?)\[\/i\]/iu", "<i>$1</i>", $text);
 	
 		$text = preg_replace("/&lt;u&gt;([^\n]*?)&lt;\/u&gt;/iu", "<u>$1</u>", $text); // underline
+		$text = preg_replace("/\[u\]([^\n]*?)\[\/u\]/iu", "<u>$1</u>", $text);
 	
     // Imgur
     $text = preg_replace("/^http(s)?:\/\/imgur.com\/([a-zA-Z0-9]{5,15})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
