@@ -64,7 +64,8 @@ $(document).ready(function ()
         var win = window.open(this.src, "_blank");
     });
 	
-		var reply_form_selector = "textarea.reply";
+		var reply_form_selector     = "textarea.reply";
+		var new_topic_form_selector = "textarea.new_post";
 
     $(reply_form_selector).focusin(function ()
     {
@@ -194,58 +195,13 @@ $(document).ready(function ()
 			$(args.selector).submit(on_submit);
 		}
 	
-		/*ajax_form
-		({
-			"selector": ".voting_form",
-			"success": function success (data)
-			{
-				console.log("Server response:");
-				console.log(data);
-				data = $.parseJSON(data);
-				if (typeof data.result !== "undefined")
-				{
-					$(success.form).find("span").html(data.result);
-					
-					if (data.result > 0)
-					{
-						$(success.form).find("span").css("color", "green");
-					}
-					
-					if (data.result == 0)
-					{
-						$(success.form).find("span").css("color", "inherit");
-					}
-					
-					if (data.result < 0)
-					{
-						$(success.form).find("span").css("color", "red");
-					}
-				}
-			}
-		});
-												 
-		ajax_form
-		({
-			"selector": ".like_form",
-			"success": function success (data)
-			{
-				console.log("Server response:");
-				console.log(data);
-				data = $.parseJSON(data);
-				if (typeof data.result !== "undefined")
-				{
-					$(success.form).find("span").html(data.result+"&nbsp;");
-					$(success.form).find("a").css("font-weight", "bold");
-				}
-			}
-		});*/
-	
 		ajax_form
 		({
 			"selector": ".new_topic_form",
 			"before" : function before (form)
 			{
 				$(form).find("input[type='submit']").prop("disabled", true);
+				$(form).find("label[for='topic_submit']").addClass("loading");
 			},
 			"success": function success (data)
 			{
@@ -277,6 +233,7 @@ $(document).ready(function ()
 					alert(data.error);
 				}
 				$(form).find("input[type='submit']").prop("disabled", false);
+				$(form).find("label[for='topic_submit']").removeClass("loading");
 			}
 		});
 	
@@ -325,7 +282,7 @@ $(document).ready(function ()
 		// Textarea autoresize
 		//textarea_autoresize(reply_form_selector);
 		autosize(document.querySelectorAll(reply_form_selector));
-		//$(reply_form_selector).trigger('autosize');
+		autosize(document.querySelectorAll(new_topic_form_selector));
 	
 		$("text").each(function(index)
 		{
@@ -362,6 +319,8 @@ function clear_new_topic_form ()
 	$(".new_topic_form").find("[name='text']").val("");
 	$(".new_topic_form").find(".picrandom").val($(".new_topic_form").find(".picrandom option:first").val());
 	$(".new_topic_form").find("[name='userfile']").val("");
+	
+	$(".new_topic_form").find("[for='topic_userfile']").html("Прикрепить картинку");
 	
 	// resize textarea
 	$(".new_topic_form").find("[name='text']").trigger("paste");

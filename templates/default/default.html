@@ -182,24 +182,82 @@
           
           <input type="hidden" name="parent_topic" id="parent_topic" value="">
           
-          <input type="text" name="title" placeholder="Введите заголовок" style="font-size:15px;width:100%;padding: 3px 5px;border: 1px solid #e6e6e6;outline: none;">
+          <input type="text" name="title" placeholder="Заголовок" style="display:none;">
           
           {% if forum_id != 1 %}
-          <input type="text" name="name" maxlength="20" placeholder="Введите имя (не обязательно)" style="font-size:15px;width:100%;padding: 3px 5px;border: 1px solid #e6e6e6;outline: none; margin-top:5px;">
+          <input type="text" name="name" maxlength="20" placeholder="Введите имя (не обязательно)" style="margin-top:4px;">
           {% endif %}
           
-          <textarea name="text" class="new_post" placeholder="Введите текст">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
-          <div style="float:left; margin-top:3px;">
-            <!--{{ block("stickers_dropdown") }}-->
-            <input id="topic_userfile" name="userfile" type="file">
-            <span class="filename"></span>
+          <textarea name="text" class="new_post" placeholder="Введите текст...">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
+
+          <style class="text/css">
+          input.inputfile
+          {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+          }
             
-            <!--<label for="topic_userfile"><input type="button" value="Выбрать файл"></label>-->
+          .inputfile_label
+          {
+            cursor: pointer;
+
+            padding: 2px 6px;
+            border: 1px solid #CACACA;
+            background: #EAEAEA;
+          }
+
+          .inputfile_label:hover,
+          .inputfile_label:focus
+          {
+            /*background-color: red;*/
+          }
+            
+          .loading
+          {
+            background: orange;
+          }
+          </style>
+          
+          <script type="text/javascript">
+          $( document ).ready(function()
+          {
+            var inputs = document.querySelectorAll( '.inputfile' );
+            Array.prototype.forEach.call( inputs, function( input )
+            {
+              var label	 = input.nextElementSibling,
+                labelVal = label.innerHTML;
+
+              input.addEventListener( 'change', function( e )
+              {
+                var fileName = '';
+                if( this.files && this.files.length > 1 )
+                  fileName = ( this.getAttribute( 'data-multiple-caption' ) || '' ).replace( '{count}', this.files.length );
+                else
+                  fileName = e.target.value.split( '\\' ).pop();
+
+                if( fileName )
+                  label.innerHTML = fileName;
+                else
+                  label.innerHTML = labelVal;
+              });
+            });
+          });
+          </script>
+          
+          <div style="float:left;">
+            <input id="topic_userfile" name="userfile" type="file" class="inputfile">
+            
+            <label for="topic_userfile" class="inputfile_label">Прикрепить картинку</label>
           </div>
+          
           <div align="right">
-            <!--<input type="button" class="submit" style="margin-right:1px;" value="test" onclick="clear_new_topic_form();">-->
-            
-            <input type="submit" class="submit" style="margin-right:1px;" name="submit" value="Новая тема">
+            <!--<input type="submit" class="submit" style="margin-right:1px;" name="submit" value="Новая тема">-->
+            <input id="topic_submit" type="submit" class="inputfile">
+            <label for="topic_submit" class="inputfile_label">Новая тема</label>
           </div>
         </form>
       </post_with_replies>
@@ -320,7 +378,7 @@
       {% if not topic_id and not display_new_topic_form and not html %}
     
         {% if forum_id == 2 %}
-        <h2>/ph/ — Философия</h2>
+        <h2>Философия нового времени</h2>
         {% endif %}
     
       {% endif %}
