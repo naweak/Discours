@@ -1,14 +1,13 @@
+vendor/
+node_modules/
+public/assets/
+
 # Contains passwords:
-config.php
+app/config.php
 
 # Contains database dumps:
-.backup/
-absolute/
-phalcon/
+backup/
 
-vendor/
-test.php
-test.html
-
-upload.php
-editor.php
+all.js
+build.sh
+minify.js

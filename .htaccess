@@ -1,45 +1,44 @@
-DirectoryIndex forum.php
-Options -Indexes
-php_value display_errors 1
-php_value error_log /tmp/php.log
 RewriteEngine on
 
-#####################################
+RewriteRule ^$ /forum/?forum=1
 
-# Phalcon:
+RewriteRule ^topic/([a-z0-9._-]+)$ /forum/?topic=$1
+RewriteRule ^forum/([a-z0-9._-]+)$ /forum/?forum=$1
 
-RewriteRule ^(login)$ phalcon/dashboard?page=$1
-RewriteRule ^(delete)$ phalcon/dashboard?page=$1
-RewriteRule ^(backup)$ phalcon/dashboard?page=$1
+################################################
+RewriteRule ^(ph)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(ph)/$ /forum/?forum=2
 
-RewriteRule ^(twig)$ phalcon/page?page=$1
+RewriteRule ^(test)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(test)/$ /forum/?forum=3
 
-RewriteRule ^(about)$ phalcon/page?page=$1
-RewriteRule ^(principles)$ phalcon/page?page=$1
-RewriteRule ^(modlog)$ phalcon/page?page=$1
-RewriteRule ^(faq)$ phalcon/page?page=$1
-RewriteRule ^(contact)$ phalcon/page?page=$1
-RewriteRule ^(developers)$ phalcon/page?page=$1
+RewriteRule ^(po)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(po)/$ /forum/?forum=4
 
-# Forum:
-RewriteRule ^topic/([a-z0-9._-]+)$ ?topic=$1 [END]
-RewriteRule ^news/([a-z0-9._-]+)$ ?topic=$1 [END]
+RewriteRule ^(vg)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(vg)/$ /forum/?forum=5
 
-RewriteRule ^ph$ https://discou.rs/ph/ [R]
-RewriteRule ^ph/$ ?forum=2 [END]
+RewriteRule ^(trash)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(trash)/$ /forum/?forum=6
+################################################
 
-# Pages:
-# RewriteRule ^twig$ pages/twig.php [END]
+RewriteRule ^(login)$ /dashboard?page=$1
+RewriteRule ^(delete)$ /dashboard?page=$1
+RewriteRule ^(backup)$ /dashboard?page=$1
 
-# RewriteRule ^about$ pages/about.php [END]
-# RewriteRule ^principles$ pages/principles.php [END]
-# RewriteRule ^modlog$ pages/modlog.php [END]
-# RewriteRule ^faq$ pages/faq.php [END]
-# RewriteRule ^contact$ pages/contact.php [END]
-## RewriteRule ^developers$ pages/developers.php [END]
-# RewriteRule ^editor$ pages/editor.php [END]
+RewriteRule ^(about)$ /page?page=$1
+RewriteRule ^(principles)$ /page?page=$1
+RewriteRule ^(modlog)$ /page?page=$1
+RewriteRule ^(faq)$ /page?page=$1
+RewriteRule ^(contact)$ /page?page=$1
+RewriteRule ^(developers)$ /page?page=$1
 
-# Dashboard:
-# RewriteRule ^login$ dashboard/login.php [END]
-# RewriteRule ^delete$ dashboard/delete.php [END]
-# RewriteRule ^backup$ dashboard/backup.php [END]
+RewriteRule ^(twig)$ /page?page=$1
+
+########################
+
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+    RewriteRule  ^$ public/    [L]
+    RewriteRule  ((?s).*) public/$1 [L]
+</IfModule>

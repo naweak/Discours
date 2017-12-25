@@ -1,0 +1,96 @@
+<?php
+try
+{
+	$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE, MYSQL_USERNAME, MYSQL_PASSWORD);
+	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+}
+catch(PDOException $e)
+{
+	die ("Connection failed: ".$e->getMessage());
+}
+
+/*foreach ($pdo->query("SELECT * from posts WHERE text LIKE '%ПРИШЛО ВРЕМЯ%'")->fetchAll() as $row)
+{
+	//echo $row["post_id"];
+	print_r($row);
+	echo "<br>";
+}*/
+?>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<hr>
+<?php
+$i = 0;
+
+$date = date('Y-m-d H:i:s', strtotime("-$i hour"));
+$beginnig_of_this_hour_str = substr($date, 0, -5)."00:00";
+$beginning_of_this_hour = strtotime($beginnig_of_this_hour_str);
+
+while ($i < 24)
+{
+	$end = strtotime("-$i hour", $beginning_of_this_hour);
+	$begin = strtotime("-".($i+1)." hour", $beginning_of_this_hour);
+	
+	echo date('Y-m-d H:i:s', $begin);
+	echo " - ";
+	echo date('Y-m-d H:i:s', $end);
+	echo ": ";
+	
+	// count number of posts here
+	$posts = Post::find("$begin < creation_time AND creation_time < $end");
+	
+	echo count($posts);
+	
+	echo "<br>";
+
+	if (date('H:i:s', $begin) == "00:00:00")
+	{
+		echo "-----------------------<br>";
+	}
+	
+	$i++;
+}
+?>
+<hr>
+
+<form method="post" action="/phalcon/posting/post">
+          Posting form:<br>
+  
+          <input type="hidden" name="forum_id" value="1">
+   
+          <input type="text" name="parent_topic" id="parent_topic" placeholder="parent_topic" value="6136">
+          <br>
+          <input type="text" name="title" placeholder="Введите заголовок" >
+          <br>
+          <input type="text" name="name" maxlength="20" placeholder="Введите имя (не обязательно)">
+          <br>
+          <textarea name="text" class="new_post" placeholder="Введите текст">teeeeext</textarea>
+          <br>
+          <input type="submit" class="submit" style="margin-right:1px;" name="submit" value="Новая тема">
+</form>
+
+<?php
+echo benchmark();
+echo "<br>";
+
+$post = Post::findFirst();
+
+echo json_encode($post->to_array());
+
+echo "<br>";
+echo benchmark();
+
+echo "<br><br>";
+
+$count = Post::query()->execute()->count();
+echo $count;
+
+$posts = Post::query()->limit(1)->execute();
+
+foreach ($posts as $post)
+{
+  //echo $post->text;
+}
+?>

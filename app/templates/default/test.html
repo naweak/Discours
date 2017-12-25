@@ -11,25 +11,11 @@
 {% endif %}
 {% endblock %}
 
-{# ##################### STICKERS_DROPDOWN #}
-{% block stickers_dropdown %}
-{% if root is defined %}
-<select class="picrandom">
-  <option value="">Без картинки</option>
-  <option value="yoba">YOBA</option>
-  <option value="criminal_raccoon">Енот</option>
-  <option value="shizik">Шизик</option>
-  <option value="cat">Кот</option>
-  <option value="pepe">Pepe</option>
-</select>
-{% endif %}
-{% endblock %}
-
 {# TOPIC WITH REPLIES BLOCK #}
 
 {% block topic_with_replies %}
 {% if root is defined %}
-  <post_with_replies class="{{ topic.post_id }}">
+  <post_with_replies class="{{ topic.post_id }}" topic_id="{{ topic.post_id }}">
     <post>
       {% if is_mod %}
       <!-- different code for post and reply! -->
@@ -44,7 +30,7 @@
           {% if topic.sticky %}
           <span style='color:red;'>[тема закреплена]</span>
           {% endif %}
-        </a>
+        </a><!-- - Анонимно Пн 18 декабря 2017 08:22:52 -->
         
         <!--<div style="float:right;padding-top:0px;">
           {{ topic.voting_html|raw }}
@@ -54,11 +40,13 @@
       <!--
       <a href="/topic/{{ topic.post_id }}" style="max-width:100%; overflow: hidden; whitespace: nowrap; text-overflow: ellipsis;">{{ topic.title_formatted|raw }}</a>
       -->      
-
+      
       <text>
         {% if topic.file_url %}
         <a href="{{ topic.file_url }}" target="_blank">
-          <img class="topic_thumb" src="{{ topic.thumb_url }}">
+          {% if topic.thumb_w and topic.thumb_h %}{% set style = 'style="width:'~topic.thumb_w~'px;height:'~topic.thumb_h~'px;"' %}{% endif %}
+          
+          <img class="topic_thumb" src="{{ topic.thumb_url }}"{{ style|raw }}>
         </a>
         {% endif %}
         
@@ -69,6 +57,10 @@
         <span style="color:blue;">Автор подписался как {{ topic.name_formatted }}</span>
         {% endif %}
       </text>
+      
+      <div style="font-size:0.75em; margin-top:0.5em; padding:0px;">
+        <!--<a href="/topic/{{ topic.post_id }}" target="_blank">Открыть тему</a>&nbsp;&#8729;&nbsp;--><span style="opacity:0.5;">{{ topic.time_formatted }}</span>
+      </div>
       
     </post>
     
@@ -124,7 +116,7 @@
 
         <div class="controls" style="margin-top: 7px;">
           <input type="submit" name="submit" style="margin-top:0px;" value="Отправить">
-          
+          <!--<input type="submit" class="inputfile_label button is-small is-outlined" value="Отправить">-->
           <input name="userfile" type="file">
         </div>
       </textarea_container>
@@ -136,25 +128,39 @@
 
 {% block reply %}
 {% if root is defined %}
-  <reply>
+  <reply order_in_topic="{{ reply.order_in_topic }}">
     {% if is_mod %}
     <!-- different code for post and reply! -->
     <form method="post" action="/delete" id="{{ reply.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
     <div class="delete" style="float:right;" onclick="delete_post({{ reply.post_id }});"></div>
     {% endif %}
     
+    <!--<div style="float:right; font-size:0.75em; padding:0px;">
+      #{{ reply.order_in_topic }}
+    </div>-->
+    
     <text>
       {% if reply.file_url %}
         <a href="{{ reply.file_url }}" target="_blank">
-          <img class="reply_thumb" src="{{ reply.thumb_url }}">
+          {% if reply.thumb_w and reply.thumb_h %}{% set style = 'style="width:'~reply.thumb_w~'px;height:'~reply.thumb_h~'px;"' %}{% endif %}
+          
+          <img class="reply_thumb" src="{{ reply.thumb_url }}"{{ style|raw }}>
         </a>
       {% endif %}
       
       {{ reply.text_formatted|raw }}
     </text>
     
+    <!--<div style="opacity:0.5; float:right; font-size:0.75em; margin-top:0.5em; padding:0px;">
+      #{{ reply.order_in_topic }}
+    </div>-->
+    
+    <!--<div style="opacity:0.75; font-size:0.75em; margin-top:0.5em; padding:0px;">
+      #{{ reply.order_in_topic }}&nbsp;&#8729;&nbsp;<a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ loop.index0+1 }});">Ответить</a>&nbsp;&#8729;&nbsp;21 dec @ 07:21
+    </div>-->
+    
     <div style="font-size:0.75em; margin-top:0.5em; padding:0px;">
-      #{{ reply.order_in_topic }}&nbsp;&#8729;&nbsp;<a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ loop.index0+1 }});">Ответить</a><!--&nbsp;&#8729;&nbsp;{{ reply.like_html|raw }}-->
+      <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ loop.index0+1 }});">Ответить</a><span style="opacity:0.5;">&nbsp;&#8729;&nbsp;{{ reply.time_formatted }}<!--&nbsp;&#8729;&nbsp;#{{ reply.order_in_topic }}--></span>
     </div>
     
   </reply>
@@ -176,7 +182,8 @@
       </content>
 
       <content class="new_topic_form_container">
-      <post_with_replies style="padding:10px; margin-top:15px;">
+      <div id="new_topic_form_error_message"></div>
+      <post_with_replies style="padding:10px 10px 12px 10px; margin-top:15px;">
         <form class="new_topic_form" method="post" action="{{ phalcon_url }}/posting/post">
           <input type="hidden" name="forum_id" value="{{ forum_id }}">
           
@@ -184,11 +191,11 @@
           
           <input type="text" name="title" placeholder="Заголовок" style="display:none;">
           
-          {% if forum_id != 1 %}
-          <input type="text" name="name" maxlength="20" placeholder="Введите имя (не обязательно)" style="margin-top:4px;">
+          {% if forum_id != 1 and false %}
+          <input type="text" name="name" maxlength="20" placeholder="Введите имя (не обязательно)"> <!-- style="margin-top:4px;" -->
           {% endif %}
           
-          <textarea name="text" class="new_post" placeholder="Введите текст...">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
+          <textarea name="text" class="new_post" spellcheck="false" placeholder="Введите текст...">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
 
           <style class="text/css">
           input.inputfile
@@ -203,11 +210,22 @@
             
           .inputfile_label
           {
-            cursor: pointer;
+            /*cursor: pointer;
 
             padding: 2px 6px;
             border: 1px solid #CACACA;
             background: #EAEAEA;
+            
+            font-size: 13px;
+            padding: 3px;
+            border: 1px solid black;
+            border-radius: 3px;
+            padding-left: 5px;
+            padding-right: 5px;*/
+            
+            /*height: 21px;
+            padding-left: 7px;
+            padding-right: 7px;*/
           }
 
           .inputfile_label:hover,
@@ -218,46 +236,25 @@
             
           .loading
           {
-            background: orange;
+            background: green;
           }
           </style>
-          
-          <script type="text/javascript">
-          $( document ).ready(function()
-          {
-            var inputs = document.querySelectorAll( '.inputfile' );
-            Array.prototype.forEach.call( inputs, function( input )
-            {
-              var label	 = input.nextElementSibling,
-                labelVal = label.innerHTML;
-
-              input.addEventListener( 'change', function( e )
-              {
-                var fileName = '';
-                if( this.files && this.files.length > 1 )
-                  fileName = ( this.getAttribute( 'data-multiple-caption' ) || '' ).replace( '{count}', this.files.length );
-                else
-                  fileName = e.target.value.split( '\\' ).pop();
-
-                if( fileName )
-                  label.innerHTML = fileName;
-                else
-                  label.innerHTML = labelVal;
-              });
-            });
-          });
-          </script>
-          
+ 
           <div style="float:left;">
             <input id="topic_userfile" name="userfile" type="file" class="inputfile">
             
-            <label for="topic_userfile" class="inputfile_label">Прикрепить картинку</label>
+            <!--<label for="topic_userfile" class="inputfile_label">Прикрепить картинку</label>-->
+            <!--<label for="topic_userfile" class="inputfile_label">Прикрепить картинку</label>-->
+          
+            <label for="topic_userfile" class="inputfile_label button is-small is-outlined">Прикрепить картинку</label>
           </div>
           
           <div align="right">
             <!--<input type="submit" class="submit" style="margin-right:1px;" name="submit" value="Новая тема">-->
             <input id="topic_submit" type="submit" class="inputfile">
-            <label for="topic_submit" class="inputfile_label">Новая тема</label>
+            <!--<label for="topic_submit" class="inputfile_label">Новая тема</label>-->
+            <!--<a class="button is-small is-outlined">Новая тема</a>-->
+            <label for="topic_submit" class="inputfile_label button is-small is-outlined">Новая тема</label>
           </div>
         </form>
       </post_with_replies>
@@ -280,48 +277,33 @@
     
     <title>Дискурс — анонимный форум</title>
     
-    {% if forum_id == 2 %}
     <style type='text/css'>
-      html, body
-      {
-        background-image: url(https://www.yoogiscloset.com/media/wysiwyg/7MonogramDetail.jpg) !important;
-      }
-      
-      h2
-      {
-        color: white !important;
-      }
+    h2
+    {
+      /*color: red !important;*/
+    }
     </style>
-    {% endif %}
     
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!--<script async src="/o.js"></script>
+    <link href="/discours.css" rel="stylesheet">-->
     
-    <!-- Twig.js -->
-    <script src="https://cdn.bootcss.com/twig.js/0.8.9/twig.js"></script>
-    <!-- /Twig.js -->
-    
-    <!-- Bulma -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/templates/default/bulma.css">
-    <!-- /Bulma -->
-    
-    <link href="https://fonts.googleapis.com/css?family=Arimo" rel="stylesheet">
-    
-    {% if js %}
-    <script type="text/javascript">{{ js|raw }}</script>
-    {% else %}
-    <script src="/templates/default/default.js"></script>
-    {% endif %}
-    
-    {% if css %}
-    <style type="text/css">{{ css|raw }}</style>
-    {% else %}
-    <link href="/templates/default/default.css" rel="stylesheet">
-    {% endif %}
+    <script async src="/assets/{{ js_file }}"></script>
+    <link href="/assets/{{ css_file }}" rel="stylesheet">
     
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui">
     
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <!--<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">-->
+    <link rel="icon" type="image/png" sizes="32x32" href="/anon.png">
+    
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-111575996-1"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-111575996-1');
+    </script>
   </head>
 
   <body>
@@ -330,7 +312,7 @@
     <nav class="navbar is-transparent">
        <div class="navbar-brand">
           <a class="navbar-item" href="/">
-            <div style="font-size:1.25em;font-weight:bold!important;">Дискурс</div>
+            <div style="font-size:1.25em;font-weight:bold!important;" class="brand">Дискурс</div>
           </a>
        </div>
        <div id="navMenuTransparentExample" class="navbar-menu">
@@ -346,6 +328,15 @@
                    </a>
                    <a class="navbar-item" href="/ph/">
                    Философия
+                   </a>
+                   <a class="navbar-item" href="/po/">
+                   Политика
+                   </a>
+                   <a class="navbar-item" href="/vg/">
+                   Видеоигры
+                   </a>
+                   <a class="navbar-item" href="/trash/">
+                   <s>Мусор</s>
                    </a>
                 </div>
              </div>
@@ -377,8 +368,20 @@
 
       {% if not topic_id and not display_new_topic_form and not html %}
     
-        {% if forum_id == 2 %}
-        <h2>Философия нового времени</h2>
+        <h2>{{ forum_title }}</h2>
+    
+        {% if forum_id == 6 %}
+        <content>
+        <article class="message">
+
+        <div class="message-body">
+        Добро пожаловать на помойку! Сюда будут переноситься раковые темы из других разделов.
+        Здесь можно постить и вручную (хотя в этом нет надобности). Не забывайте, что это
+        всё еще Дискурс, поэтому <b><u>порно, шок-контент, спам и вайпы запрещены</u></b>.
+        А вот страдать шизней и гадить в чужие темы можно сколько угодно.
+        </div>
+        </article>
+        </content>
         {% endif %}
     
       {% endif %}
@@ -426,6 +429,8 @@
       <footer>
         From discou.rs with love!
       </footer>
+    
+      <!--<link rel="stylesheet" href="/discours.css">-->
   </body>
 </html>
 {% endif %}

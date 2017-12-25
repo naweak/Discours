@@ -221,7 +221,8 @@ reply
 {
 	display: block;
 	width: 100%;
-	background: #ccc;
+	/*background: #ccc;*/
+	background: transparent;
 	border-top: 1px solid #ddd;
 }
 
@@ -281,7 +282,7 @@ post, expand
 	display: block;
 	width: 100%;
 	margin-top: 1.25em;
-	background: #f0f0f0;
+	/*background: #f0f0f0;*/
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
@@ -338,10 +339,10 @@ form.post
 	border-radius: 4px!important;
 }
 
-div
+/*div
 {
 	border-radius: 4px!important;
-}
+}*/
 
 text
 {
@@ -520,7 +521,8 @@ textarea.reply
 					height: 28px;
 
           outline: none;
-          resize: vertical;
+          /*resize: vertical;*/
+					resize: none;
 
 					border-top: 0px;
 					border-right: 0px;
@@ -529,11 +531,13 @@ textarea.reply
 
 					border-style: solid;
 					border-color: #e6e6e6;
-          color: #525252;
+          /*color: #525252;*/
+					color: black;
           display: inline-block;
           vertical-align: top;
           /*margin: 5px 0px;*/
-					margin-bottom: 8px;
+					/*margin-bottom: 8px;*/
+					margin-bottom: 6px;
         }
 
 				.new_topic_form input[type="text"]
@@ -563,4 +567,99 @@ textarea.reply
 .controls
 {
 	display:none;
+}
+
+post_info
+{
+	display: block;
+	color: grey;
+	margin-bottom: 4px;
+	padding: 0px;
+}
+
+/* night theme */
+
+.night
+{
+	color: white;
+  background-color: #2f2f2f;
+}
+
+.night a
+{
+	color: #c6c6c6;
+}
+
+.night a:hover
+{
+	color: #ddd;
+}
+
+.night .navbar
+{
+	background-image: linear-gradient(to bottom,#444444,#222222);
+	box-shadow: 0 1px 10px rgba(0,0,0,0.1);
+}
+
+.night .navbar-link
+{
+	color: #c6c6c6 !important;
+}
+
+.night .navbar-link::after
+{
+	border: 1px solid #c6c6c6;
+	border-right: 0;
+	border-top: 0;
+}
+
+.night .brand
+{
+	color: #c6c6c6;
+	text-shadow: 0 1px 0 black;
+}
+
+.night .brand:hover
+{
+	color: #ddd;
+}
+
+.night .navbar-item
+{
+	color: black;
+}
+
+.night .button
+{
+	background: none;
+	
+	color: #575757;
+	border-color: #575757;
+}
+
+.night .hr
+{
+	border-top: 1px solid #1c1c1a;
+}
+
+.night post_with_replies
+{
+	color: white;
+	border: solid 1px #575757;
+	background-color: #2C2C2C;
+	box-shadow: none;
+}
+
+.night textarea
+{
+	color: white;
+	background: transparent;
+}
+
+.night expand
+{
+	color: white;
+	background: transparent;
+	border-top: 1px solid #575757;
+	border-bottom: 1px solid #575757;
 }

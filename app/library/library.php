@@ -14,10 +14,8 @@ function microtime_from_start ()
 	echo microtime(true)-$start_microtime;
 }
 
-function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM)
+function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM, $twig_template = "default")
 {
-	$twig_template = "default";
-	
 	if (!JS_CACHING)
 	{
 		$twig_data["js"]  = @file_get_contents(ROOT_DIR."/templates/default/default.js");
@@ -27,8 +25,18 @@ function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM)
 	{
 		$twig_data["css"] = @file_get_contents(ROOT_DIR."/templates/default/default.css");
 	}
+	
+	function last_file ($str)
+	{
+		$all_files = glob($str, 1);
+		$last_file = end($all_files);
+		return basename($last_file);
+	}
 
-	require_once ROOT_DIR."/vendor/autoload.php";
+	$twig_data["js_file"]  = last_file(ROOT_DIR."/../public/assets/*.js");
+	$twig_data["css_file"] = last_file(ROOT_DIR."/../public/assets/*.css");
+
+	require_once ROOT_DIR."/../vendor/autoload.php";
 	$loader = new Twig_Loader_Filesystem($twig_filesystem);
 	$twig = new Twig_Environment($loader);
 	return $twig->render("$twig_template.html", $twig_data);
@@ -50,7 +58,7 @@ function anti_xss ($text)
 	return $text;
 }
 
-function markup ($text)
+function markup ($text, $data = null)
 {
     $lines_to_show = 10;
   
@@ -60,6 +68,13 @@ function markup ($text)
   
     // Anti-XSS
 		$text = anti_xss($text);
+	
+		if (isset($data["parent_topic"]) and $data["parent_topic"] != null)
+		{
+			$text = preg_replace("/(^|\n)&gt;&gt;([0-9]+)/i",
+												 "$1<a onclick='link_click(".$data["parent_topic"].",$2);'>&gt;&gt;Ответ на пост #$2</a>",
+												 $text); // >>123
+		}
 
     // ([^\n]*)
   	$text = preg_replace("/(^|\n)&gt;([^\n]*)/i", "$1<quote>&gt;$2</quote>", $text); // add ">" using ::before selector
@@ -79,8 +94,8 @@ function markup ($text)
 		$text = preg_replace("/\[u\]([^\n]*?)\[\/u\]/iu", "<u>$1</u>", $text);
 	
     // Imgur
-    $text = preg_replace("/^http(s)?:\/\/imgur.com\/([a-zA-Z0-9]{5,15})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
-    $text = preg_replace("/^http(s)?:\/\/i.imgur.com\/([a-zA-Z0-9]{5,15}).([a-z]{3})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
+    // $text = preg_replace("/^http(s)?:\/\/imgur.com\/([a-zA-Z0-9]{5,15})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
+    // $text = preg_replace("/^http(s)?:\/\/i.imgur.com\/([a-zA-Z0-9]{5,15}).([a-z]{3})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
   
 		// Links
     $text = preg_replace('!(((f|ht)tp(s)?://)[-a-zA-Zа-яА-Я()0-9@:%_+.~#?&;//=]+)!u', '<a href="$1" target="_blank">$1</a>', $text);
@@ -115,68 +130,76 @@ function send_message_to_telegram_channel ($chatID, $message, $token)
 
 function is_mod()
 {
-    if (isset($_SESSION["user_id"]) and $_SESSION["user_id"] == 1)
-    {
-        return true;
-    }
+	require_session();
 
-    else
-    {
-        return false;
-    }
+	if (isset($_SESSION["user_id"]) and $_SESSION["user_id"] == 1)
+	{
+			return true;
+	}
+
+	else
+	{
+			return false;
+	}
+}
+
+function error_page ($code)
+{
+	header("HTTP/1.0 404 Not Found");
+	echo "404 Not Found";
+	die();
 }
 
 function how_long_ago ($age)
 {
     if ($age < 1 * 60) return "менее минуты назад";
-
     if ($age < 2 * 60) return "менее двух минут назад";
-
     if ($age < 3 * 60) return "менее трех минут назад";
-
     if ($age < 4 * 60) return "менее четырех минут назад";
-
     if ($age < 5 * 60) return "менее пяти минут назад";
-
     if ($age < 60 * 60)
     {
         return "менее часа назад";
     }
-
     return "более часа назад";
 }
 
 function time_format ($timestamp)
-	{	
-		$postDate = date( "d.m.Y", $timestamp );
-		$postMinute = date( "H:i", $timestamp );
-		
-		if ($postDate == date('d.m.Y')) {
-			// Если сегодня
-			$datetime = 'Cегодня в ';
-		} else if ($postDate == date('d.m.Y', strtotime('-1 day'))) {
-			// Если вчера
-			$datetime = 'Вчера в ';
-		} else {
-			// Иначе
-			$fulldate = date( "j # Y в ", $timestamp );
-			$mon = date("m", $timestamp );
-			switch( $mon ) {
-				case  1: { $mon='Января'; } break;
-				case  2: { $mon='Февраля'; } break;
-				case  3: { $mon='Марта'; } break;
-				case  4: { $mon='Апреля'; } break;
-				case  5: { $mon='Мая'; } break;
-				case  6: { $mon='Июня'; } break;
-				case  7: { $mon='Июля'; } break;
-				case  8: { $mon='Августа'; } break;
-				case  9: { $mon='Сентября'; } break;
-				case 10: { $mon='Октября'; } break;
-				case 11: { $mon='Ноября'; } break;
-				case 12: { $mon='Декабря'; } break;
-			}
-			$datetime = str_replace( '#', $mon, $fulldate );
+{	
+	$postDate = date( "d.m.Y", $timestamp );
+	$postMinute = date( "H:i", $timestamp );
+
+	if ($postDate == date('d.m.Y')) {
+		// Если сегодня
+		$datetime = 'Cегодня в ';
+	} else if ($postDate == date('d.m.Y', strtotime('-1 day'))) {
+		// Если вчера
+		$datetime = 'Вчера в ';
+	} else {
+		// Иначе
+		$fulldate = date( "j # Y в ", $timestamp );
+		$mon = date("m", $timestamp );
+		switch( $mon ) {
+			case  1: { $mon='Января'; } break;
+			case  2: { $mon='Февраля'; } break;
+			case  3: { $mon='Марта'; } break;
+			case  4: { $mon='Апреля'; } break;
+			case  5: { $mon='Мая'; } break;
+			case  6: { $mon='Июня'; } break;
+			case  7: { $mon='Июля'; } break;
+			case  8: { $mon='Августа'; } break;
+			case  9: { $mon='Сентября'; } break;
+			case 10: { $mon='Октября'; } break;
+			case 11: { $mon='Ноября'; } break;
+			case 12: { $mon='Декабря'; } break;
 		}
-		return $datetime.$postMinute;
+		$datetime = str_replace( '#', $mon, $fulldate );
 	}
+	return $datetime.$postMinute;
+}
+
+function smart_time_format ($timestamp)
+{
+	return date("d M @ H:i", $timestamp);
+}
 ?>
