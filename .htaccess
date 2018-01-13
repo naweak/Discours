@@ -36,11 +36,11 @@ RewriteRule ^(blog)/$ /forum/?forum=9
 RewriteRule ^(d)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(d)/$ /forum/?forum=10
 ################################################
-RewriteRule ^(login)$ /dashboard?page=$1
-RewriteRule ^(delete)$ /dashboard?page=$1
-RewriteRule ^(backup)$ /dashboard?page=$1
-RewriteRule ^(backu)$ /dashboard?page=backup
-RewriteRule ^(move)$ /dashboard?page=$1
+RewriteRule ^(login)$ /page?page=$1
+RewriteRule ^(delete)$ /page?page=$1
+RewriteRule ^(backup)$ /page?page=$1
+RewriteRule ^(backu)$ /page?page=backup
+RewriteRule ^(move)$ /page?page=$1
 
 RewriteRule ^(about)$ /page?page=$1
 RewriteRule ^(principles)$ /page?page=$1

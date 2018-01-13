@@ -1,4 +1,4 @@
-template="test"
+template="default"
 
 echo "Template: ${template}"
 

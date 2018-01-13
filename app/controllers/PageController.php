@@ -17,14 +17,22 @@ class PageController extends Controller
 			die("Page name should be alphanumeric!");
 		}
 		
-		$filename = APP_PATH."/pages/$page.php";
+		$page_filename      = APP_PATH."/pages/$page.php";
+		$dashboard_filename = APP_PATH."/dashboard/$page.php";
 		
-		if (!file_exists($filename))
+		if (file_exists($page_filename))
 		{
-			die("404 Not Found");
+			require $page_filename;
+			exit();
 		}
 		
-		require $filename;
+		if (file_exists($dashboard_filename))
+		{
+			require $dashboard_filename;
+			exit();
+		}
+		
+		die("404 Not Found");
 	}
 
 }

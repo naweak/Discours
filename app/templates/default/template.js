@@ -1,6 +1,6 @@
 $(document).ready(function ()
 {
-		document.title = "Дискурс";
+		/*document.title = "Дискурс";*/
 	
     on_resize();
 	
@@ -28,10 +28,27 @@ $(document).ready(function ()
 				else
 					fileName = e.target.value.split( '\\' ).pop();
 
-				if( fileName )
-					label.innerHTML = fileName;
+				if(fileName)
+				{
+					/*label.innerHTML = fileName;*/
+					if (fileName.indexOf(".") > -1)
+					{
+						label.innerHTML = "<i class='fa fa-picture-o' aria-hidden='true'></i>" +
+							"&nbsp;" +
+							fileName.split('.').pop().toUpperCase() +
+							"-файл";
+					}
+					else
+					{
+						label.innerHTML = fileName;
+					}
+					label.style.fontWeight = "bold";
+				}
 				else
+				{
 					label.innerHTML = labelVal;
+					label.style.fontWeight = "normal";
+				}
 			});
 		});
 	
@@ -52,11 +69,25 @@ $(document).ready(function ()
         }*/
     });
 	
-		$(reply_form_selector).keydown(function (e)
+		$(new_topic_form_selector).keydown(function (e)
 		{
 			if (e.ctrlKey && e.keyCode == 13) // Ctrl-Enter pressed
 			{
 				console.log("ctrl+enter");
+				
+				var submit = $(e.target).parent().find(":submit");
+				
+				$(submit).submit();
+				
+				console.log(submit);
+			}
+		});
+	
+		$(reply_form_selector).keydown(function (e)
+		{
+			if (e.ctrlKey && e.keyCode == 13) // Ctrl-Enter pressed
+			{
+				//console.log("ctrl+enter");
 				
 				var controls = $(e.target).next();
 				var submit = $(controls).find(":submit");
@@ -78,46 +109,11 @@ $(document).ready(function ()
 			return form_data;
 		}
 	
-		$(".new_topic_form").submit(function()
-		{
-			var picrandom = $(this).find(".picrandom");
-			if (picrandom.val())
-			{
-				var random_sticker_set_name = $(picrandom).val();
-				var index_in_sticker_set = Math.floor(Math.random()*sticker_sets[random_sticker_set_name].length);
-				var random_sticker = sticker_sets[random_sticker_set_name][index_in_sticker_set];
-				
-				$("textarea.new_post").val(random_sticker + "\n" + $("textarea.new_post").val());
-			}
-		});
-	
-		$(".reply_form").submit(function()
-		{
-			var text = $(this).find("textarea").val();
-			var first_line = text.split('\n')[0];
-			var regex = /^:([a-zA-Z0-9]+):$/ig;
-			var matches = regex.exec(first_line);
-			if (matches && matches[1] && typeof sticker_sets[matches[1]] !== "undefined")
-			{
-				var random_sticker_set_name = matches[1];
-				var index_in_sticker_set = Math.floor(Math.random()*sticker_sets[random_sticker_set_name].length);
-				var random_sticker = sticker_sets[random_sticker_set_name][index_in_sticker_set];
-				var textarea = $(this).find("textarea");
-				
-				var value = $(textarea).val().split(/\n+/g);
-				value.shift();
-				$(textarea).val(value.join("\n"));
-				
-				textarea.val(random_sticker + "\n" + textarea.val());
-			}
-		});
-	
 		function ajax_form (args)
 		{
 			function on_submit()
 			{
 				var form = this;
-				//var form_data = get_form_data(form);
 				if (!FormData)
 				{
 					alert("Обнови браузер!");
@@ -135,11 +131,14 @@ $(document).ready(function ()
 					form_data[window.submit] = true;
 					delete window.submit;
 				}
-				//form_data["ajax"] = true;
 				form_data.append("ajax", true);
 				console.log("Form data for submission:");
 				console.log(form_data);
 				on_submit.args.success.form = form;
+				if (typeof args.error !== "undefined")
+				{
+					on_submit.args.error.form = form;
+				}
 				$.ajax
 				({
 					url: this.action,
@@ -155,7 +154,12 @@ $(document).ready(function ()
 							{
 								var percentComplete = evt.loaded / evt.total;
 								percentComplete = parseInt(percentComplete * 100);
-								console.log(percentComplete);
+								//console.log(percentComplete);
+								if (typeof args.percent !== "undefined")
+								{
+									on_submit.args.percent.form = form;
+									args.percent(percentComplete);
+								}
 
 								if (percentComplete === 100)
 								{
@@ -170,10 +174,11 @@ $(document).ready(function ()
 					
 					data: form_data,
 					contentType:false,
-          cache: false,
+          cache:false,
           processData:false,
 					
-					success: on_submit.args.success
+					success: on_submit.args.success,
+					error:   on_submit.args.error
 				});
 				return false;
 			}
@@ -200,14 +205,7 @@ $(document).ready(function ()
 					$("#new_topic_form_error_message").html("");
 					
 					// prepend thread
-					//alert("success");
-					var twig_data =
-					{
-						"block": "topic_with_replies",
-						"topic": data.topic
-					};
-
-					var rendered = render(twig_data);
+					rendered = data.html;
 					$("#topics").prepend(rendered);
 					
 					// clear form
@@ -215,13 +213,7 @@ $(document).ready(function ()
 				}
 				else
 				{
-					// reset picrandom
-					$(".new_topic_form").find(".picrandom").val($(".new_topic_form").find(".picrandom option:first").val());
-					
-					//alert(data.error);
-					
 					var error_message_html = "<article class='message is-warning'><div class='message-header'><p>Ошибка</p><button class='delete' aria-label='delete' onclick='$(this).parent().parent().hide();'></button></div><div class='message-body'>"+data.error+"</div></article>";
-					
 					$("#new_topic_form_error_message").html("");
 					var new_item = $(error_message_html).hide();
 					$("#new_topic_form_error_message").append(new_item);
@@ -229,6 +221,31 @@ $(document).ready(function ()
 				}
 				$(form).find("input[type='submit']").prop("disabled", false);
 				$(form).find("label[for='topic_submit']").removeClass("is-loading");
+			},
+			"error": function error (data)
+			{
+				var form = error.form;
+				console.log(form);
+				console.log("Error!");
+				/* Copied from success function: */
+				var error_message_html = "<article class='message is-warning'><div class='message-header'><p>Ошибка</p><button class='delete' aria-label='delete' onclick='$(this).parent().parent().hide();'></button></div><div class='message-body'>Запрос не был отправлен! Попробуйте еще раз.</div></article>";
+				$("#new_topic_form_error_message").html("");
+				var new_item = $(error_message_html).hide();
+				$("#new_topic_form_error_message").append(new_item);
+				new_item.slideDown(300);
+				/**/
+				$(form).find("input[type='submit']").prop("disabled", false);
+				$(form).find("label[for='topic_submit']").removeClass("is-loading");
+			},
+			"percent": function percent (data)
+			{
+				var form = percent.form;
+				console.log(data);
+				$(form).find("label[for='topic_submit']").css("background", "linear-gradient(90deg, #ffdd57 "+data+"%, transparent "+(data+1)+"%)");
+				if (data == 100)
+				{
+					$(form).find("label[for='topic_submit']").css("background", "");
+				}
 			}
 		});
 	
@@ -239,6 +256,7 @@ $(document).ready(function ()
 			"before" : function before (form)
 			{
 				$(form).find("input[type='submit']").prop("disabled", true);
+				$(form).find(".submit_button").addClass("is-loading");
 			},
 			"success": function success (data)
 			{
@@ -248,59 +266,86 @@ $(document).ready(function ()
 				data = $.parseJSON(data);
 				if (typeof data.reply !== "undefined")
 				{
-					// append reply
-					var twig_data =
+					if ($(form).hasClass("notification_form"))
 					{
-						"block": "reply",
-						"reply": data.reply
-					};
-					var rendered = render(twig_data);
+						$(form).parent().find(".notification_reply_link").first().hide();
+						$(form).hide();
+						return true;
+					}
+					
+					// append reply
+					rendered = data.html;
 					rendered += "<div class='hr'></div>";
-					$("post_with_replies."+data.reply.parent_topic).find("replies").append(rendered);
+					
+					$(form).parent().find("replies").append(rendered);
 					
 					// clear form
-					$("post_with_replies."+data.reply.parent_topic).find("[name='userfile']").val("");
-					var textarea = $("post_with_replies."+data.reply.parent_topic).find("textarea");
+					$(form).find("[name='userfile']").val("");
+					$(form).find(".attach_button").html("Прикрепить картинку");
+					var textarea = $(form).find("textarea");
+					//$(textarea).blur();
 					textarea.val("");
 					autosize.update(textarea);
 					
 					// resize textarea
-					$("post_with_replies."+data.reply.parent_topic).find("textarea").trigger("paste");
+					textarea.trigger("paste");
 				}
 				else
 				{
 					alert(data.error);
 				}
 				$(form).find("input[type='submit']").prop("disabled", false);
+				$(form).find(".submit_button").removeClass("is-loading");
+			},
+			"error": function error (data)
+			{
+				var form = error.form;
+				console.log(form);
+				console.log("Error!");
+				alert("Запрос не был отправлен! Попробуйте еще раз.");
+				$(form).find("input[type='submit']").prop("disabled", false);
+				$(form).find(".submit_button").removeClass("is-loading");
+			},
+			"percent": function percent (data)
+			{
+				var form = percent.form;
+				console.log(data);
+				$(form).find(".submit_button").css("background", "linear-gradient(90deg, #ffdd57 "+data+"%, transparent "+(data+1)+"%)");
+				if (data == 100)
+				{
+					$(form).find(".submit_button").css("background", "");
+				}
 			}
 		});
 
 		// Textarea autoresize
-		//textarea_autoresize(reply_form_selector);
-		autosize(document.querySelectorAll(reply_form_selector));
-		autosize(document.querySelectorAll(new_topic_form_selector));
+		//autosize(document.querySelectorAll(reply_form_selector));
+		//autosize(document.querySelectorAll(new_topic_form_selector));
+		$(reply_form_selector).focus(function()
+		{
+			autosize(this);
+		});
+	
+		$(new_topic_form_selector).focus(function()
+		{
+			autosize(this);
+			console.log($(this).parent());
+			$(this).parent().find("[name='title']").css("display", "block");
+		});
 	
 		$("text").each(function(index)
 		{
 			var height = $(this).height();
-			//var display_height = 310;
-			var display_height = 200;
+			var display_height = 200; /* duplicated in CSS file */
 			var expand_html = "<a class='expand_text' onclick='expand_previous(this);'>Показать текст полностью</a>";
 			
-			if (height > display_height)
+			//if (height > display_height)
+			if (this.scrollHeight > $(this).innerHeight())
 			{
-				$(this).css("max-height", display_height);
+				//$(this).css("max-height", display_height);
 				$(this).after(expand_html);
 			}
 		});
-});
-
-$(window).load(function()
-{
-    $('.lazyload').each(function()
-		{
-    	$(this).attr('src', $(this).attr('data-src'));
-    });
 });
 
 /* Functions: */
@@ -372,18 +417,24 @@ function reply_to_topic(topic_id, reply_id, index)
 		contenteditable.css("height", endHeight);
 		/* /Copied from Autoresize Plugin */
 	}
-	
-	/*else
-	{
-		//autosize.update(contenteditable);
-		//contenteditable.focus();
-		//contenteditable.trigger("keypress");
-	}*/
+}
+
+function isScrolledIntoView(elem)
+{
+    var docViewTop = $(window).scrollTop();
+    var docViewBottom = docViewTop + $(window).height();
+
+    var elemTop = $(elem).offset().top;
+    var elemBottom = elemTop + $(elem).height();
+
+    return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
 }
 
 function link_click (parent_topic, order_in_topic)
 {
-	var post = $("[topic_id='"+parent_topic+"']").find("[order_in_topic='"+order_in_topic+"']").find("text");
+	var elem = $("[topic_id='"+parent_topic+"']").find("[order_in_topic='"+order_in_topic+"']");
+	var post = elem.find("text");
+	
 	var html = $(post).html();
 	html = html.trim();
 	//html = html.replace(/<(?:.|\n)*?>/gm, '');
@@ -399,7 +450,22 @@ function link_click (parent_topic, order_in_topic)
 	
 	console.log(html);
 	
-	alert(html);
+	if (isScrolledIntoView(elem) && $(elem).is(":visible"))
+	{
+		console.log("element visible");
+		/*$(elem).animate
+		({
+			opacity: 0.25,
+			left: "+=50",
+			height: "toggle"
+		}, 500);*/
+		$(elem).fadeOut(250).fadeIn(250);
+	}
+	
+	else
+	{
+		alert(html);
+	}
 }
 
 function delete_post(post_id)
@@ -409,7 +475,7 @@ function delete_post(post_id)
 
 function expand_previous (element)
 {
-	$(element).prev().css("max-height", "");
+	$(element).prev().css("max-height", "9999px");
 	$(element).remove();
 }
 
