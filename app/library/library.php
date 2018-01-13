@@ -14,18 +14,37 @@ function microtime_from_start ()
 	echo microtime(true)-$start_microtime;
 }
 
+$memcache = new Memcache;
+$memcache->connect("127.0.0.1", 11211);
+
+function cache_set ($name, $data, $time = 25) // time in seconds
+{
+	global $memcache;
+	return $memcache->set($name, $data, false, $time);
+}
+
+function cache_get ($name)
+{
+	global $memcache;
+	return $memcache->get($name);
+}
+
+function pdo ()
+{
+	try
+	{
+		$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE, MYSQL_USERNAME, MYSQL_PASSWORD);
+		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		return $pdo;
+	}
+	catch(PDOException $e)
+	{
+		die ("Connection failed: ".$e->getMessage());
+	}
+}
+
 function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM, $twig_template = "default")
 {
-	if (!JS_CACHING)
-	{
-		$twig_data["js"]  = @file_get_contents(ROOT_DIR."/templates/default/default.js");
-	}
-	
-	if (!CSS_CACHING)
-	{
-		$twig_data["css"] = @file_get_contents(ROOT_DIR."/templates/default/default.css");
-	}
-	
 	function last_file ($str)
 	{
 		$all_files = glob($str, 1);
@@ -33,13 +52,14 @@ function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM, $twig_t
 		return basename($last_file);
 	}
 
-	$twig_data["js_file"]  = last_file(ROOT_DIR."/../public/assets/*.js");
-	$twig_data["css_file"] = last_file(ROOT_DIR."/../public/assets/*.css");
+	$twig_data["js_file"]  = last_file(ROOT_DIR."/../public/assets/".$twig_template."_*.js");
+	$twig_data["css_file"] = last_file(ROOT_DIR."/../public/assets/".$twig_template."_*.css");
 
 	require_once ROOT_DIR."/../vendor/autoload.php";
 	$loader = new Twig_Loader_Filesystem($twig_filesystem);
 	$twig = new Twig_Environment($loader);
-	return $twig->render("$twig_template.html", $twig_data);
+	//return $twig->render("$twig_template.html", $twig_data);
+	return $twig->render(TWIG_HTML_FILENAME, $twig_data);
 }
 
 function render_from_string ($template, $data)
@@ -93,6 +113,8 @@ function markup ($text, $data = null)
 		$text = preg_replace("/&lt;u&gt;([^\n]*?)&lt;\/u&gt;/iu", "<u>$1</u>", $text); // underline
 		$text = preg_replace("/\[u\]([^\n]*?)\[\/u\]/iu", "<u>$1</u>", $text);
 	
+		$text = preg_replace("/\[s\]([^\n]*?)\[\/s\]/iu", "<strike>$1</strike>", $text); // strike
+	
     // Imgur
     // $text = preg_replace("/^http(s)?:\/\/imgur.com\/([a-zA-Z0-9]{5,15})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
     // $text = preg_replace("/^http(s)?:\/\/i.imgur.com\/([a-zA-Z0-9]{5,15}).([a-z]{3})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
@@ -128,7 +150,7 @@ function send_message_to_telegram_channel ($chatID, $message, $token)
     return $result;
 }
 
-function is_mod()
+function is_mod ()
 {
 	require_session();
 
@@ -200,6 +222,11 @@ function time_format ($timestamp)
 
 function smart_time_format ($timestamp)
 {
-	return date("d M @ H:i", $timestamp);
+	$dm = date("d M", $timestamp);
+	if ($dm == date("d M"))
+	{
+		$dm = "Сегодня";
+	}
+	return $dm." @ ".date("H:i", $timestamp);
 }
 ?>

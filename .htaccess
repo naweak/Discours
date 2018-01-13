@@ -1,5 +1,8 @@
 RewriteEngine on
 
+# Prohibit directory listing (/public/files and others):
+Options -Indexes
+
 RewriteRule ^$ /forum/?forum=1
 
 RewriteRule ^topic/([a-z0-9._-]+)$ /forum/?topic=$1
@@ -20,11 +23,24 @@ RewriteRule ^(vg)/$ /forum/?forum=5
 
 RewriteRule ^(trash)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(trash)/$ /forum/?forum=6
-################################################
 
+RewriteRule ^(hw)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(hw)/$ /forum/?forum=7
+
+RewriteRule ^(a|anime)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(a|anime)/$ /forum/?forum=8
+
+RewriteRule ^(blog)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(blog)/$ /forum/?forum=9
+
+RewriteRule ^(d)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(d)/$ /forum/?forum=10
+################################################
 RewriteRule ^(login)$ /dashboard?page=$1
 RewriteRule ^(delete)$ /dashboard?page=$1
 RewriteRule ^(backup)$ /dashboard?page=$1
+RewriteRule ^(backu)$ /dashboard?page=backup
+RewriteRule ^(move)$ /dashboard?page=$1
 
 RewriteRule ^(about)$ /page?page=$1
 RewriteRule ^(principles)$ /page?page=$1
@@ -32,9 +48,12 @@ RewriteRule ^(modlog)$ /page?page=$1
 RewriteRule ^(faq)$ /page?page=$1
 RewriteRule ^(contact)$ /page?page=$1
 RewriteRule ^(developers)$ /page?page=$1
+RewriteRule ^(img)$ /page?page=$1
+RewriteRule ^(stat)$ /page?page=$1
 
 RewriteRule ^(twig)$ /page?page=$1
 
+RewriteRule ^(notifications)$ /page?page=$1
 ########################
 
 <IfModule mod_rewrite.c>

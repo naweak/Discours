@@ -1,15 +1,14 @@
 vendor/
 node_modules/
+public/assets/
 
 /ws
-public/ws.php
 
 app/controllers/NotificationController.php
 app/models/Notification.php
 app/pages/notifications.php
 
 # Images:
-public/assets/
 public/files/
 
 # Contains passwords:

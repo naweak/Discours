@@ -7,6 +7,17 @@ use Phalcon\Mvc\Application;
 use Phalcon\Mvc\Url as UrlProvider;
 use Phalcon\Mvc\View;
 
+/*use Phalcon\Mvc\Router;
+$router = new Router();
+$router->add
+(
+    "/abcd",
+    [
+        "controller" => "notification",
+        "action"     => "index",
+    ]
+);*/
+
 require_once dirname(__DIR__)."/app/config.php"; // load configuration
 require_once dirname(__DIR__)."/app/library/library.php"; // load Discours functions (is it alwats needed or can be loaded later?)
 
@@ -57,8 +68,8 @@ $di['db'] = function() {
     ));
 };
 
-if(!defined("PHALCON_FROM_DISCOURS"))
-{
+//if(!defined("PHALCON_FROM_DISCOURS"))
+//{
   // Handle the request
   try {
       $application = new Application($di);
@@ -66,4 +77,4 @@ if(!defined("PHALCON_FROM_DISCOURS"))
   } catch (Exception $e) {
        echo "Exception: ", $e->getMessage();
   }
-}
+//}

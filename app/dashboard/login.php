@@ -23,7 +23,13 @@ ob_start();
 ?>
 <h2>Вход</h2>
 
-<?php echo session_cache_expire(); ?>
+<?php
+echo session_cache_expire();
+echo "<br>";
+echo session_id();
+echo "<br>";
+echo var_dump($_SESSION);
+?>
 
 <content style="text-align:center;">
 <?php

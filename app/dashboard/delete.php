@@ -31,7 +31,7 @@ if (isset($_POST["submit"]))
         
   if ($post_id == 0)
   {
-    $error = "Post_id cannot be empty!"; # if empty, all topics are deleted
+    $error = "Post_id cannot be empty!"; // if empty, all topics are deleted
   }
   
   if ($_POST["reason"] == "")
@@ -41,15 +41,12 @@ if (isset($_POST["submit"]))
 	
 	function update_topic_ord ($post_id)
 	{
-		global $pdo;
+		// DOESN'T WORK IF TOPIC HAS NO REPLIES!!!
 		
+		global $pdo;
 		$last_reply_row = $pdo->query("SELECT * FROM posts WHERE parent_topic = '$post_id' ORDER BY ord DESC")->fetch();
-		echo $last_reply_row["ord"] . "<br>";
-
 		$query_string = "UPDATE posts SET ord = '{$last_reply_row['ord']}' WHERE post_id = '$post_id'";
-		echo $query_string . "<br>";
-
-		echo $pdo->query("UPDATE posts SET ord = '".$last_reply_row['ord']."' WHERE post_id = '".$row['parent_topic']."' AND parent_topic = 0")->execute();
+		$pdo->query("UPDATE posts SET ord = '".$last_reply_row['ord']."' WHERE post_id = '".$last_reply_row['parent_topic']."' AND parent_topic = 0")->execute();
 	}
         
   if (empty($error))
@@ -57,28 +54,32 @@ if (isset($_POST["submit"]))
     $mod_id = $_SESSION["user_id"];
     $timestamp = time();
     
-    $sql = mysql_query("SELECT * FROM posts WHERE post_id = '$post_id'");
-    $row = mysql_fetch_assoc($sql);
-    $text_sample = mysql_real_escape_string($row["text"]);
-    $ip = mysql_real_escape_string($row["ip"]);
-    $reason = mysql_real_escape_string($_POST["reason"]);
-    
-    $query = "DELETE FROM posts WHERE post_id = '$post_id' OR parent_topic = '$post_id'";
-    $sql = mysql_query($query);
+		$row = $pdo->query("SELECT * FROM posts WHERE post_id = '$post_id'")->fetch();
 		
-		////////////////
-		if ($row['parent_topic'] != 0) // reply to thread
+		$text_sample = $row["text"];
+    $ip = $row["ip"];
+    $reason = $_POST["reason"];
+    
+		$query = $pdo->prepare("DELETE FROM posts WHERE post_id = '$post_id' OR parent_topic = '$post_id'");
+		$query->execute();
+		$affected_rows = $query->rowCount();
+		
+    $message = "Post deleted rows: $affected_rows<br>";
+		
+		if ($row['parent_topic'] != 0) // reply to topic
 		{
 			update_topic_ord($row['parent_topic']);
+			$pdo->query("DELETE FROM notifications WHERE post_id = '$post_id'");
 		}
-    ////////////////
-    
-    $mysql_affected_rows = mysql_affected_rows();
-    $message = "Post deleted rows: $mysql_affected_rows<br>";
+		
+		else // topic
+		{
+			//
+		}
     
     $ban_id = 0;
     
-    if ($mysql_affected_rows > 0)
+    if ($affected_rows > 0)
     {
       if ($ban_user)
       {
@@ -87,54 +88,62 @@ if (isset($_POST["submit"]))
         {
           $expires = strtotime("+10 years");
         }
+
+				$query = $pdo->prepare("INSERT INTO bans (ban_id, ip, expires) VALUES ('', :ip, :expires)");
+				$query->execute(["ip" => $ip, "expires" => $expires]);
         
-        mysql_query("INSERT INTO bans (ban_id, ip, expires) VALUES ('', '$ip', '$expires')");
-        
-        $ban_id = mysql_insert_id();
+				$ban_id = $pdo->lastInsertId();
         
         $message .= "USER BANNED ($ip) until ".date(DATE_ATOM, $expires)."!\n";
       }
-      
-      mysql_query("INSERT INTO modlog (action_id, mod_id, timestamp, post_id, text_sample, ip, reason, ban_id)
-      VALUES ('', '$mod_id', '$timestamp', '$post_id', '$text_sample', '$ip', '$reason', '$ban_id')");
+			
+			$modlog = new Modlog();
+			$modlog->mod_id = $mod_id;
+			$modlog->timestamp = $timestamp;
+			$modlog->post_id = $post_id;
+			$modlog->text_sample = $text_sample;
+			$modlog->ip = $ip;
+			$modlog->reason = $reason;
+			$modlog->ban_id = $ban_id;
+			$modlog->save();
     }
     
     // Delete all by this user
-    if (isset($_POST["delete_all_by_user"])) // define a timeframe!
+    if (isset($_POST["delete_all_by_user"]))
     {
       if ($ip != "")
       {
-        $sql = mysql_query("SELECT * FROM posts WHERE ip = '$ip' AND ($timestamp - creation_time) < $delete_all_by_user_hours*60*60");
-        $wipe_deleted_rows = 0;
-        while ($row = mysql_fetch_assoc($sql))
+				$wipe_deleted_rows = 0;
+				
+				$query = $pdo->prepare("SELECT * FROM posts WHERE ip = :ip AND ($timestamp - creation_time) < $delete_all_by_user_hours*60*60");
+				$query->execute(["ip" => $ip]);
+				
+				foreach ($query->fetchAll(PDO::FETCH_ASSOC) as $row)
         {
           $message .= "Post: {$row['post_id']}<br>";
           
-          $text_sample = mysql_real_escape_string($row["text"]);
-          $ip = mysql_real_escape_string($row["ip"]);
-          
-          mysql_query("INSERT INTO modlog (action_id, mod_id, timestamp, post_id, text_sample, ip, reason, ban_id)
-          VALUES ('', '$mod_id', '$timestamp', '{$row['post_id']}', '$text_sample', '$ip', 'Удаление вайпа', '$ban_id')");
-          
-          mysql_query("DELETE FROM posts WHERE post_id = '{$row['post_id']}'");
+					$text_sample = $row["text"];
+    			$ip = $row["ip"];
 					
-					////////////////
-          /*if ($row['parent_topic'] != 0) // reply to thread
-          {
-            $last_reply_row = $pdo->query("SELECT * FROM posts WHERE parent_topic = '".$row['parent_topic']."' ORDER BY ord DESC")->fetch();
-            echo $last_reply_row["ord"] . "<br>";
-						
-						echo "UPDATE posts SET ord = '".$last_reply_row['ord']."' WHERE post_id = '".$row['parent_topic']."'";
-						echo "<br>";
-						
-            $pdo->query("UPDATE posts SET ord = '".$last_reply_row['ord']."' WHERE post_id = '".$row['parent_topic']."'")->execute();
-          }*/
+					$modlog = new Modlog();
+					$modlog->mod_id = $mod_id;
+					$modlog->timestamp = $timestamp;
+					$modlog->post_id = $row['post_id'];
+					$modlog->text_sample = $text_sample;
+					$modlog->ip = $ip;
+					$modlog->reason = "Удаление вайпа";
+					$modlog->ban_id = $ban_id;
+					$modlog->save();
+					
+					$query = $pdo->prepare("DELETE FROM posts WHERE post_id = :post_id");
+					$query->execute(["post_id" => $row['post_id']]);
+					
+					$pdo->query("DELETE FROM notifications WHERE post_id = '{$row['post_id']}'");
 					
 					if ($row['parent_topic'] != 0) // reply to thread
 					{
 						update_topic_ord($row['parent_topic']);
 					}
-          ////////////////
           
           $wipe_deleted_rows++;
         }

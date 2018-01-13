@@ -44,41 +44,47 @@ class PostingController extends Controller
   		$this->error("Пожалуйста, используйте IPv4.");
 		}
 		
+		if ($forum_id == 9)
+		{
+			$this->error("Только администраторы могут создавать темы.");
+		}
+		
 		// Text
     /* Somehow accepts one-letter strings like "a" */
     if (mb_strlen($text) < $min_text_length)
     {
-        $this->error("Текст слишком короткий!");
+			if (!is_uploaded_file($_FILES["userfile"]["tmp_name"]))
+			{
+				$this->error("Текст слишком короткий!");
+			}
     }
 
     if (mb_strlen($text) > $max_text_length)
     {
-        $this->error("Текст слишком длинный (>$max_text_length)!");
+    	$this->error("Текст слишком длинный (>$max_text_length)!");
     }
   
     // Title:
     if (mb_strlen($title) < $min_title_length and $title != "")
     {
-        $this->error("Заголовок слишком короткий (<$min_title_length)!");
+    	$this->error("Заголовок слишком короткий (<$min_title_length)!");
     }
   
     if (mb_strlen($title) > $max_title_length)
     {
-        $this->error("Заголовок слишком длинный (>$max_title_length)!");
+    	$this->error("Заголовок слишком длинный (>$max_title_length)!");
     }
   
     // Name:
     if (mb_strlen($name) > $max_name_length )
     {
-        $this->error("Имя слишком длинное (>$max_name_length )!");
+    	$this->error("Имя слишком длинное (>$max_name_length )!");
     }
-		
-		// ADD BAN EXPIRATION!!!!!
 		
 		$active_ban = Ban::findFirst
 		(
     [
-			"ip = :ip:",
+			"ip = :ip: AND expires > $time",
 			
 			"bind" =>
 			[
@@ -175,6 +181,23 @@ class PostingController extends Controller
 		// New topic
     else
     {
+			/*******/
+			/*$last_topics = Post::find // different from $last_topic
+			(
+			[
+				"ip = :ip: AND parent_topic = 0 WHERE $time-creation_time < 60*60",
+
+				"bind" =>
+				[
+					"ip" => $ip
+				],
+
+				"order" => "post_id DESC"
+			]
+			);/*
+			// how long does the user have to wait?
+			/*******/
+			
 			if ($last_topic)
 			{
 				$last_topic_age = $time-$last_topic->creation_time;
@@ -203,9 +226,10 @@ class PostingController extends Controller
 		
 		// Create post object
 		$post = new Post();
+		$post->forum_id = $forum_id; // will be used in process_file()
+		$post->parent_topic = $parent_topic;
 		
 		// Process uploaded file
-		//if ($this->request->hasFiles()) // doesn't check if file was uploaded or not
 		if (is_uploaded_file($_FILES["userfile"]["tmp_name"]))
 		{
 			//$this->error("has file!");
@@ -213,6 +237,14 @@ class PostingController extends Controller
 			$file = $files[0];
 			
 			$this->process_file($file, $post);
+		}
+		
+		else
+		{
+			if (!$parent_topic)
+			{
+				$this->error("Прикрепите картинку для создания темы.");
+			}
 		}
 		
 		// Save new post
@@ -225,8 +257,6 @@ class PostingController extends Controller
 			}
 		}
 		
-		$post->forum_id = $forum_id;
-		$post->parent_topic = $parent_topic;
 		$post->creation_time = $time;
 		$post->ip = $ip;
 		$post->ord = $ord;
@@ -236,53 +266,98 @@ class PostingController extends Controller
 		$post->name = $name;
 		
 		$result = $post->save();
-	
-		if ($result)
-		{
-			if ($parent_topic)
-      {
-				$parent_topic_obj->ord = $ord;
-				
-				$parent_result = $parent_topic_obj->save();
-				if (!$parent_result)
-				{
-					foreach ($post->getMessages() as $message)
-					{
-						echo $message->getMessage(), "<br/>";
-					}
-					
-					die("Error updating parent topic");
-				}
-      }
-			
-			if ($request->getPost("ajax"))
-			{
-				$output = ["success" => true];
-				
-				if ($parent_topic)
-				{
-					$output["reply"] = $post->to_array();
-				}
-				
-				else
-				{
-					$output["topic"] = $post->to_array();
-				}
-				
-				echo json_encode($output);
-			}
-			else
-			{
-				return $this->response->redirect($_SERVER['HTTP_REFERER']);
-			}
-		}
 		
-		else
+		if (!$result) // report errors if saving went wrong
 		{
 			foreach ($post->getMessages() as $message)
 			{
 				echo $message->getMessage(), "<br/>";
 			}
+		}
+		
+		if ($parent_topic) // update parent topic's ord
+		{
+			$parent_topic_obj->ord = $ord;
+
+			$parent_result = $parent_topic_obj->save();
+			if (!$parent_result)
+			{
+				foreach ($post->getMessages() as $message)
+				{
+					echo $message->getMessage(), "<br/>";
+				}
+
+				die("Error updating parent topic");
+			}
+		}
+		
+		//if (!is_mod() or true) // notification
+		if (!is_mod()) // notification
+		{
+			$notification = new Notification();
+			$post_id = $post->post_id;
+			$forum_title = anti_xss($forum_obj->title);
+			
+			if (!$parent_topic) // new topic
+			{
+				$notification->notify
+				(1,
+				 $post_id,
+				"[$ip] - $forum_title: <span style='color:green;'>NEW TOPIC!!!</span> 
+				<a href='/topic/$post_id' target='_blank' style='color:blue;' onclick=\"this.style.color='violet';\">#$post_id</a>"
+				);
+			}
+			
+			else // reply to topic
+			{
+				$notification->notify
+				(1,
+				 $post_id,
+				"[$ip] - $forum_title: New reply to topic 
+				<a href='/topic/$parent_topic' target='_blank' style='color:blue;' onclick=\"this.style.color='violet';\">#$parent_topic</a>"
+				);
+			}
+		}
+	
+		if ($request->getPost("ajax")) // report success to user
+		{
+			$output = ["success" => true];
+
+			/* HTML output */
+			$post_array = $post->to_array();
+			if ($parent_topic)
+			{
+				$twig_data["block"] = "reply";
+				$twig_data["reply"] = $post_array;
+			}
+			else
+			{
+				$twig_data["block"] = "topic_with_replies";
+				$twig_data["topic"] = $post_array;
+			}
+			$html = render($twig_data);
+			$output["html"] = $html;
+			/* / HTML output */
+
+			$output["benchmark"] = benchmark();
+			
+			// Remove this? HTML is already included
+			if ($parent_topic)
+			{
+				$output["reply"] = $post->to_array();
+			}
+
+			else
+			{
+				$output["topic"] = $post->to_array();
+			}
+
+			echo json_encode($output);
+		}
+
+		else
+		{
+			return $this->response->redirect($_SERVER['HTTP_REFERER']);
 		}
   }
 	
@@ -330,12 +405,14 @@ class PostingController extends Controller
 		$file_name = $file->getName();
 		$file_size = $file->getSize(); // file size in bytes
 		$file_type = $file->getRealType();
-		$file_extension = $file->getExtension();
+		$file_extension = strtolower($file->getExtension());
 		$max_file_size = 5 * 1048576; // in bytes
+    $max_file_width  = 4096;
+    $max_file_height = 4096;
 		
 		$allowed_extensions = ["jpg", "jpeg", "png", "gif", "bmp"];
 		
-		if (!in_array(strtolower($file_extension), $allowed_extensions))
+		if (!in_array($file_extension, $allowed_extensions))
 		{
 			$this->error("Unknown file extension ($file_extension)! Allowed file types: ".join(", ", $allowed_extensions));
 		}
@@ -345,26 +422,66 @@ class PostingController extends Controller
 			$this->error("File size ($file_size) exceeded the maximum of $max_file_size");
 		}
 		
-		$identify_output = exec("identify $tmp_name");
+		//copy ($tmp_name, "/tmp/uploaded_".time().".".$file_extension);
+		/*$identify_output = exec("identify $tmp_name"); // crashes
 		if (!$identify_output)
 		{
 			$this->error("Cannot identify image type!");
+		}*/
+		/*if ($file_type == "application/x-bzip2") // Large image attack prevention
+		{
+			$this->error("Smart enought, ain't ya?");
+		}*/
+		$exif_imagetype = exif_imagetype($tmp_name);
+		if (!$exif_imagetype)
+		{
+			$this->error("Загруженный файл не является изображением.");
 		}
+		
+		//$identify_output = exec("identify -format '%[fx:w]x%[fx:h]' $tmp_name"); // crashes
+		//$this->error($identify_output);
+    list($file_w, $file_h) = getimagesize($tmp_name);
+    if ($file_w > $max_file_width or $file_h > $max_file_height)
+    {
+      $this->error("Image too large ($max_file_width x $max_file_height max)");
+    }
 
 		$thumb_path = tempnam(sys_get_temp_dir(), "thumb");
-		exec("convert -thumbnail 150x150 $tmp_name $thumb_path");
+		if ($post->forum_id != 3)
+		{
+			exec("convert -thumbnail 150x150 $tmp_name $thumb_path");
+		}
+		else
+		{
+			//test forum
+			//exec("convert -resize 150x150 -level 0%,100%,0.8 -density 300 -sharpen 1x1 -quality 100 $tmp_name $thumb_path");
+			if (!$post->parent_topic) // new topic
+			{
+				$square_size = 150;
+			}
+			else // reply
+			{
+				$square_size = 100;
+			}
+			exec("convert $tmp_name -resize '{$square_size}^>' -gravity center -crop {$square_size}x{$square_size}+0+0 -strip $thumb_path"); // square
+			
+			//exec("convert $tmp_name -resize 150 -density 300 $thumb_path");
+		}
 
 		list($thumb_w, $thumb_h) = getimagesize($thumb_path);
 		
-		$curl_output = exec("curl --upload-file $tmp_name https://transfer.sh/image.$file_extension");
-		$file_url = $curl_output;
+		$time = time();
+		$rand = random_int(1000, 9999);
 		
-		$curl_output = exec("curl --upload-file $thumb_path https://transfer.sh/image.$file_extension");
-		$thumb_url = $curl_output;
+		$new_file_name  = "{$time}_{$rand}.".$file_extension;
+		$new_thumb_name = "{$time}_{$rand}_thumb.".$file_extension;
+		$new_path = ROOT_DIR."/../public/files";
 		
-		/*echo $file_url."<br>";
-		echo $thumb_url."<br><br>";
-		echo "<img src='$thumb_url'>";*/
+		copy ($tmp_name, $new_path."/".$new_file_name);
+		copy ($thumb_path, $new_path."/".$new_thumb_name);
+		
+		$file_url  = "https://discou.rs/files/$new_file_name";
+		$thumb_url = "https://discou.rs/files/$new_thumb_name";
 		
 		$post->file_url = $file_url;
 		$post->thumb_url = $thumb_url;

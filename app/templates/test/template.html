@@ -1,0 +1,440 @@
+{#
+
+NoScript:
+
+#}
+{% block noscript %}
+{% if root is defined %}
+<noscript>
+  <content>
+    <post_with_replies style="text-align:center; font-weight:bold;">
+      Ваш браузер не поддерживает JavaScript!
+    </post_with_replies>
+  </content>
+</noscript>
+{% endif %}
+{% endblock %}
+{#
+
+Topic with replies:
+
+#}
+{% block topic_with_replies %}
+{% if root is defined %}
+  <post_with_replies class="{{ topic.post_id }}" topic_id="{{ topic.post_id }}">
+    <post>
+      {% if is_mod %}
+        {# different code for topic and reply! #}
+        <!--<form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
+        <div class="delete" style="float:right;" onclick="delete_post({{ topic.post_id }});"></div>-->
+      {% endif %}
+      
+      <div class="topic_header">
+        
+        {% if forum_title == "Главная" %}
+        <a href="/forum/{{ topic.forum_id }}" style="display: inline-block; overflow: hidden;">{{ topic.forum_title }}</a>
+        <span style="display: inline-block; overflow: hidden;">&#x2192;</span>
+        {% endif %}
+
+        <a href="/topic/{{ topic.post_id }}" style="display: inline-block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: calc(100%);">
+          {{ topic.title_formatted|raw }}
+          {% if topic.sticky %}
+          <span style='color:red;'>[тема закреплена]</span>
+          {% endif %}
+        </a>
+      </div>
+
+      <text>
+        {% if topic.file_url %}
+        <a href="{{ topic.file_url }}" target="_blank">
+          {% if topic.thumb_w and topic.thumb_h %}{% set style = 'style="width:'~topic.thumb_w~'px;height:'~topic.thumb_h~'px;"' %}{% endif %}
+          
+          <img class="topic_thumb" src="{{ topic.thumb_url }}"{{ style|raw }}>
+        </a>
+        {% endif %}
+        
+        {{ topic.text_formatted|raw }}
+        
+        {% if (topic.name_formatted != "") %}
+          <br>
+          <span style="color:blue;">Автор подписался как {{ topic.name_formatted }}</span>
+        {% endif %}
+      </text>
+      
+      <div class="post_footnote" style="float:right;">
+        <!--{% if is_mod %}
+        {# different code for topic and reply! #}
+         <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
+        <a href="javascript:;" onclick="delete_post({{ topic.post_id }});" class="delete_footnote">Удалить</a>
+        {% endif %}-->
+      </div>
+      
+      <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
+
+      <div class="post_footnote topic_footnote">
+        {% if is_mod %}
+        {# different code for topic and reply! #}
+        <a href="javascript:;" onclick="delete_post({{ topic.post_id }});" class="delete_footnote" style="color:red;">Удалить</a>
+        <span style="opacity:0.5;">&#8729;</span>
+        {% endif %}
+        <span style="opacity:0.5;">{{ topic.time_formatted }}</span>
+      </div>
+      
+    </post>
+
+    <replies>
+    {% if topic.replies|length > replies_to_show %}
+      <expand onclick='show_omitted({{ topic.post_id }});' id="show_omitted_{{ topic.post_id }}">
+        Показать все {{ topic.replies|length }} ответов
+      </expand>
+    
+      <omitted_replies id='omitted_{{ topic.post_id }}'>
+    {% elseif topic.replies|length != 0 %}
+      <div class="hr"></div>
+    {% endif %}
+    
+    {% for reply in topic.replies %}
+      {{ block("reply") }}
+        
+      <div class="hr"></div>
+    
+      {% if topic.replies|length > replies_to_show and loop.index0 == topic.replies|length - replies_to_show - 1 %}
+      </omitted_replies>
+      {% endif %}
+    {% endfor %}
+    
+    {% if topic.replies|length == 0 %}
+      <div class="hr"></div>
+    {% endif %}
+    </replies>
+    
+    <form class="reply_form" method="post" action="{{ phalcon_url }}/posting/post">
+      <input type="hidden" name="forum_id" value="{{ topic.forum_id }}">
+      
+      <input type="hidden" name="parent_topic" id="parent_topic" value="{{ topic.post_id }}">
+      
+      <input type="hidden" name="text" value="">
+
+      <textarea_container>
+        <textarea style="padding-top: 2px; font-size: 15px; line-height: 15px; height:20px; margin-bottom:0px;" class="reply" name="text" id="text_{{ topic.post_id }}" spellcheck="false" placeholder="Написать ответ..."></textarea>
+
+        <div class="controls" style="margin-top: 7px;">
+          <div style="float:left;">
+            <input id="reply_userfile_{{ topic.post_id }}" name="userfile" type="file" class="inputfile">
+            <label for="reply_userfile_{{ topic.post_id }}" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Прикрепить картинку</label>
+          </div>
+            
+          <div align="right">
+            <input id="reply_submit_{{ topic.post_id }}" type="submit" class="inputfile">
+            <label for="reply_submit_{{ topic.post_id }}" class="inputfile_label submit_button button is-small
+            is-outlined                                   
+            ">Отправить</label>
+          </div>
+        </div>
+      </textarea_container>
+    </form>
+    
+  </post_with_replies>
+{% endif %}
+{% endblock %}
+{#
+
+Reply:
+
+#}
+{% block reply %}
+{% if root is defined %}
+  <reply order_in_topic="{{ reply.order_in_topic }}">
+    <text>
+      {% if reply.file_url %}
+        <a href="{{ reply.file_url }}" target="_blank">
+          {% if reply.thumb_w and reply.thumb_h %}{% set style = 'style="width:'~reply.thumb_w~'px;height:'~reply.thumb_h~'px;"' %}{% endif %}
+          
+          <img class="reply_thumb" src="{{ reply.thumb_url }}"{{ style|raw }}>
+        </a>
+      {% endif %}
+      
+      {{ reply.text_formatted|raw }}
+    </text>
+    
+    <div class="post_footnote" style="float:right;">
+      <!--{% if is_mod %}
+      {# different code for topic and reply! #}
+      <form method="post" action="/delete" id="{{ reply.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
+      <a href="javascript:;" onclick="delete_post({{ reply.post_id }});" class="delete_footnote">Удалить</a>
+      {% endif %}-->
+    </div>
+    
+    <form method="post" action="/delete" id="{{ reply.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
+    
+    <div class="post_footnote">
+      <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ reply.order_in_topic }});">Ответить</a><span style="opacity:0.5;">
+      {% if is_mod %}
+      {# different code for topic and reply! #}
+      <span style="opacity:0.5;">&#8729;</span>
+      <a href="javascript:;" onclick="delete_post({{ reply.post_id }});" class="delete_footnote" style="color:red;opacity:1;">Удалить</a>
+      {% endif %}
+      <!--&nbsp;-->&#8729;&nbsp;{{ reply.time_formatted }}</span>
+      <!--{% if is_mod %}
+      {# different code for topic and reply! #}
+      <span style="opacity:0.5;">&#8729;</span>
+      <a href="javascript:;" onclick="delete_post({{ reply.post_id }});" class="delete_footnote" style="color:inherit;">Удалить</a>
+      {% endif %}-->
+    </div>
+  </reply>
+{% endif %}
+{% endblock %}
+{#
+
+New topic form:
+
+#}
+{% block new_topic_form %}
+{% if root is defined %}
+      <content class="new_topic_form_container">
+      <div id="new_topic_form_error_message"></div>
+      <post_with_replies style="padding:10px 10px 12px 10px; margin-top:15px;">
+        <form class="new_topic_form" method="post" action="{{ phalcon_url }}/posting/post">
+          <input type="hidden" name="forum_id" value="{{ forum_id }}">
+          
+          <input type="hidden" name="parent_topic" id="parent_topic" value="">
+          
+          <input type="text" name="title" placeholder="Название темы" autocomplete="off" style="display:none; margin-bottom:3px;">
+          
+          {% if forum_id != 1 and false %}
+          <input type="text" name="name" maxlength="20" placeholder="Введите имя (не обязательно)"> <!-- style="margin-top:4px;" -->
+          {% endif %}
+          
+          <textarea name="text" class="new_post" spellcheck="false" placeholder="Введите текст...">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
+ 
+          <div style="float:left;">
+            <!--<input id="topic_userfile" name="userfile" type="file" class="inputfile">
+            <label for="topic_userfile" class="inputfile_label button is-small is-outlined"><i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Прикрепить картинку</label>-->
+            <input id="topic_userfile" name="userfile" type="file" class="inputfile">
+            <label for="topic_userfile" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Прикрепить картинку</label>
+          </div>
+          
+          <div align="right">
+            <input id="topic_submit" type="submit" class="inputfile">
+            <label for="topic_submit" class="inputfile_label button is-small is-outlined">Новая тема</label>
+          </div>
+        </form>
+      </post_with_replies>
+      </content>
+{% endif %}
+{% endblock %}
+{#
+
+Main page block:
+
+#}
+{% block page %}
+{% if root is defined %}
+<!DOCTYPE html>
+<html>
+  <head>
+    
+    {% if final_title is not defined %}
+      {% if title is defined %}
+        {% set final_title = title~" — Дискурс" %}
+      {% else %}
+        {% set final_title = "Дискурс" %}
+      {% endif %}
+    {% endif %}
+    <title>{{ final_title }}</title>
+        
+    <!-- Meta -->
+    <meta charset="UTF-8">
+    <meta name="keywords" content="анонимный форум,дискурс,discours,анонимность,анонимное общение"/>
+    <meta name="description" content="Дискурс — самый свободный форум русскоязычного интернета."/>
+    <!-- / Meta -->
+    
+    <script async src="/assets/{{ js_file }}"></script>
+    <link href="/assets/{{ css_file }}" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui">
+    
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+    
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!--<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111575996-1"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-111575996-1');
+    </script>-->
+    <!--/ Google Analytics -->
+  </head>
+
+  <body>
+    {{ block("noscript") }}
+    
+    <nav class="navbar is-transparent">
+       <div class="mobile_navbar_buttons">
+        {% if is_mod %}
+          {% if notifications_unread > 0 %}
+            <button class="button is-small is-outlined" style="font-weight:bold;" onclick="document.location='/notifications';">{{ notifications_unread }} увед.</button>
+          {% else %}
+            <!--<button class="button is-small is-outlined" onclick="document.location='/notifications';">Нет увед.</button>-->
+          {% endif %}
+        {% endif %}
+         
+        <!--<button class="button is-small is-outlined" onclick="$('.new_topic_form_container').css('display', 'block');">Новая тема</button>-->
+       </div>
+      
+       <div class="navbar-brand">
+          <a class="navbar-item" href="/">
+            <div style="font-size:1.25em;font-weight:bold!important;" class="brand">Дискурс</div>
+          </a>
+       </div>
+      
+       <div id="navMenuTransparentExample" class="navbar-menu">
+          <div class="navbar-start">
+            
+             <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link is-active">
+                Форумы
+                </a>
+                <div class="navbar-dropdown is-boxed">
+                   <a class="navbar-item" href="/">
+                   Главная
+                   </a>
+                   <a class="navbar-item" href="/vg/">
+                   Видеоигры
+                   </a>
+                   <a class="navbar-item" href="/po/">
+                   Политика
+                   </a>
+                   <a class="navbar-item" href="/anime/">
+                   Аниме
+                   </a>
+                   <a class="navbar-item" href="/hw/">
+                   Компьютерное железо
+                   </a>
+                   <a class="navbar-item" href="/ph/">
+                   Философия
+                   </a>
+                   <a class="navbar-item" href="/d/">
+                   <i>Отзывы и предложения</i>
+                   </a>
+                   <!-- -->
+                   <a class="navbar-item" href="/trash/">
+                   <s>Свалка</s>
+                   </a>
+                </div>
+             </div>
+             <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link is-active">
+                Справка
+                </a>
+                <div class="navbar-dropdown is-boxed">
+                   <a class="navbar-item" href="/about">
+                   О проекте
+                   </a>
+                   <a class="navbar-item" href="/faq">
+                   FAQ
+                   </a>
+                   <a class="navbar-item" href="/contact">
+                   Контакты
+                   </a>
+                </div>
+             </div>
+          </div>
+         
+          <div class="navbar-end">
+            {% if is_mod %}
+            <a class="navbar-item" href="/notifications" target="_blank">
+              {% if notifications_unread > 0 %}
+                <b>{{ notifications_unread }} новых уведомлений</b>
+              {% else %}
+                <!--Нет новых уведомлений-->
+              {% endif %}
+            </a>
+            {% endif %}
+          </div>
+       </div>
+    </nav>
+    
+      {% if forum_title %}
+        <h2><a href="/forum/{{ forum_id }}" style="color:inherit;text-decoration:none;">{{ forum_title }}</a></h2>
+      {% endif %}
+
+      {% if not topic_id and not display_new_topic_form and not html %}
+    
+        {% if forum_id == 6 %}
+        <content>
+        <article class="message">
+        <div class="message-body">
+        Добро пожаловать на свалку! Сюда будут переноситься раковые темы из других разделов.
+        Здесь можно постить и вручную (хотя в этом нет надобности). Не забывайте, что это
+        всё еще Дискурс, поэтому <b><u>порно, шок-контент, спам и вайпы запрещены</u></b>.
+        А вот страдать шизней и гадить в чужие темы можно сколько угодно.
+        </div>
+        </article>
+        </content>
+        {% endif %}
+    
+      {% endif %}
+    
+      {{ html|raw }}
+    
+      {% if posting_error %}
+        <content>
+          <post_with_replies>
+            <post>
+              <div style="text-align:center;color:red;">{{ posting_error }}</div>
+
+              {% if declined_text %}
+                Ваш пост:<br>
+                {{ declined_text|raw }}
+              {% endif %}
+            </post>
+          </post_with_replies>
+        </content>
+      {% endif %}
+    
+      {% if display_new_topic_form or (html == false and topic_id == false) %}
+        {{ block("new_topic_form") }}
+      {% endif %}
+    
+      {% if topics %}
+        <content id="topics">
+        {% for topic in topics %}
+          {{ block("topic_with_replies") }}
+        {% endfor %}
+        </content>
+    
+        {% if limit == default_limit and not topic_id %}
+        <content>
+          <post_with_replies>
+            <post style="text-align:center;">
+              На странице отображены самые свежие темы. <a href="?show_all">Посмотреть&nbsp;все.</a>
+            </post>
+          </post_with_replies>
+        </content>
+        {% endif %}
+    
+      {% endif %}
+    
+      <footer>
+        <div>Пожалуйста, прочтите <a href="https://discou.rs/topic/13988" target="_blank">новогоднее обращение</a> администрации Дискурса.</div>
+        From discou.rs with love!
+      </footer>
+  </body>
+</html>{% endif %}
+{% endblock %}
+{#
+
+########################################################
+
+#}
+{% set root = true %}
+{% if block is defined %}
+{{ block(block) }}
+{% else %}
+{{ block("page") }}{% endif %}
