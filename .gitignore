@@ -1,13 +1,22 @@
 vendor/
 node_modules/
+
+/ws
+public/ws.php
+
+app/controllers/NotificationController.php
+app/models/Notification.php
+app/pages/notifications.php
+
+# Images:
 public/assets/
+public/files/
 
 # Contains passwords:
 app/config.php
 
+# Contains sensitive data:
+sessions/
+
 # Contains database dumps:
 backup/
-
-all.js
-build.sh
-minify.js
