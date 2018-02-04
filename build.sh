@@ -14,6 +14,11 @@ temp_file_css=$(mktemp)
 
 # sudo tail /var/log/apache2/error.log
 
+# git status
+# git add .
+# git commit -m ""
+# git push
+
 browserify bundle.js | uglifyjs >> public/assets/${template}_${timestamp}.js
 uglifyjs app/templates/${template}/template.js >> public/assets/${template}_${timestamp}.js
 
