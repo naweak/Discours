@@ -62,16 +62,15 @@ Topic with replies:
       </text>
       
       <div class="post_footnote" style="float:right;">
-        <!--{% if is_mod %}
-        {# different code for topic and reply! #}
-         <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
-        <a href="javascript:;" onclick="delete_post({{ topic.post_id }});" class="delete_footnote">Удалить</a>
-        {% endif %}-->
       </div>
       
       <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
 
       <div class="post_footnote topic_footnote">
+        <!-- #a9a9a9 -->
+        <!-- up-to-date color in reply block -->
+        <a href="/report" target="_blank" style="color:#a9a9a9;">Report</a>
+        <span style="opacity:0.5;">&#8729;</span>
         {% if is_mod %}
         {# different code for topic and reply! #}
         <a href="javascript:;" onclick="delete_post({{ topic.post_id }});" class="delete_footnote" style="color:red;">Удалить</a>
@@ -108,7 +107,7 @@ Topic with replies:
     {% endif %}
     </replies>
     
-    <form class="reply_form" method="post" action="{{ phalcon_url }}/posting/post">
+    <form class="reply_form" method="post" action="/posting/post">
       <input type="hidden" name="forum_id" value="{{ topic.forum_id }}">
       
       <input type="hidden" name="parent_topic" id="parent_topic" value="{{ topic.post_id }}">
@@ -119,13 +118,22 @@ Topic with replies:
         <textarea style="padding-top: 2px; font-size: 15px; line-height: 15px; height:20px; margin-bottom:0px;" class="reply" name="text" id="text_{{ topic.post_id }}" spellcheck="false" placeholder="Написать ответ..."></textarea>
 
         <div class="controls" style="margin-top: 7px;">
-          <div style="float:left;">
+          <div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
             <input id="reply_userfile_{{ topic.post_id }}" name="userfile" type="file" class="inputfile">
             <label for="reply_userfile_{{ topic.post_id }}" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Прикрепить картинку</label>
           </div>
             
           <div align="right">
             <input id="reply_submit_{{ topic.post_id }}" type="submit" class="inputfile">
+            
+            {% if forum_id != 12 %}
+            <div style="display:inline;margin-right:5px;">
+              <label>
+                <input name="sage" type="checkbox"> <abbr title="Не поднимать тему" style="text-decoration:none;">sage</abbr>
+              </label>
+            </div>
+            {% endif %}
+            
             <label for="reply_submit_{{ topic.post_id }}" class="inputfile_label submit_button button is-small
             is-outlined                                   
             ">Отправить</label>
@@ -144,7 +152,7 @@ Reply:
 #}
 {% block reply %}
 {% if root is defined %}
-  <reply order_in_topic="{{ reply.order_in_topic }}">
+  <reply id="reply_{{ reply.post_id }}" order_in_topic="{{ reply.order_in_topic }}">
     <text>
       {% if reply.file_url %}
         <a href="{{ reply.file_url }}" target="_blank">
@@ -158,28 +166,20 @@ Reply:
     </text>
     
     <div class="post_footnote" style="float:right;">
-      <!--{% if is_mod %}
-      {# different code for topic and reply! #}
-      <form method="post" action="/delete" id="{{ reply.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
-      <a href="javascript:;" onclick="delete_post({{ reply.post_id }});" class="delete_footnote">Удалить</a>
-      {% endif %}-->
     </div>
     
     <form method="post" action="/delete" id="{{ reply.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
     
     <div class="post_footnote">
       <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ reply.order_in_topic }});">Ответить</a><span style="opacity:0.5;">
+      <span style="opacity:0.5;">&#8729;</span>
+      <a href="/report" target="_blank" style="color:#606060;">Report</a>
       {% if is_mod %}
       {# different code for topic and reply! #}
       <span style="opacity:0.5;">&#8729;</span>
       <a href="javascript:;" onclick="delete_post({{ reply.post_id }});" class="delete_footnote" style="color:red;opacity:1;">Удалить</a>
       {% endif %}
-      <!--&nbsp;-->&#8729;&nbsp;{{ reply.time_formatted }}</span>
-      <!--{% if is_mod %}
-      {# different code for topic and reply! #}
-      <span style="opacity:0.5;">&#8729;</span>
-      <a href="javascript:;" onclick="delete_post({{ reply.post_id }});" class="delete_footnote" style="color:inherit;">Удалить</a>
-      {% endif %}-->
+      &#8729;&nbsp;{{ reply.time_formatted }}</span>
     </div>
   </reply>
 {% endif %}
@@ -190,11 +190,12 @@ New topic form:
 
 #}
 {% block new_topic_form %}
-{% if root is defined %}
+{% if (root is defined) %}
+{% if is_mod or (forum_id != 9 and forum_id != 11) %}
       <content class="new_topic_form_container">
-      <div id="new_topic_form_error_message"></div>
+      <div id="new_topic_form_error_message" style="margin-top:13px;"></div>
       <post_with_replies style="padding:10px 10px 12px 10px; margin-top:15px;">
-        <form class="new_topic_form" method="post" action="{{ phalcon_url }}/posting/post">
+        <form class="new_topic_form" method="post" action="/posting/post">
           <input type="hidden" name="forum_id" value="{{ forum_id }}">
           
           <input type="hidden" name="parent_topic" id="parent_topic" value="">
@@ -202,14 +203,12 @@ New topic form:
           <input type="text" name="title" placeholder="Название темы" autocomplete="off" style="display:none; margin-bottom:3px;">
           
           {% if forum_id != 1 and false %}
-          <input type="text" name="name" maxlength="20" placeholder="Введите имя (не обязательно)"> <!-- style="margin-top:4px;" -->
+          <input type="text" name="name" maxlength="20" placeholder="Введите имя (не обязательно)">
           {% endif %}
           
           <textarea name="text" class="new_post" spellcheck="false" placeholder="Введите текст...">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
  
-          <div style="float:left;">
-            <!--<input id="topic_userfile" name="userfile" type="file" class="inputfile">
-            <label for="topic_userfile" class="inputfile_label button is-small is-outlined"><i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Прикрепить картинку</label>-->
+          <div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
             <input id="topic_userfile" name="userfile" type="file" class="inputfile">
             <label for="topic_userfile" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Прикрепить картинку</label>
           </div>
@@ -221,6 +220,7 @@ New topic form:
         </form>
       </post_with_replies>
       </content>
+{% endif %}
 {% endif %}
 {% endblock %}
 {#
@@ -246,7 +246,7 @@ Main page block:
     <!-- Meta -->
     <meta charset="UTF-8">
     <meta name="keywords" content="анонимный форум,дискурс,discours,анонимность,анонимное общение"/>
-    <meta name="description" content="Дискурс — самый свободный форум русскоязычного интернета."/>
+    <meta name="description" content="{% if description%}{{ description }}{% else %}Дискурс — самый свободный форум русскоязычного интернета.{% endif %}"/>
     <!-- / Meta -->
     
     <script async src="/assets/{{ js_file }}"></script>
@@ -269,6 +269,10 @@ Main page block:
     gtag('config', 'UA-111575996-1');
     </script>-->
     <!--/ Google Analytics -->
+    
+    <script type="text/javascript">
+    var topic_id = {% if topic_id %}{{ topic_id }}{% else %}0{% endif %};
+    </script>
   </head>
 
   <body>
@@ -278,9 +282,9 @@ Main page block:
        <div class="mobile_navbar_buttons">
         {% if is_mod %}
           {% if notifications_unread > 0 %}
-            <button class="button is-small is-outlined" style="font-weight:bold;" onclick="document.location='/notifications';">{{ notifications_unread }} увед.</button>
+            <button class="button is-small is-outlined" style="font-weight:bold;" onclick="document.location='/notifications2';">{{ notifications_unread }} увед.</button>
           {% else %}
-            <!--<button class="button is-small is-outlined" onclick="document.location='/notifications';">Нет увед.</button>-->
+            <!--<button class="button is-small is-outlined" onclick="document.location='/notifications2';">Нет увед.</button>-->
           {% endif %}
         {% endif %}
          
@@ -302,7 +306,7 @@ Main page block:
                 </a>
                 <div class="navbar-dropdown is-boxed">
                    <a class="navbar-item" href="/">
-                   Главная
+                   <b>Главная</b>
                    </a>
                    <a class="navbar-item" href="/vg/">
                    Видеоигры
@@ -320,11 +324,19 @@ Main page block:
                    Философия
                    </a>
                    <a class="navbar-item" href="/d/">
-                   <i>Отзывы и предложения</i>
+                   Отзывы и предложения
                    </a>
-                   <!-- -->
+                   <a class="navbar-item" href="/news/">
+                   Новости
+                   </a>
+                   <a class="navbar-item" href="/old/">
+                   Старый дизайн
+                   </a>
+                   <a class="navbar-item" href="/1chan/">
+                   1chan
+                   </a>
                    <a class="navbar-item" href="/trash/">
-                   <s>Свалка</s>
+                   Свалка
                    </a>
                 </div>
              </div>
@@ -339,8 +351,11 @@ Main page block:
                    <a class="navbar-item" href="/faq">
                    FAQ
                    </a>
+                   <a class="navbar-item" href="/changelog/">
+                   Changelog
+                   </a>
                    <a class="navbar-item" href="/contact">
-                   Контакты
+                   Обратная связь
                    </a>
                 </div>
              </div>
@@ -348,7 +363,7 @@ Main page block:
          
           <div class="navbar-end">
             {% if is_mod %}
-            <a class="navbar-item" href="/notifications" target="_blank">
+            <a class="navbar-item" href="/notifications2" target="_blank">
               {% if notifications_unread > 0 %}
                 <b>{{ notifications_unread }} новых уведомлений</b>
               {% else %}
@@ -370,10 +385,16 @@ Main page block:
         <content>
         <article class="message">
         <div class="message-body">
-        Добро пожаловать на свалку! Сюда будут переноситься раковые темы из других разделов.
-        Здесь можно постить и вручную (хотя в этом нет надобности). Не забывайте, что это
-        всё еще Дискурс, поэтому <b><u>порно, шок-контент, спам и вайпы запрещены</u></b>.
-        А вот страдать шизней и гадить в чужие темы можно сколько угодно.
+          <center>В этот раздел переносятся раковые темы.</center>
+        </div>
+        </article>
+        </content>
+        {% endif %}
+        {% if forum_id == 12 %}
+        <content>
+        <article class="message">
+        <div class="message-body">
+          <center>Новости можно добавлять каждые три минуты, бампов нет, можно пиарить параши.</center>
         </div>
         </article>
         </content>
@@ -409,11 +430,17 @@ Main page block:
         {% endfor %}
         </content>
     
-        {% if limit == default_limit and not topic_id %}
+        {% if topic_id %}
+        <div style="margin-top:10px;" onclick="load_new_replies(topic_id);">
+          <a href="javascript:;">Загрузить новые посты</a>
+        </div>
+        {% endif %}
+    
+        {% if topics|length == default_limit and not topic_id %}
         <content>
-          <post_with_replies>
+          <post_with_replies id="load_more_topics" style="cursor:pointer;" onclick="load_more_topics();">
             <post style="text-align:center;">
-              На странице отображены самые свежие темы. <a href="?show_all">Посмотреть&nbsp;все.</a>
+              Загрузить еще посты
             </post>
           </post_with_replies>
         </content>

@@ -1,0 +1,306 @@
+{#
+
+NoScript:
+
+#}
+{% block noscript %}
+{% if root is defined %}
+  <div style="text-align:center; font-weight:bold;">
+    Ваш браузер не поддерживает JavaScript!
+  </div>
+{% endif %}
+{% endblock %}
+{#
+
+Topic with replies:
+
+#}
+{% block topic_with_replies %}
+{% if root is defined %}
+  <!-- topic -->
+  {% if topic.file_url %}
+  <span class="filesize">Файл: <a target="_blank" href="{{ topic.file_url }}">15174078934820.png</a><!-- -(<em>7726 B, 100x100</em>)--></span>
+  <span class="thumbnailmsg">Показана уменьшенная копия, оригинал по клику.</span><br /> 
+  <a target="_blank" href="{{ topic.file_url }}"> 
+  <img src="{{ topic.thumb_url }}" width="{{ topic.thumb_w }}" height="{{ topic.thumb_h }}" alt="" class="thumb" /></a>    
+  {% endif %}  
+
+  <a name="{{ topic.post_id }}"></a> <label><input type="checkbox" name="delete" value="{{ topic.post_id }}" />
+  {% if topic.title_formatted and topic.title_formatted != "Тема без заголовка" %}
+  <span class="filetitle">{{ topic.title_formatted|raw }}</span>
+  {% endif %}
+  <span class="postername">Анонимно</span> {{ topic.time_formatted }}</label>
+  <span class="reflink">
+  {% if not topic_id %}
+  <a href="/res/{{ reply.post_id }}.html#i{{ topic.post_id }}">No.{{ topic.post_id }}</a>
+  {% else %}
+  <a href="javascript:insert('>>{{ topic.post_id }}')">No.{{ topic.post_id }}</a>
+  {% endif %}
+  </span>&nbsp;
+  {% if not topic_id %}
+  [<a href="res/{{ topic.post_id }}.html">Ответить</a>]
+  {% endif %}
+  <blockquote>
+    <p>{{ topic.text_formatted|raw }}</p>
+  </blockquote>
+
+  {% if topic.omitted_replies %}
+  <span class="omittedposts">Пропущено постов: {{ topic.omitted_replies }}. Нажмите Ответить для просмотра.</span>
+  {% endif %}
+
+  {% for reply in topic.replies %}
+    {{ block("reply") }}
+  {% endfor %}
+
+  <br clear="left" />
+  <hr />
+{% endif %}
+{% endblock %}
+{#
+
+Reply:
+
+#}
+{% block reply %}
+{% if root is defined %}
+  <!-- reply -->
+  <table>
+    <tbody>
+      <tr>
+        <!--<td class="doubledash">&gt;&gt;</td>-->
+        <td class="reply" id="reply{{ reply.post_id }}">
+          <a name="{{ reply.post_id }}"></a> <label><input type="checkbox" name="delete" value="{{ reply.post_id }}" />
+          <!--<span class="replytitle">TITLE</span>-->
+          <span class="commentpostername">Анонимно</span>
+          {{ reply.time_formatted }}
+          </label>
+          
+          <span class="reflink"> 
+          {% if not topic_id %}
+          <a href="/res/{{ reply.post_id }}.html#i{{ reply.post_id }}">No.{{ reply.post_id }}</a>
+          {% else %}
+          <a href="javascript:insert('>>{{ reply.post_id }}')">No.{{ reply.post_id }}</a>
+          {% endif %}
+          </span>
+
+          {% if reply.file_url %}
+          </span>&nbsp; <br />
+          <span class="filesize">Файл: <a target="_blank" href="{{ reply.file_url }}">15174078934820.png</a><!-- -(<em>29727 B, 576x432</em>)--></span>
+          <span class="thumbnailmsg">Показана уменьшенная копия, оригинал по клику.</span><br/>
+          <a target="_blank" href="{{ reply.file_url }}"> <img src="{{ reply.thumb_url }}" width="{{ reply.thumb_w }}" height="{{ reply.thumb_h }}" class="thumb" /></a>
+          {% endif %}
+          
+          <blockquote>
+            <p>{{ reply.text_formatted|raw }}</p>
+          </blockquote>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}
+{#
+
+New topic form:
+
+#}
+{% block new_topic_form %}
+{% if (root is defined) %}
+{% if is_mod or (forum_id != 9 and forum_id != 11) %}
+<div class="postarea">
+			<form id="postform" action="/posting/post" method="post" enctype="multipart/form-data">
+				<input type="hidden" name="task" value="post" />
+        <input type="hidden" name="forum_id" value="{{ forum_id }}" />
+        {% if topic_id %}
+        <input type="hidden" name="parent_topic" value="{{ topic_id }}" />
+        {% endif %}
+				<div class="trap">Leave these fields empty (spam trap): <input type="text" name="name" size="28" autocomplete="off" /><input type="text" name="link" size="28" autocomplete="off" /></div>
+				<table>
+					<tbody>
+						<!--<tr>
+							<td class="postblock">Name</td>
+							<td><input type="text" name="field1" size="28" /></td>
+						</tr>
+						<tr>
+							<td class="postblock">Link</td>
+							<td><input type="text" name="field2" size="28" /></td>
+						</tr>-->
+						<tr>
+							<td class="postblock">Тема</td>
+							<td><input type="text" name="field3" size="35" /> <input type="submit" value="Отправить" /></td>
+						</tr>
+						<tr>
+							<td class="postblock">Комментарий</td>
+							<td><textarea name="text" cols="48" rows="4"></textarea></td>
+						</tr>
+						<tr>
+							<td class="postblock">Файл</td>
+							<td><input type="file" name="userfile" size="35" /></td>
+						</tr>
+						<!--<tr>
+							<td class="postblock">Verification</td>
+							<td><input type="text" name="captcha" size="10" /> <img alt="" src="/captcha.pl?key=mainpage&amp;dummy=" /> </td>
+						</tr>
+						<tr>
+							<td class="postblock">Password</td>
+							<td><input type="password" name="password" size="8" /> (for post and file deletion)</td>
+						</tr>-->
+						<tr>
+							<td colspan="2">
+								<div class="rules">
+									<ul>
+										<li>Supported file types are: GIF, JPG, PNG</li>
+										<li>Maximum file size allowed is 1000 KB.</li>
+										<li>Images greater than 200x200 pixels will be thumbnailed.</li>
+									</ul>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+		</div>
+{% endif %}
+{% endif %}
+{% endblock %}
+{#
+
+Main page block:
+
+#}
+{% block page %}
+{% if root is defined %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+	<head>
+		<title>{{ forum_title }}</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<style type="text/css">
+			body {
+			margin: 0;
+			padding: 8px;
+			margin-bottom: auto;
+			}
+			blockquote blockquote {
+			margin-left: 0em
+			}
+			form {
+			margin-bottom: 0px
+			}
+			form .trap {
+			display: none
+			}
+			.postarea {
+			text-align: center
+			}
+			.postarea table {
+			margin: 0px auto;
+			text-align: left
+			}
+			.thumb {
+			border: none;
+			float: left;
+			margin: 2px 20px
+			}
+			.nothumb {
+			float: left;
+			background: #eee;
+			border: 2px dashed #aaa;
+			text-align: center;
+			margin: 2px 20px;
+			padding: 1em 0.5em 1em 0.5em;
+			}
+			.reply blockquote,
+			blockquote :last-child {
+			/*margin-bottom: 0em*/
+      margin-bottom: 8px;
+      margin-top: 8px;
+			}
+			.reflink a {
+			color: inherit;
+			text-decoration: none
+			}
+			.reply .filesize {
+			margin-left: 20px
+			}
+			.userdelete {
+			float: right;
+			text-align: center;
+			white-space: nowrap
+			}
+			.replypage .replylink {
+			display: none
+			}
+		</style>
+    <link rel="stylesheet" type="text/css" href="/futaba.css" title="Futaba" />
+		<!--<link rel="alternate stylesheet" type="text/css" href="/css/burichan.css" title="Burichan" />
+		<link rel="alternate stylesheet" type="text/css" href="/css/gurochan.css" title="Gurochan" />
+		<link rel="alternate stylesheet" type="text/css" href="/css/photon.css" title="Photon" />
+		<link rel="alternate stylesheet" type="text/css" href="/css/style.css" title="Style" />
+		<link rel="alternate stylesheet" type="text/css" href="/css/tabs.css" title="Tabs" />
+		<link rel="alternate stylesheet" type="text/css" href="/css/winxp.blue.css" title="Winxp.blue" />-->
+		<script type="text/javascript">
+			var style_cookie = "wakabastyle";
+		</script>
+		<!--<script type="text/javascript" src="/wakaba3.js"></script>-->
+	</head>
+	<body>
+    
+  <div class="adminbar">
+    <!--
+    [<a href="javascript:set_stylesheet('Burichan')">Burichan</a>] [<a href="javascript:set_stylesheet('Futaba')">Futaba</a>] [<a href="javascript:set_stylesheet('Gurochan')">Gurochan</a>] [<a href="javascript:set_stylesheet('Photon')">Photon</a>] [<a href="javascript:set_stylesheet('Style')">Style</a>]
+    [<a href="javascript:set_stylesheet('Tabs')">Tabs</a>] [<a href="javascript:set_stylesheet('Winxp.blue')">Winxp.blue</a>] - [<a href="/../" target="_top">Home</a>] [<a href="/wakaba.pl?task=admin">Manage</a>]
+    -->
+    [<a href="/" target="_top">Главная</a>] - [<a href="/old/">old</a>] - [<a href="/vg/">vg</a> / <a href="/po/">po</a> / <a href="/a/">a</a> / <a href="/hw/">hw</a> / <a href="/ph/">ph</a> / <a href="/d/">d</a>]
+  </div>
+		<a href="/old/" style="text-decoration:none;"><div class="logo">{{ forum_title }}</div></a>
+  <hr />
+
+  {% if posting_error %}
+    <div>
+      <div style="text-align:center;color:red;">{{ posting_error }}</div>
+
+      {% if declined_text %}
+        Ваш пост:<br>
+        {{ declined_text|raw }}
+      {% endif %}
+    </div>
+  {% endif %}
+    
+  {% if topic_id %}
+  [<a href="../">Назад</a>] <div class="theader">Ответ в тему</div>
+  {% endif %}
+
+  {{ block("new_topic_form") }}
+    
+  <hr />
+    
+  <form id="delform" action="/wakaba.pl" method="post">
+  {% if topics %}
+    {% for topic in topics %}
+      {{ block("topic_with_replies") }}
+    {% endfor %}
+  {% endif %}
+  </form>
+  
+  <!--
+	<p class="footer"> - <a href="http://wakaba.c3.cx/">wakaba 3.0.7</a> + <a href="http://www.2chan.net/">futaba</a> + <a href="http://www.1chan.net/futallaby/">futallaby</a> -</p>
+  -->   
+
+    <script async type="text/javascript" src="/dc.js"></script>
+    
+	</body>
+</html>
+{% endif %}
+{% endblock %}
+{#
+
+########################################################
+
+#}
+{% set root = true %}
+{% if block is defined %}
+{{ block(block) }}
+{% else %}
+{{ block("page") }}{% endif %}

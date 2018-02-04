@@ -1,20 +1,7 @@
 <?php
 require_bundle();
 
-//////////////
-/*try
-{
-	$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE, MYSQL_USERNAME, MYSQL_PASSWORD);
-	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-}
-catch(PDOException $e)
-{
-	die ("Connection failed: ".$e->getMessage());
-}*/
 $pdo = pdo();
-//////////////
-
-//$pdo->exec("insert into forums (forum_id, title) VALUES ('', 'Blog')");
 
 if (!is_mod())
 {

@@ -68,6 +68,16 @@ $di['db'] = function() {
     ));
 };
 
+if (false)
+{
+  $di->set('router', function() use ($config) {
+    $router = new \Phalcon\Mvc\Router(false);
+    $router->removeExtraSlashes(false);
+    include('../app/config/routes.php');
+    return $router;
+  });
+}
+
 //if(!defined("PHALCON_FROM_DISCOURS"))
 //{
   // Handle the request

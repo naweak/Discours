@@ -52,10 +52,10 @@ function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM, $twig_t
 		return basename($last_file);
 	}
 
-	$twig_data["js_file"]  = last_file(ROOT_DIR."/../public/assets/".$twig_template."_*.js");
-	$twig_data["css_file"] = last_file(ROOT_DIR."/../public/assets/".$twig_template."_*.css");
+	$twig_data["js_file"]  = last_file(ROOT_DIR."/public/assets/".$twig_template."_*.js");
+	$twig_data["css_file"] = last_file(ROOT_DIR."/public/assets/".$twig_template."_*.css");
 
-	require_once ROOT_DIR."/../vendor/autoload.php";
+	require_once ROOT_DIR."/vendor/autoload.php";
 	$loader = new Twig_Loader_Filesystem($twig_filesystem);
 	$twig = new Twig_Environment($loader);
 	//return $twig->render("$twig_template.html", $twig_data);
@@ -80,7 +80,12 @@ function anti_xss ($text)
 
 function markup ($text, $data = null)
 {
-    $lines_to_show = 10;
+    #$lines_to_show = 10; // no longer used
+		$forum_template = "default";
+		if ($data["forum_id"] == 14)
+		{
+			$forum_template = "wakaba";
+		}
   
     $text = str_replace("\r", "", $text); // remove /r's
 	
@@ -91,9 +96,18 @@ function markup ($text, $data = null)
 	
 		if (isset($data["parent_topic"]) and $data["parent_topic"] != null)
 		{
-			$text = preg_replace("/(^|\n)&gt;&gt;([0-9]+)/i",
-												 "$1<a onclick='link_click(".$data["parent_topic"].",$2);'>&gt;&gt;Ответ на пост #$2</a>",
-												 $text); // >>123
+			if ($forum_template == "default") // normal link
+			{
+				$text = preg_replace("/(^|\n)&gt;&gt;([0-9]+)/i",
+													 "$1<a onclick='link_click(".$data["parent_topic"].",$2);'>&gt;&gt;Ответ на пост #$2</a>",
+													 $text); // >>123
+			}
+			elseif ($forum_template == "wakaba") // wakaba link
+			{
+				$text = preg_replace("/(^|\n)&gt;&gt;([0-9]+)/i",
+									 "$1<a href=''>&gt;&gt;$2</a>",
+									 $text); // >>123
+			}
 		}
 
     // ([^\n]*)
@@ -113,7 +127,11 @@ function markup ($text, $data = null)
 		$text = preg_replace("/&lt;u&gt;([^\n]*?)&lt;\/u&gt;/iu", "<u>$1</u>", $text); // underline
 		$text = preg_replace("/\[u\]([^\n]*?)\[\/u\]/iu", "<u>$1</u>", $text);
 	
-		$text = preg_replace("/\[s\]([^\n]*?)\[\/s\]/iu", "<strike>$1</strike>", $text); // strike
+		$text = preg_replace("/&lt;s&gt;([^\n]*?)&lt;\/s&gt;/iu", "<strike>$1</strike>", $text); // strike
+		$text = preg_replace("/\[s\]([^\n]*?)\[\/s\]/iu", "<strike>$1</strike>", $text);
+	
+		$text = preg_replace("/%%([^\n]*?)%%/iu", "<span class='spoiler'>$1</span>", $text); // spoiler
+		$text = preg_replace("/\[spoiler\]([^\n]*?)\[\/spoiler\]/iu", "<span class='spoiler'>$1</span>", $text);
 	
     // Imgur
     // $text = preg_replace("/^http(s)?:\/\/imgur.com\/([a-zA-Z0-9]{5,15})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
@@ -127,7 +145,7 @@ function markup ($text, $data = null)
 		$text = preg_replace("/:(rage):/iu", "<img src='https://1chan.ca/img/$1.png' width='28px' height='30px'>", $text);
 	
 		// Smiles (animated)
-		$text = preg_replace("/:(nyan):/iu", "<img src='https://1chan.ca/img/$1.gif' width='40px' height='40px'>", $text);
+		$text = preg_replace("/:(nyan):/iu", "<img src='https://1chan.ca/img/$1.gif' width='53px' height='21px'>", $text);
 		$text = preg_replace("/:(popka):/iu", "<img src='https://1chan.ca/img/$1.gif' width='45px' height='35px'>", $text);
 	
     return $text;
@@ -150,11 +168,24 @@ function send_message_to_telegram_channel ($chatID, $message, $token)
     return $result;
 }
 
-function is_mod ()
+function user_id ()
 {
 	require_session();
 
-	if (isset($_SESSION["user_id"]) and $_SESSION["user_id"] == 1)
+	if (isset($_SESSION["user_id"]))
+	{
+			return intval($_SESSION["user_id"]);
+	}
+
+	else
+	{
+			return 0;
+	}
+}
+
+function is_mod ()
+{
+	if (user_id() == 1)
 	{
 			return true;
 	}
@@ -165,11 +196,63 @@ function is_mod ()
 	}
 }
 
-function error_page ($code)
+function error_page ($code) // 404 Not Found
 {
 	header("HTTP/1.0 404 Not Found");
-	echo "404 Not Found";
-	die();
+	ob_start();
+	?>
+	<h2>Вы попали на страницу 404</h2>
+	<content>
+		<div align="center">
+			<iframe src="//coub.com/embed/12hxbn?muted=false&autostart=false&originalSize=false&startWithHD=false" allowfullscreen="true" frameborder="0" width="480" height="270"></iframe>
+		</div>
+		<br>
+		Это значит, что контент, который вы пытаетесь найти, был удален, либо вовсе никогда не существовал.
+		Вы можете <a href="/contact">связаться</a> с нами, но вряд ли это поможет.
+		Поэтому лучше посмотрите видеоролик сверху и успокойтесь.
+	</content>
+	<?php
+	$html = ob_get_contents();
+	ob_end_clean();
+	$twig_data = array
+	(
+		"html" => $html,
+		"final_title" => "Не найдено!"
+	);
+	echo render($twig_data);
+	exit();
+}
+
+function first_topic_error_page ()
+{
+	ob_start();
+	?>
+	<h2>Вы пытались найти первую тему!</h2>
+	<content>
+		<div align="center">
+			<a href="https://www.youtube.com/watch?v=r-aUrGMBuc8" target="_blank">
+			<img src="https://i.ytimg.com/vi/r-aUrGMBuc8/hqdefault.jpg" alt="Putin" style="height:250px;">
+			</a>
+		</div>
+		<br>
+		Но ее здесь нет. <a href="http://lurkmore.to/АПЛ_«Курск»" target="_blank">Она&nbsp;утонула</a>, чего нам очень жаль.
+		Администрация Дискурса впредь делает всё возможное, чтобы подобная ситуация не повторилась (регулярные
+		<a href="https://ru.wikipedia.org/wiki/Резервное_копирование" target="_blank">бэкапы</a>, например).
+		А «первой темой» можно считать <a href="/topic/20">тему&nbsp;номер&nbsp;20</a>.<br>
+		<br>
+		Серьезно, мы учимся на ошибках, и после этого досадного провала был даже введен новый принцип —
+		<a href="https://discou.rs/principles">принцип&nbsp;долговечности</a>, согласно которому старые темы не удаляются,
+		а остаются в назидание потомкам.
+	</content>
+	<?php
+	$html = ob_get_contents();
+	ob_end_clean();
+	$twig_data = array
+	(
+		"html" => $html
+	);
+	echo render($twig_data);
+	exit();
 }
 
 function how_long_ago ($age)

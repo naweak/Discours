@@ -17,12 +17,23 @@ class PostingController extends Controller
 		$max_name_length = 25;
 		$min_text_length = 3;
 		$max_text_length = 15000;
+		$allow_sage = true;
 		
 		$forum_id     = intval($request->getPost("forum_id"));
 		$parent_topic = intval($request->getPost("parent_topic"));
 		$title        = $request->getPost("title");
 		$name         = $request->getPost("name");
 		$text         = $request->getPost("text");
+		
+		if ($request->getPost("parent")) // Dollchan Extension Tools patch
+		{
+			$parent_topic = $request->getPost("parent");
+		}
+		
+		if ($forum_id == 12)
+		{
+			$new_topic_delay = 3*60;
+		}
 		
 		$ip = $GLOBALS["client_ip"];
 		$time = time();
@@ -44,9 +55,14 @@ class PostingController extends Controller
   		$this->error("Пожалуйста, используйте IPv4.");
 		}
 		
-		if ($forum_id == 9)
+		if
+		(
+			($forum_id == 9 or $forum_id == 11)
+			and !$parent_topic
+			and user_id() != 1
+		)
 		{
-			$this->error("Только администраторы могут создавать темы.");
+			$this->error("Только администраторы могут создавать темы на этом форуме.");
 		}
 		
 		// Text
@@ -229,9 +245,26 @@ class PostingController extends Controller
 		$post->forum_id = $forum_id; // will be used in process_file()
 		$post->parent_topic = $parent_topic;
 		
+		// url:
+		/*$text_lines = explode("\n", $text);
+		$last_line = end($text_lines);
+		if (preg_match("/^url:[ ]*(.*)/i", $last_line, $matches))
+		{
+			$url = $matches[1];
+			if (filter_var($url, FILTER_VALIDATE_URL))
+			{
+				$this->error("URL: $url");
+			}
+		}*/
+		
 		// Process uploaded file
 		if (is_uploaded_file($_FILES["userfile"]["tmp_name"]))
 		{
+			if ($forum_id == 12)
+			{
+				$this->error("В этом разделе нельзя прикреплять картинки!");
+			}
+			
 			//$this->error("has file!");
 			$files = $this->request->getUploadedFiles();
 			$file = $files[0];
@@ -241,7 +274,7 @@ class PostingController extends Controller
 		
 		else
 		{
-			if (!$parent_topic)
+			if (!$parent_topic and $forum_id != 11 and $forum_id != 12) // changelog
 			{
 				$this->error("Прикрепите картинку для создания темы.");
 			}
@@ -249,11 +282,15 @@ class PostingController extends Controller
 		
 		// Save new post
 		$ord = round(microtime(true) * 1000);
-		if (!$parent_topic)
+		/*if ($parent_topic == 10670) // sticky
 		{
-			if ($parent_topic == 10670)
+				$ord = $ord*2;
+		}*/
+		if ($forum_id == 11 or $forum_id == 12)
+		{
+			if ($parent_topic)
 			{
-				//$ord = $ord*2;
+				$ord = $parent_topic_obj->ord;
 			}
 		}
 		
@@ -277,46 +314,62 @@ class PostingController extends Controller
 		
 		if ($parent_topic) // update parent topic's ord
 		{
-			$parent_topic_obj->ord = $ord;
-
-			$parent_result = $parent_topic_obj->save();
-			if (!$parent_result)
+			if (!$allow_sage or ($allow_sage and !$request->getPost("sage"))) // bump
 			{
-				foreach ($post->getMessages() as $message)
+				if ($parent_topic != 18520) // topic to report posts
 				{
-					echo $message->getMessage(), "<br/>";
-				}
+					$parent_topic_obj->ord = $ord;
 
-				die("Error updating parent topic");
+					$result = $parent_topic_obj->save();
+					if (!result)
+					{
+						foreach ($post->getMessages() as $message)
+						{
+							echo $message->getMessage(), "<br/>";
+						}
+
+						die("Error updating parent topic");
+					}
+				}
+			}
+			
+			else // sage
+			{
+				$post->ord = $parent_topic_obj->ord;
+				$result = $post->save();
+				
+				if (!$result) // report errors if saving went wrong
+				{
+					foreach ($post->getMessages() as $message)
+					{
+						echo $message->getMessage(), "<br/>";
+					}
+				}
 			}
 		}
-		
-		//if (!is_mod() or true) // notification
+
 		if (!is_mod()) // notification
 		{
 			$notification = new Notification();
 			$post_id = $post->post_id;
 			$forum_title = anti_xss($forum_obj->title);
-			
 			if (!$parent_topic) // new topic
 			{
-				$notification->notify
-				(1,
-				 $post_id,
-				"[$ip] - $forum_title: <span style='color:green;'>NEW TOPIC!!!</span> 
-				<a href='/topic/$post_id' target='_blank' style='color:blue;' onclick=\"this.style.color='violet';\">#$post_id</a>"
-				);
+				$notification_text = "[$ip] - <b>$forum_title</b>: <span style='color:green;'>НОВАЯ ТЕМА</span> 
+				<a href='/topic/$post_id' target='_blank' style='color:blue;' onclick=\"this.style.color='violet';\">#$post_id</a>";
 			}
-			
 			else // reply to topic
 			{
-				$notification->notify
-				(1,
-				 $post_id,
-				"[$ip] - $forum_title: New reply to topic 
-				<a href='/topic/$parent_topic' target='_blank' style='color:blue;' onclick=\"this.style.color='violet';\">#$parent_topic</a>"
-				);
+				$notification_text = "[$ip] - <b>$forum_title</b>: ответ в тему
+				<a href='/topic/$parent_topic' target='_blank' style='color:blue;' onclick=\"this.style.color='violet';\">#$parent_topic</a>";
 			}
+			
+			$notification->notify(1, $notification_text, $post_id, $parent_topic);
+		}
+		
+		if ($forum_id == 11 and $parent_topic == 0) // posting to Changelog
+		{
+			send_message_to_telegram_channel("@DiscoursChangelog", $text . "\nОбсудить: https://discou.rs/topic/".$post->post_id, TELEGRAM_TOKEN);
 		}
 	
 		if ($request->getPost("ajax")) // report success to user
@@ -407,8 +460,8 @@ class PostingController extends Controller
 		$file_type = $file->getRealType();
 		$file_extension = strtolower($file->getExtension());
 		$max_file_size = 5 * 1048576; // in bytes
-    $max_file_width  = 4096;
-    $max_file_height = 4096;
+    $max_file_width  = 8192;
+    $max_file_height = 8192;
 		
 		$allowed_extensions = ["jpg", "jpeg", "png", "gif", "bmp"];
 		
@@ -421,25 +474,13 @@ class PostingController extends Controller
 		{
 			$this->error("File size ($file_size) exceeded the maximum of $max_file_size");
 		}
-		
-		//copy ($tmp_name, "/tmp/uploaded_".time().".".$file_extension);
-		/*$identify_output = exec("identify $tmp_name"); // crashes
-		if (!$identify_output)
-		{
-			$this->error("Cannot identify image type!");
-		}*/
-		/*if ($file_type == "application/x-bzip2") // Large image attack prevention
-		{
-			$this->error("Smart enought, ain't ya?");
-		}*/
+
 		$exif_imagetype = exif_imagetype($tmp_name);
 		if (!$exif_imagetype)
 		{
 			$this->error("Загруженный файл не является изображением.");
 		}
-		
-		//$identify_output = exec("identify -format '%[fx:w]x%[fx:h]' $tmp_name"); // crashes
-		//$this->error($identify_output);
+
     list($file_w, $file_h) = getimagesize($tmp_name);
     if ($file_w > $max_file_width or $file_h > $max_file_height)
     {
@@ -449,7 +490,7 @@ class PostingController extends Controller
 		$thumb_path = tempnam(sys_get_temp_dir(), "thumb");
 		if ($post->forum_id != 3)
 		{
-			exec("convert -thumbnail 150x150 $tmp_name $thumb_path");
+			exec("convert -thumbnail 150x150 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
 		}
 		else
 		{
@@ -475,7 +516,7 @@ class PostingController extends Controller
 		
 		$new_file_name  = "{$time}_{$rand}.".$file_extension;
 		$new_thumb_name = "{$time}_{$rand}_thumb.".$file_extension;
-		$new_path = ROOT_DIR."/../public/files";
+		$new_path = ROOT_DIR."/public/files";
 		
 		copy ($tmp_name, $new_path."/".$new_file_name);
 		copy ($thumb_path, $new_path."/".$new_thumb_name);

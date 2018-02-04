@@ -1,0 +1,89 @@
+{#
+
+NoScript:
+
+#}
+{% block noscript %}
+{% if root is defined %}
+  <div style="text-align:center; font-weight:bold;">
+    Ваш браузер не поддерживает JavaScript!
+  </div>
+{% endif %}
+{% endblock %}
+{#
+
+Topic with replies:
+
+#}
+{% block topic_with_replies %}
+{% if root is defined %}
+  post_with_replies<br>
+{% endif %}
+{% endblock %}
+{#
+
+Reply:
+
+#}
+{% block reply %}
+{% if root is defined %}
+  reply<br>
+{% endif %}
+{% endblock %}
+{#
+
+New topic form:
+
+#}
+{% block new_topic_form %}
+{% if (root is defined) %}
+{% if is_mod or (forum_id != 9 and forum_id != 11) %}
+  new_topic_form<br>
+{% endif %}
+{% endif %}
+{% endblock %}
+{#
+
+Main page block:
+
+#}
+{% block page %}
+{% if root is defined %}
+
+      {% if forum_title %}
+        <h2><a href="/forum/{{ forum_id }}">{{ forum_title }}</a></h2>
+      {% endif %}
+    
+      {% if posting_error %}
+        <div>
+          <div style="text-align:center;color:red;">{{ posting_error }}</div>
+
+          {% if declined_text %}
+            Ваш пост:<br>
+            {{ declined_text|raw }}
+          {% endif %}
+        </div>
+      {% endif %}
+    
+      {% if display_new_topic_form or (html == false and topic_id == false) %}
+        {{ block("new_topic_form") }}
+      {% endif %}
+    
+      {% if topics %}
+        {% for topic in topics %}
+          {{ block("topic_with_replies") }}
+        {% endfor %}
+      {% endif %}
+
+{% endif %}
+{% endblock %}
+{#
+
+########################################################
+
+#}
+{% set root = true %}
+{% if block is defined %}
+{{ block(block) }}
+{% else %}
+{{ block("page") }}{% endif %}

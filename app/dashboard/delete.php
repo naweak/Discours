@@ -1,17 +1,7 @@
 <?php
 require_bundle();
 
-//////////////
-try
-{
-	$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE, MYSQL_USERNAME, MYSQL_PASSWORD);
-	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-}
-catch(PDOException $e)
-{
-	die ("Connection failed: ".$e->getMessage());
-}
-//////////////
+$pdo = pdo();
 
 if (!is_mod())
 {
@@ -39,14 +29,26 @@ if (isset($_POST["submit"]))
     $error = "Reason cannot be empty!";
   }
 	
-	function update_topic_ord ($post_id)
+	if (mb_strlen($_POST["reason"]) > 256)
 	{
-		// DOESN'T WORK IF TOPIC HAS NO REPLIES!!!
-		
+		$error = "Reason too long!";
+	}
+	
+	function update_topic_ord ($topic_id)
+	{
 		global $pdo;
-		$last_reply_row = $pdo->query("SELECT * FROM posts WHERE parent_topic = '$post_id' ORDER BY ord DESC")->fetch();
-		$query_string = "UPDATE posts SET ord = '{$last_reply_row['ord']}' WHERE post_id = '$post_id'";
-		$pdo->query("UPDATE posts SET ord = '".$last_reply_row['ord']."' WHERE post_id = '".$last_reply_row['parent_topic']."' AND parent_topic = 0")->execute();
+		$last_reply_row = $pdo->query("SELECT * FROM posts WHERE parent_topic = '$topic_id' ORDER BY ord DESC")->fetch();
+		
+		if ($last_reply_row) // topic has replies
+		{
+			$pdo->query("UPDATE posts SET ord = '{$last_reply_row['ord']}' WHERE post_id = '$topic_id' AND parent_topic = 0")->execute();
+		}
+		
+		else // topic is empty
+		{
+			$topic_row = $pdo->query("SELECT * FROM posts WHERE post_id = '$topic_id' AND parent_topic = 0")->fetch();
+			$pdo->query("UPDATE posts SET ord = '".($topic_row['creation_time']*1000)."' WHERE post_id = '$topic_id' AND parent_topic = 0");
+		}
 	}
         
   if (empty($error))
@@ -66,16 +68,12 @@ if (isset($_POST["submit"]))
 		
     $message = "Post deleted rows: $affected_rows<br>";
 		
-		if ($row['parent_topic'] != 0) // reply to topic
+		if ($row['parent_topic'] != 0) // deleted a reply to a topic
 		{
 			update_topic_ord($row['parent_topic']);
-			$pdo->query("DELETE FROM notifications WHERE post_id = '$post_id'");
 		}
 		
-		else // topic
-		{
-			//
-		}
+		$pdo->query("DELETE FROM notifications WHERE post_id = '$post_id'");
     
     $ban_id = 0;
     
@@ -94,7 +92,12 @@ if (isset($_POST["submit"]))
         
 				$ban_id = $pdo->lastInsertId();
         
-        $message .= "USER BANNED ($ip) until ".date(DATE_ATOM, $expires)."!\n";
+        $message .= "USER BANNED until ".date(DATE_ATOM, $expires)."!\n";
+				
+				if ($_SESSION["user_id"] == 1)
+				{
+					$message .= "IP: $ip\n";
+				}
       }
 			
 			$modlog = new Modlog();
@@ -172,7 +175,7 @@ ob_start();
   <form action="" method="post">
       <input type="checkbox" name="ban_user" id="checkbox1"> <label for="checkbox1">Ban user?</label>
       <br>
-      <input type="checkbox" name="delete_all_by_user" id="checkbox2"> <label for="checkbox2">Delete all posts by this user (anti-WIPE only) (&lt; <?php echo $delete_all_by_user_hours; ?> hours from now)</label>
+		<input type="checkbox" name="delete_all_by_user" id="checkbox2"> <label for="checkbox2">Delete all posts by this user (anti-WIPE only) (&lt; <?php echo $delete_all_by_user_hours; ?> hours from now) <b>Пермабан</b></label>
       <br> Причина бана:
       <!--<input type="text" name="reason" placeholder="Reason" value="вайп">-->
       <select name="reason">

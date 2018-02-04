@@ -5,6 +5,9 @@ if (!is_mod())
 }
 
 $pdo = pdo();
+
+//$pdo->query("INSERT INTO forums (forum_id, title) VALUES ('', 'Олдфаги')");
+//$pdo->query("UPDATE forums SET title = 'Старый дизайн' WHERE forum_id = 14");
 ?>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>

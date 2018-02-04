@@ -2,45 +2,51 @@
 //die("Temporary unavailable due to migration to Phalcon framework");
 ob_start();
 
-try
-{
-	$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE, MYSQL_USERNAME, MYSQL_PASSWORD);
-	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-}
-catch(PDOException $e)
-{
-	die ("Connection failed: ".$e->getMessage());
-}
-?>      
+$pdo = pdo();
+?>
 <content>
+		<h2 style="text-align:center;">Журнал действий модераторов</h2>
+	
     <?php
     $sql = $pdo->query("SELECT COUNT(*) FROM bans");
     $sql->execute();
     $result = $sql->fetch();
   
     //var_dump($result);
-    echo "Total bans: {$result[0]}<br>";
+    echo "Всего банов: {$result[0]}<br>";
     ?>
   
     <table width=100% border style="margin-top:1em;">
         <tr>
             <td>Номер&nbsp;действия</td>
+						<td>Дата</td>
             <td>Модератор</td>
             <td>Номер&nbsp;поста</td>
             <td width="100%">Текст поста</td>
             <td>Причина</td>
         </tr>
         <?php
-      //$sql = _query("SELECT * FROM modlog");
-      $sql = $pdo->query("SELECT * FROM modlog ORDER BY action_id DESC LIMIT 20");
+			$offset = 0;
+			$logs_per_page = 20;
+			
+			if (isset ($_GET["p"]))
+			{
+				$offset = $logs_per_page * abs(intval($_GET["p"])-1);
+			}
+			
+			$sql = $pdo->prepare("SELECT COUNT(*) FROM modlog");
+			$sql->execute();
+			$modlog_size = $sql->fetchColumn();
+			
+      $sql = $pdo->query("SELECT * FROM modlog ORDER BY action_id DESC LIMIT $logs_per_page OFFSET $offset");
       $sql->execute();
       $result = $sql->fetchAll();
-      
-      //while ($row = _fetch_assoc($sql))      
+ 
       foreach ($result as $row)
       {
         echo "<tr>";
         echo "<td>{$row["action_id"]}</td>";
+				echo "<td>{$row["action_id"]}</td>";
         echo "<td>{$row["mod_id"]}</td>";
         echo "<td>{$row["post_id"]}</td>";
         
@@ -61,6 +67,11 @@ catch(PDOException $e)
       }
       ?>
     </table>
+	
+		<form action="" method="get" style="margin-top:15px;">
+			Переход на страницу (max. <?php echo intval($modlog_size/$logs_per_page); ?>):
+			<input type="number" name="p"> <input type="submit" value="Go">
+		</form>
 </content>
 <?php
 $html = ob_get_contents();
@@ -68,7 +79,8 @@ ob_end_clean();
 
 $twig_data = array
 (
-  "html" => $html
+  "html" => $html,
+	"final_title" => "Модлог"
 );
 
 echo render($twig_data);

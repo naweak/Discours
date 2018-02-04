@@ -1,12 +1,15 @@
 vendor/
 node_modules/
 public/assets/
+public/test.php
+public/phpinfo.php
 
-/ws
+/websocket
 
 app/controllers/NotificationController.php
 app/models/Notification.php
 app/pages/notifications.php
+app/pages/notifications*
 
 # Images:
 public/files/

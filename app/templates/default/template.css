@@ -163,7 +163,8 @@ html, body
 	-webkit-font-smoothing: subpixel-antialiased;*/
 	
 	font-size: 15px;
-	background: #edeef0;
+	/*background: #edeef0;*/
+	background: #efefef;
 	color: #555;
 }
 
@@ -725,4 +726,15 @@ post_info
 .attach_button
 {
 	margin-left: 2px;
+}
+
+.spoiler
+{
+	background: #cccccc;
+	color: #cccccc;
+}
+
+.spoiler:hover
+{
+	color: inherit;
 }

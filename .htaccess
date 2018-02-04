@@ -3,38 +3,56 @@ RewriteEngine on
 # Prohibit directory listing (/public/files and others):
 Options -Indexes
 
-RewriteRule ^$ /forum/?forum=1
+RewriteRule ^$ /forum/?forum=1&%{QUERY_STRING}
 
-RewriteRule ^topic/([a-z0-9._-]+)$ /forum/?topic=$1
-RewriteRule ^forum/([a-z0-9._-]+)$ /forum/?forum=$1
+RewriteRule ^test/res/([a-z0-9._-]+).html$ /forum/?topic=$1&%{QUERY_STRING} [L]
+RewriteRule ^old/res/([a-z0-9._-]+).html$ /forum/?topic=$1&%{QUERY_STRING} [L]
+
+RewriteRule ^topic/([a-z0-9._-]+)$ /forum/?topic=$1&%{QUERY_STRING}
+RewriteRule ^forum/([a-z0-9._-]+)$ /forum/?forum=$1&%{QUERY_STRING}
 
 ################################################
+RewriteRule ^(b)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(b)/$ /page?page=$1
+################################################
 RewriteRule ^(ph)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(ph)/$ /forum/?forum=2
+RewriteRule ^(ph)/$ /forum/?forum=2&%{QUERY_STRING}
 
 RewriteRule ^(test)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(test)/$ /forum/?forum=3
+RewriteRule ^(test)/$ /forum/?forum=3&%{QUERY_STRING}
 
 RewriteRule ^(po)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(po)/$ /forum/?forum=4
+RewriteRule ^(po)/$ /forum/?forum=4&%{QUERY_STRING}
 
 RewriteRule ^(vg)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(vg)/$ /forum/?forum=5
+RewriteRule ^(vg)/$ /forum/?forum=5&%{QUERY_STRING}
 
 RewriteRule ^(trash)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(trash)/$ /forum/?forum=6
+RewriteRule ^(trash)/$ /forum/?forum=6&%{QUERY_STRING}
 
 RewriteRule ^(hw)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(hw)/$ /forum/?forum=7
+RewriteRule ^(hw)/$ /forum/?forum=7&%{QUERY_STRING}
 
 RewriteRule ^(a|anime)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(a|anime)/$ /forum/?forum=8
+RewriteRule ^(a|anime)/$ /forum/?forum=8&%{QUERY_STRING}
 
 RewriteRule ^(blog)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(blog)/$ /forum/?forum=9
+RewriteRule ^(blog)/$ /forum/?forum=9&%{QUERY_STRING}
 
 RewriteRule ^(d)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(d)/$ /forum/?forum=10
+RewriteRule ^(d)/$ /forum/?forum=10&%{QUERY_STRING}
+
+RewriteRule ^(changelog)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(changelog)/$ /forum/?forum=11&%{QUERY_STRING}
+
+RewriteRule ^(1chan)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(1chan)/$ /forum/?forum=12&%{QUERY_STRING}
+
+RewriteRule ^(news)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(news)/$ /forum/?forum=13&%{QUERY_STRING}
+
+RewriteRule ^(old)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(old)/$ /forum/?forum=14&%{QUERY_STRING}
 ################################################
 RewriteRule ^(login)$ /page?page=$1
 RewriteRule ^(delete)$ /page?page=$1
@@ -44,16 +62,19 @@ RewriteRule ^(move)$ /page?page=$1
 
 RewriteRule ^(about)$ /page?page=$1
 RewriteRule ^(principles)$ /page?page=$1
-RewriteRule ^(modlog)$ /page?page=$1
+RewriteRule ^(modlog)$ /page?page=$1&%{QUERY_STRING}
 RewriteRule ^(faq)$ /page?page=$1
 RewriteRule ^(contact)$ /page?page=$1
 RewriteRule ^(developers)$ /page?page=$1
 RewriteRule ^(img)$ /page?page=$1
 RewriteRule ^(stat)$ /page?page=$1
+RewriteRule ^(report)$ /page?page=$1
+RewriteRule ^(tidyup)$ /page?page=$1
 
 RewriteRule ^(twig)$ /page?page=$1
 
 RewriteRule ^(notifications)$ /page?page=$1
+RewriteRule ^(notifications2)$ /page?page=$1
 ########################
 
 <IfModule mod_rewrite.c>

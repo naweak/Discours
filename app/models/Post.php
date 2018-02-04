@@ -43,7 +43,10 @@ class Post extends Model
 		
 		if (!$text_formatted_from_cache)
 		{
-			$text_formatted = markup($this->text, ["parent_topic" => $this->parent_topic]);
+			$text_formatted = markup($this->text,
+				["forum_id" => $this->forum_id,
+				 "parent_topic" => $this->parent_topic]
+			);
 			cache_set($text_formatted_from_cache_name, $text_formatted, 7*24*60*60);
 		}
 		
