@@ -282,7 +282,7 @@ Main page block:
        <div class="mobile_navbar_buttons">
         {% if is_mod %}
           {% if notifications_unread > 0 %}
-            <button class="button is-small is-outlined" style="font-weight:bold;" onclick="document.location='/notifications2';">{{ notifications_unread }} увед.</button>
+            <button class="button is-small is-outlined" style="font-weight:bold;" onclick="document.location='/notifications';">{{ notifications_unread }} увед.</button>
           {% else %}
             <!--<button class="button is-small is-outlined" onclick="document.location='/notifications2';">Нет увед.</button>-->
           {% endif %}
@@ -363,7 +363,7 @@ Main page block:
          
           <div class="navbar-end">
             {% if is_mod %}
-            <a class="navbar-item" href="/notifications2" target="_blank">
+            <a class="navbar-item" href="/notifications" target="_blank">
               {% if notifications_unread > 0 %}
                 <b>{{ notifications_unread }} новых уведомлений</b>
               {% else %}
@@ -431,14 +431,16 @@ Main page block:
         </content>
     
         {% if topic_id %}
-        <div style="margin-top:10px;" onclick="load_new_replies(topic_id);">
+        <!-- in topic -->
+        <div id="load_new_replies" style="margin-top:10px;" onclick="$(this).hide();load_new_replies(topic_id, function () {$('#load_new_replies').show();});">
           <a href="javascript:;">Загрузить новые посты</a>
         </div>
         {% endif %}
     
         {% if topics|length == default_limit and not topic_id %}
+        <!-- on forum page -->
         <content>
-          <post_with_replies id="load_more_topics" style="cursor:pointer;" onclick="load_more_topics();">
+          <post_with_replies id="load_more_topics" style="cursor:pointer;" onclick="$(this).hide();load_more_topics(function () {$('#load_more_topics').show();});">
             <post style="text-align:center;">
               Загрузить еще посты
             </post>

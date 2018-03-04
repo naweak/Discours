@@ -17,4 +17,5 @@ class Modlog extends Model
 	public $ip;
 	public $reason;
 	public $ban_id;
+	public $unlawful;
 }

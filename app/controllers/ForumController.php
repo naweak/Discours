@@ -6,7 +6,8 @@ class ForumController extends Controller
 {
 
 	public function indexAction()
-	{		
+	{
+		die("<html><head><meta charset=эUTF-8э></head><body>Все под контролем. Переезжаем.</body></html>");
 		$pdo = pdo();
 		
 		//$default_limit = 25;
@@ -111,6 +112,8 @@ class ForumController extends Controller
 			"forum_title" => $forum_obj->title,
 			"final_title" => $forum_obj->title,
 			
+			"meta" => array(),
+			
 			"is_mod" => is_mod()
 		);
 		
@@ -143,14 +146,21 @@ class ForumController extends Controller
 			
 			if ($topic->title)
 			{
-				$description = "Дискурс — ".anti_xss($topic->title);
+				//$description = "Дискурс — ".anti_xss($topic->title);
+				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($topic->title);
 			}
 			
 			elseif (mb_strlen($topic->text) > 3)
 			{
 				$trim_chars = 250;
-				$text_summary = strlen($topic->text) > $trim_chars ? substr($topic->text,0,$trim_chars)."..." : $topic->text;
-				$description = "Дискурс — ".anti_xss($text_summary);
+				$text_summary = mb_strlen($topic->text) > $trim_chars ? mb_substr($topic->text,0,$trim_chars)."..." : $topic->text;
+				//$description = "Дискурс — ".anti_xss($text_summary);
+				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($text_summary);
+			}
+			
+			if ($topic->file_url)
+			{
+				$twig_data["meta"]["image"] = $topic->file_url;
 			}
 		}
 		
@@ -161,7 +171,7 @@ class ForumController extends Controller
 			
 			$omit_replies = false;
 			
-			if ($forum_obj->forum_id == 14) // /old/
+			if (in_array($forum_obj->forum_id, array(3, 14))) // /test/, /old/
 			{
 				if (!$topic_id)
 				{
@@ -208,10 +218,10 @@ class ForumController extends Controller
 			echo "<!-- ".$topic->post_id." ".benchmark()." -->\n";
 		}
 		
-		if (isset($description))
+		/*if (isset($description))
 		{
 			$twig_data["description"] = $description;
-		}
+		}*/
 		
 		$query = $pdo->query("SELECT COUNT(*) FROM notifications WHERE is_read = 0");
 		$twig_data["notifications_unread"] = $query->fetchColumn();

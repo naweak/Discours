@@ -29,11 +29,18 @@ function cache_get ($name)
 	return $memcache->get($name);
 }
 
-function pdo ()
+function pdo ($encoding = "")
 {
 	try
 	{
-		$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE, MYSQL_USERNAME, MYSQL_PASSWORD);
+		if (strtolower($encoding) == "utf8")
+		{
+			$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE.";charset=utf8", MYSQL_USERNAME, MYSQL_PASSWORD);
+		}
+		else
+		{
+			$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE, MYSQL_USERNAME, MYSQL_PASSWORD);
+		}
 		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		return $pdo;
 	}
@@ -99,7 +106,8 @@ function markup ($text, $data = null)
 			if ($forum_template == "default") // normal link
 			{
 				$text = preg_replace("/(^|\n)&gt;&gt;([0-9]+)/i",
-													 "$1<a onclick='link_click(".$data["parent_topic"].",$2);'>&gt;&gt;Ответ на пост #$2</a>",
+													 //"$1<a onclick='link_click(".$data["parent_topic"].",$2);'>&gt;&gt;Ответ на пост #$2</a>",
+														 "$1<a onclick='link_click(".$data["parent_topic"].",$2);'>Ответ на пост #$2</a>",
 													 $text); // >>123
 			}
 			elseif ($forum_template == "wakaba") // wakaba link
@@ -111,7 +119,8 @@ function markup ($text, $data = null)
 		}
 
     // ([^\n]*)
-  	$text = preg_replace("/(^|\n)&gt;([^\n]*)/i", "$1<quote>&gt;$2</quote>", $text); // add ">" using ::before selector
+  	//$text = preg_replace("/(^|\n)&gt;([^\n]*)/i", "$1<quote>&gt;$2</quote>", $text); // add ">" using ::before selector
+		$text = preg_replace("/(^|\n)&gt;([^\n]*)/i", "$1<quote>$2</quote>", $text); // add ">" using ::before selector
 	
     $text = str_replace("\n", "<br>\n", $text);
   
@@ -140,13 +149,12 @@ function markup ($text, $data = null)
 		// Links
     $text = preg_replace('!(((f|ht)tp(s)?://)[-a-zA-Zа-яА-Я()0-9@:%_+.~#?&;//=]+)!u', '<a href="$1" target="_blank">$1</a>', $text);
   
-		// Smiles
-		$text = preg_replace("/:(sheez):/iu", "<img src='https://1chan.ca/img/$1.png' width='30px' height='30px'>", $text);
-		$text = preg_replace("/:(rage):/iu", "<img src='https://1chan.ca/img/$1.png' width='28px' height='30px'>", $text);
-	
+		/*// Smiles
+		$text = preg_replace("/:(sheez):/iu", "<img src='https://1chan.ca/img/$1.png' alt='$1' width='30px' height='30px'>", $text);
+		$text = preg_replace("/:(rage):/iu", "<img src='https://1chan.ca/img/$1.png' alt='$1' width='28px' height='30px'>", $text);
 		// Smiles (animated)
-		$text = preg_replace("/:(nyan):/iu", "<img src='https://1chan.ca/img/$1.gif' width='53px' height='21px'>", $text);
-		$text = preg_replace("/:(popka):/iu", "<img src='https://1chan.ca/img/$1.gif' width='45px' height='35px'>", $text);
+		$text = preg_replace("/:(nyan):/iu", "<img src='https://1chan.ca/img/$1.gif' alt='$1' width='53px' height='21px'>", $text);
+		$text = preg_replace("/:(popka):/iu", "<img src='https://1chan.ca/img/$1.gif' alt='$1' width='45px' height='35px'>", $text);*/
 	
     return $text;
 }

@@ -43,6 +43,8 @@ class PostingController extends Controller
 			$this->error("Must be POST data");
 		}
 		
+		$this->error("No fun allowed.");
+		
     $allowed_host = $_SERVER['SERVER_NAME'];
     $host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
     if(substr($host, 0 - strlen($allowed_host)) != $allowed_host)
@@ -57,12 +59,18 @@ class PostingController extends Controller
 		
 		if
 		(
-			($forum_id == 9 or $forum_id == 11)
+			//($forum_id == 9 or $forum_id == 11)
+			in_array($forum_id, array(9, 11))
 			and !$parent_topic
 			and user_id() != 1
 		)
 		{
 			$this->error("Только администраторы могут создавать темы на этом форуме.");
+		}
+		
+		if ($forum_id == 3 and user_id() != 1) // /test/
+		{
+			$this->error("Этот форум закрыт для постинга.");
 		}
 		
 		// Text
@@ -371,6 +379,11 @@ class PostingController extends Controller
 		{
 			send_message_to_telegram_channel("@DiscoursChangelog", $text . "\nОбсудить: https://discou.rs/topic/".$post->post_id, TELEGRAM_TOKEN);
 		}
+		
+		/*elseif ($parent_topic == 0) // posting to Discours Topics
+		{
+			send_message_to_telegram_channel("@DiscoursTopics", "https://discou.rs/topic/".$post->post_id, TELEGRAM_TOKEN);
+		}*/
 	
 		if ($request->getPost("ajax")) // report success to user
 		{
@@ -492,9 +505,9 @@ class PostingController extends Controller
 		{
 			exec("convert -thumbnail 150x150 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
 		}
-		else
+		else // /test/
 		{
-			//test forum
+			/*
 			//exec("convert -resize 150x150 -level 0%,100%,0.8 -density 300 -sharpen 1x1 -quality 100 $tmp_name $thumb_path");
 			if (!$post->parent_topic) // new topic
 			{
@@ -507,6 +520,8 @@ class PostingController extends Controller
 			exec("convert $tmp_name -resize '{$square_size}^>' -gravity center -crop {$square_size}x{$square_size}+0+0 -strip $thumb_path"); // square
 			
 			//exec("convert $tmp_name -resize 150 -density 300 $thumb_path");
+			*/
+			exec("convert -thumbnail 150x150 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
 		}
 
 		list($thumb_w, $thumb_h) = getimagesize($thumb_path);
@@ -516,10 +531,9 @@ class PostingController extends Controller
 		
 		$new_file_name  = "{$time}_{$rand}.".$file_extension;
 		$new_thumb_name = "{$time}_{$rand}_thumb.".$file_extension;
-		$new_path = ROOT_DIR."/public/files";
 		
-		copy ($tmp_name, $new_path."/".$new_file_name);
-		copy ($thumb_path, $new_path."/".$new_thumb_name);
+		copy ($tmp_name, UPLOAD_DIR."/".$new_file_name);
+		copy ($thumb_path, UPLOAD_DIR."/".$new_thumb_name);
 		
 		$file_url  = "https://discou.rs/files/$new_file_name";
 		$thumb_url = "https://discou.rs/files/$new_thumb_name";

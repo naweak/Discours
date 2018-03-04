@@ -98,6 +98,11 @@ and (max-width : 700px)
 		text-align: justify !important;
 	}
 	
+	content.notifications
+	{
+		padding: 0px 10px;
+	}
+	
 	footer
 	{
 		display: none;

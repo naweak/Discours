@@ -56,9 +56,10 @@ $(document).ready(function ()
 		{
 			if (!topic_id)
 			{
-				if(isScrolledIntoView($("#load_more_topics")))
+				if($("#load_more_topics").is(":visible") && isScrolledIntoView($("#load_more_topics")))
 				{
-					$("#load_more_topics").click();
+					$("#load_more_topics").hide();
+					load_more_topics(function () {$("#load_more_topics").show();});
 				}
 			}
 		}
@@ -354,6 +355,9 @@ function bind_event_handlers ()
 
 				// resize textarea
 				textarea.trigger("paste");
+				
+				$(form).find("input[type='submit']").prop("disabled", false);
+				$(form).find(".submit_button").removeClass("is-loading");
 			}
 			
 			if (typeof data.reply !== "undefined")
@@ -391,10 +395,12 @@ function bind_event_handlers ()
 			}
 			else
 			{
+				$(form).find("input[type='submit']").prop("disabled", false);
+				$(form).find(".submit_button").removeClass("is-loading");
 				alert(data.error);
 			}
-			$(form).find("input[type='submit']").prop("disabled", false);
-			$(form).find(".submit_button").removeClass("is-loading");
+			/*$(form).find("input[type='submit']").prop("disabled", false);
+			$(form).find(".submit_button").removeClass("is-loading");*/
 		},
 		"error": function error (data)
 		{
@@ -619,7 +625,7 @@ function isScrolledIntoView (elem)
 		return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
 }
 
-function load_more_topics ()
+function load_more_topics (on_finish)
 {
 	var onclick_script = $("#load_more_posts").attr("onclick");
 	var caption = $("#load_more_posts post").html();
@@ -633,11 +639,14 @@ function load_more_topics ()
 		if (topics_element)
 		{
 			$("#topics").append(topics_element.innerHTML);
-			//bind_event_handlers();
 		}
 		$("#load_more_posts").attr("onclick", onclick_script);
 		$("#load_more_posts post").html(caption);
 		window.dynamic_page_coounter++;
+		if(typeof on_finish !== "undefined")
+		{
+			on_finish();
+		}
 	});
 }
 
@@ -658,12 +667,12 @@ function load_new_replies (topic_id, on_finish)
 					console.log("New reply!");
 					$("post_with_replies[topic_id='"+topic_id+"'] replies").append(this);
 					$("post_with_replies[topic_id='"+topic_id+"'] replies").append("<div class='hr'></div>");
-					if(typeof on_finish !== "undefined")
-					{
-						on_finish();
-					}
 				}
 			});
+			if(typeof on_finish !== "undefined")
+			{
+				on_finish();
+			}
 		}
 	});
 }

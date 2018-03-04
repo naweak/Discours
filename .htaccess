@@ -53,6 +53,15 @@ RewriteRule ^(news)/$ /forum/?forum=13&%{QUERY_STRING}
 
 RewriteRule ^(old)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(old)/$ /forum/?forum=14&%{QUERY_STRING}
+
+RewriteRule ^(advice)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(advice)/$ /forum/?forum=15&%{QUERY_STRING}
+
+RewriteRule ^(art)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(art)/$ /forum/?forum=16&%{QUERY_STRING}
+
+RewriteRule ^(hobby)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(hobby)/$ /forum/?forum=17&%{QUERY_STRING}
 ################################################
 RewriteRule ^(login)$ /page?page=$1
 RewriteRule ^(delete)$ /page?page=$1
@@ -73,8 +82,12 @@ RewriteRule ^(tidyup)$ /page?page=$1
 
 RewriteRule ^(twig)$ /page?page=$1
 
-RewriteRule ^(notifications)$ /page?page=$1
+RewriteRule ^(notifications)$ /page?page=notifications2
+
+RewriteRule ^(notifications1)$ /page?page=$1
 RewriteRule ^(notifications2)$ /page?page=$1
+
+RewriteRule ^(convert)$ /page?page=$1
 ########################
 
 <IfModule mod_rewrite.c>

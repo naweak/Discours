@@ -2,7 +2,7 @@
 //die("Temporary unavailable due to migration to Phalcon framework");
 ob_start();
 
-$pdo = pdo();
+$pdo = pdo("utf8");
 ?>
 <content>
 		<h2 style="text-align:center;">Журнал действий модераторов</h2>
@@ -64,6 +64,19 @@ $pdo = pdo();
         echo "<td>$reason</td>";
         
         echo "</tr>";
+				
+				if ($row["unlawful"])
+				{
+					?>
+					<tr>
+						<td colspan="100">
+							<span style="color:red;">
+								Бан неправомерен. <?php echo anti_xss($row["unlawful"]); ?>
+							</span>
+						</td>
+					</tr>
+					<?php
+				}
       }
       ?>
     </table>

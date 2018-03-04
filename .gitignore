@@ -16,6 +16,7 @@ public/files/
 
 # Contains passwords:
 app/config.php
+app/config/config.php
 
 # Contains sensitive data:
 sessions/

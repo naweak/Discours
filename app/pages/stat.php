@@ -6,7 +6,7 @@ if (!is_mod())
 
 $pdo = pdo();
 
-//$pdo->query("INSERT INTO forums (forum_id, title) VALUES ('', 'Олдфаги')");
+//$pdo->query("INSERT INTO forums (forum_id, title) VALUES ('', 'Советы и вопросы')");
 //$pdo->query("UPDATE forums SET title = 'Старый дизайн' WHERE forum_id = 14");
 ?>
 

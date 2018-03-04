@@ -7,18 +7,7 @@ use Phalcon\Mvc\Application;
 use Phalcon\Mvc\Url as UrlProvider;
 use Phalcon\Mvc\View;
 
-/*use Phalcon\Mvc\Router;
-$router = new Router();
-$router->add
-(
-    "/abcd",
-    [
-        "controller" => "notification",
-        "action"     => "index",
-    ]
-);*/
-
-require_once dirname(__DIR__)."/app/config.php"; // load configuration
+require_once dirname(__DIR__)."/app/config/config.php"; // load configuration
 require_once dirname(__DIR__)."/app/library/library.php"; // load Discours functions (is it alwats needed or can be loaded later?)
 
 \Phalcon\Mvc\Model::setup
@@ -64,7 +53,10 @@ $di['db'] = function() {
         "host"     => MYSQL_HOST,
         "username" => MYSQL_USERNAME,
         "password" => MYSQL_PASSWORD,
-        "dbname"   => MYSQL_DATABASE
+        "dbname"   => MYSQL_DATABASE,
+        "options" => array(
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
+        )
     ));
 };
 

@@ -23,9 +23,6 @@ class Post extends Model
 	
 	function to_array ($external = false)
 	{
-		//$VotingController = new VotingController();
-		//$LikeController   = new LikeController();
-		
 		$forum_obj = Forum::findFirst
 		(
     [
@@ -78,17 +75,27 @@ class Post extends Model
 			$output["title_formatted"] = ($this->title != "") ? str_replace(" ", "&nbsp;", anti_xss($this->title)) : "Тема без заголовка";
 		}
 		
-		/*if ($this->parent_topic == 0)
+		// /test/
+		/*if ($this->forum_id == 3 and $output["title_formatted"] == "Тема без заголовка")
 		{
-			$output["voting_html"] = $VotingController->html($this->post_id);
-		}
-		
-		else
-		{
-			$output["like_html"] = $LikeController->html($this->post_id);
+			$output["title_formatted"] = "";
 		}*/
 		
 		return $output;
+	}
+	
+	function delete_files ()
+	{
+		$file_path  = UPLOAD_DIR."/".basename($this->file_url);
+		$thumb_path = UPLOAD_DIR."/".basename($this->thumb_url);
+		if (is_file($file_path))
+		{
+			unlink($file_path);
+		}
+		if (is_file($thumb_path))
+		{
+			unlink($thumb_path);
+		}
 	}
 
 	public $post_id;

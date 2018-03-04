@@ -61,11 +61,19 @@ if (isset($_POST["submit"]))
 		$text_sample = $row["text"];
     $ip = $row["ip"];
     $reason = $_POST["reason"];
-    
+		
+		/********/
+		$post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $post_id]]);
+		if (!$post_object)
+		{
+			die("Post not found!");
+		}
+		$post_object->delete_files();
+		/********/
+  
 		$query = $pdo->prepare("DELETE FROM posts WHERE post_id = '$post_id' OR parent_topic = '$post_id'");
 		$query->execute();
 		$affected_rows = $query->rowCount();
-		
     $message = "Post deleted rows: $affected_rows<br>";
 		
 		if ($row['parent_topic'] != 0) // deleted a reply to a topic
@@ -108,6 +116,7 @@ if (isset($_POST["submit"]))
 			$modlog->ip = $ip;
 			$modlog->reason = $reason;
 			$modlog->ban_id = $ban_id;
+			$modlog->unlawful = "";
 			$modlog->save();
     }
     
@@ -136,7 +145,17 @@ if (isset($_POST["submit"]))
 					$modlog->ip = $ip;
 					$modlog->reason = "Удаление вайпа";
 					$modlog->ban_id = $ban_id;
+					$modlog->unlawful = "";
 					$modlog->save();
+					
+					/********/
+					$post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $row['post_id']]]);
+					if (!$post_object)
+					{
+						die("Post not found!");
+					}
+					$post_object->delete_files();
+					/********/
 					
 					$query = $pdo->prepare("DELETE FROM posts WHERE post_id = :post_id");
 					$query->execute(["post_id" => $row['post_id']]);

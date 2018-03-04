@@ -62,6 +62,7 @@ if (isset($_POST["submit"]))
 			$modlog->ip = "";
 			$modlog->reason = "";
 			$modlog->ban_id = 0;
+			$modlog->unlawful = "";
 			$modlog->save();
     }
   }
