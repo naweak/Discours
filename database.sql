@@ -21,7 +21,7 @@ CREATE TABLE `bans` (
   `ip` text COLLATE utf8_bin NOT NULL,
   `expires` int(10) unsigned NOT NULL,
   PRIMARY KEY (`ban_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=313 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -35,7 +35,7 @@ CREATE TABLE `forums` (
   `forum_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `title` text COLLATE utf8_bin NOT NULL,
   PRIMARY KEY (`forum_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -55,7 +55,7 @@ CREATE TABLE `modlog` (
   `reason` text COLLATE utf8_bin NOT NULL,
   `ban_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`action_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8823 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -73,7 +73,7 @@ CREATE TABLE `notifications` (
   `post_id` int(10) unsigned NOT NULL,
   `text` text COLLATE utf8_bin NOT NULL,
   PRIMARY KEY (`notification_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=592 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -99,7 +99,7 @@ CREATE TABLE `posts` (
   `thumb_w` int(10) unsigned NOT NULL,
   `thumb_h` int(10) unsigned NOT NULL,
   PRIMARY KEY (`post_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15466 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

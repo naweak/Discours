@@ -43,8 +43,6 @@ class PostingController extends Controller
 			$this->error("Must be POST data");
 		}
 		
-		$this->error("No fun allowed.");
-		
     $allowed_host = $_SERVER['SERVER_NAME'];
     $host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
     if(substr($host, 0 - strlen($allowed_host)) != $allowed_host)
@@ -535,8 +533,8 @@ class PostingController extends Controller
 		copy ($tmp_name, UPLOAD_DIR."/".$new_file_name);
 		copy ($thumb_path, UPLOAD_DIR."/".$new_thumb_name);
 		
-		$file_url  = "https://discou.rs/files/$new_file_name";
-		$thumb_url = "https://discou.rs/files/$new_thumb_name";
+		$file_url  = FILE_PROTOCOL."://".FILE_HOST."/files/$new_file_name";
+		$thumb_url = FILE_PROTOCOL."://".FILE_HOST."/files/$new_thumb_name";
 		
 		$post->file_url = $file_url;
 		$post->thumb_url = $thumb_url;

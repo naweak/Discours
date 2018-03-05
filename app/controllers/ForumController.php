@@ -7,10 +7,8 @@ class ForumController extends Controller
 
 	public function indexAction()
 	{
-		die("<html><head><meta charset=эUTF-8э></head><body>Все под контролем. Переезжаем.</body></html>");
 		$pdo = pdo();
-		
-		//$default_limit = 25;
+	
 		$default_limit = 20;
 		$replies_to_show = 3;
 		$limit = $default_limit;
@@ -135,7 +133,7 @@ class ForumController extends Controller
 		}
 		/******/
 		
-		if (!$topic_id) // forum page
+		if (!isset($topic_id)) // forum page
 		{
 			$description = "Дискурс — ".anti_xss($forum_obj->title);
 		}

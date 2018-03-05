@@ -29,18 +29,11 @@ function cache_get ($name)
 	return $memcache->get($name);
 }
 
-function pdo ($encoding = "")
+function pdo ($encoding = "utf8")
 {
 	try
 	{
-		if (strtolower($encoding) == "utf8")
-		{
-			$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE.";charset=utf8", MYSQL_USERNAME, MYSQL_PASSWORD);
-		}
-		else
-		{
-			$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE, MYSQL_USERNAME, MYSQL_PASSWORD);
-		}
+		$pdo = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE.";charset=".$encoding, MYSQL_USERNAME, MYSQL_PASSWORD);
 		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		return $pdo;
 	}
@@ -207,6 +200,7 @@ function is_mod ()
 function error_page ($code) // 404 Not Found
 {
 	header("HTTP/1.0 404 Not Found");
+	echo "<!--".benchmark()."-->";
 	ob_start();
 	?>
 	<h2>Вы попали на страницу 404</h2>
@@ -228,6 +222,7 @@ function error_page ($code) // 404 Not Found
 		"final_title" => "Не найдено!"
 	);
 	echo render($twig_data);
+	echo "<!--".benchmark()."-->";
 	exit();
 }
 

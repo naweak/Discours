@@ -7,8 +7,6 @@ public/phpinfo.php
 /websocket
 
 app/controllers/NotificationController.php
-app/models/Notification.php
-app/pages/notifications.php
 app/pages/notifications*
 
 # Images:

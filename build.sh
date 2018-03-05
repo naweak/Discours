@@ -5,7 +5,7 @@
 # git commit -m ""
 # git push
 
-template="test"
+template="default"
 
 echo "Template: ${template}"
 
@@ -25,9 +25,9 @@ uglifyjs app/templates/${template}/template.js >> public/assets/${template}_${ti
 #browserify bundle.js | uglifyjs >> $temp_file_js
 #uglifyjs app/templates/${template}/template.js >> $temp_file_js
 
-minify app/templates/${template}/bulma.css >> public/assets/${template}_$timestamp.css
-minify app/templates/${template}/template.css >> public/assets/${template}_$timestamp.css
-minify app/templates/${template}/arimo.css >> public/assets/${template}_$timestamp.css
+uglifycss app/templates/${template}/bulma.css >> public/assets/${template}_$timestamp.css
+uglifycss app/templates/${template}/template.css >> public/assets/${template}_$timestamp.css
+uglifycss app/templates/${template}/arimo.css >> public/assets/${template}_$timestamp.css
 
 #minify app/templates/${template}/bulma.css >> $temp_file_css
 #minify app/templates/${template}/template.css >> $temp_file_css
