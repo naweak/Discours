@@ -320,7 +320,12 @@ class PostingController extends Controller
 		
 		if ($parent_topic) // update parent topic's ord
 		{
-			if (!$allow_sage or ($allow_sage and !$request->getPost("sage"))) // bump
+			if // bump if...
+			(
+					!$allow_sage // sage disallowed
+					or is_uploaded_file($_FILES["userfile"]["tmp_name"]) // or post has file
+					or ($allow_sage and !$request->getPost("sage")) // sage is alloed AND request contains sage
+			)
 			{
 				if ($parent_topic != 18520) // topic to report posts
 				{
@@ -382,40 +387,17 @@ class PostingController extends Controller
 		{
 			send_message_to_telegram_channel("@DiscoursTopics", "https://discou.rs/topic/".$post->post_id, TELEGRAM_TOKEN);
 		}*/
+		
+		//page_cache_delete("forum_".$forum_obj->forum_id); // delete page cache
+		cache_delete("forum_".$forum_obj->forum_id); // delete page cache
+		//exec("curl --max-time 0.01 https://domain/forum/?forum=".$forum_obj->forum_id); // update page cache
 	
 		if ($request->getPost("ajax")) // report success to user
 		{
-			$output = ["success" => true];
-
-			/* HTML output */
-			$post_array = $post->to_array();
-			if ($parent_topic)
-			{
-				$twig_data["block"] = "reply";
-				$twig_data["reply"] = $post_array;
-			}
-			else
-			{
-				$twig_data["block"] = "topic_with_replies";
-				$twig_data["topic"] = $post_array;
-			}
-			$html = render($twig_data);
-			$output["html"] = $html;
-			/* / HTML output */
-
+			$output = array();
+			$output["success"] = true;
+			$output["post_id"] = $post->post_id;
 			$output["benchmark"] = benchmark();
-			
-			// Remove this? HTML is already included
-			if ($parent_topic)
-			{
-				$output["reply"] = $post->to_array();
-			}
-
-			else
-			{
-				$output["topic"] = $post->to_array();
-			}
-
 			echo json_encode($output);
 		}
 
@@ -453,7 +435,7 @@ class PostingController extends Controller
 			echo render($twig_data);
 		}
 			
-		die();
+		exit();
 	}
 	
 	function process_file ($file, $post)
@@ -505,30 +487,28 @@ class PostingController extends Controller
 		}
 		else // /test/
 		{
-			/*
-			//exec("convert -resize 150x150 -level 0%,100%,0.8 -density 300 -sharpen 1x1 -quality 100 $tmp_name $thumb_path");
-			if (!$post->parent_topic) // new topic
-			{
-				$square_size = 150;
-			}
-			else // reply
-			{
-				$square_size = 100;
-			}
-			exec("convert $tmp_name -resize '{$square_size}^>' -gravity center -crop {$square_size}x{$square_size}+0+0 -strip $thumb_path"); // square
-			
-			//exec("convert $tmp_name -resize 150 -density 300 $thumb_path");
-			*/
 			exec("convert -thumbnail 150x150 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
 		}
 
 		list($thumb_w, $thumb_h) = getimagesize($thumb_path);
 		
+		function random_str ($length, $keyspace = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+		{
+				$str = "";
+				$max = mb_strlen($keyspace, "8bit") - 1;
+				for ($i = 0; $i < $length; ++$i) {
+						$str .= $keyspace[random_int(0, $max)];
+				}
+				return $str;
+		}
 		$time = time();
 		$rand = random_int(1000, 9999);
+		$rand_str = random_str(8);
 		
-		$new_file_name  = "{$time}_{$rand}.".$file_extension;
-		$new_thumb_name = "{$time}_{$rand}_thumb.".$file_extension;
+		//$new_file_name  = "{$time}_{$rand}.".$file_extension;
+		//$new_thumb_name = "{$time}_{$rand}_thumb.".$file_extension;
+		$new_file_name  = "{$rand_str}.".$file_extension;
+		$new_thumb_name = "{$rand_str}_thumb.".$file_extension;
 		
 		copy ($tmp_name, UPLOAD_DIR."/".$new_file_name);
 		copy ($thumb_path, UPLOAD_DIR."/".$new_thumb_name);

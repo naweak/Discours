@@ -10,9 +10,8 @@
 3) MySQL (phpMyAdmin — по желанию)
 4) Phalcon
 5) Memcached
-6) Twig
-7) Node.JS
-8) ImageMagick
+6) Node.JS
+7) ImageMagick
 
 Инструкции по установке несложно найти в интернете. Рекомендуемый дистрибутив — Ubuntu последней стабильной версии.
 
@@ -23,16 +22,21 @@
 Это делается при помощи выполнения скрипта build.sh: ./build.sh
 
 Чтобы он мог работать, нужно установить Node.js и несколько модулей.
+
 npm install jquery
+
 npm install jquery-browserify
+
 npm install autosize
+
 npm install uglify-js -g
+
 npm install uglifycss -g
 
 ### Установка
 
-1) Скопируйте содержание этого репозитория в корень вашего веб-сервера.
-2) Установите Twig при помощи composer.
+1) Скопируйте содержание этого репозитория в корень вашего веб-сервера (git clone).
+2) Установите Twig через [composer](https://twig.symfony.com/doc/2.x/installation.html).
 3) Создайте базу данных и таблицы при помощи файла database.sql
 4) Отредактируйте app/config-example.php и переименуйте в config.php
 5) Создайте первую запись в таблице forums при помощи phpMyAdmin или консоли

@@ -213,6 +213,11 @@ content
 	text-align: left;
 }
 
+form
+{
+	margin: 0px;
+}
+
 omitted_replies
 {
 	display: none;

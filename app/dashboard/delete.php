@@ -36,7 +36,8 @@ if (isset($_POST["submit"]))
 	
 	function update_topic_ord ($topic_id)
 	{
-		global $pdo;
+		$pdo = pdo(); // really bad code
+		
 		$last_reply_row = $pdo->query("SELECT * FROM posts WHERE parent_topic = '$topic_id' ORDER BY ord DESC")->fetch();
 		
 		if ($last_reply_row) // topic has replies
@@ -94,8 +95,7 @@ if (isset($_POST["submit"]))
         {
           $expires = strtotime("+10 years");
         }
-
-				$query = $pdo->prepare("INSERT INTO bans (ban_id, ip, expires) VALUES ('', :ip, :expires)");
+				$query = $pdo->prepare("INSERT INTO bans (ip, expires) VALUES (:ip, :expires)");
 				$query->execute(["ip" => $ip, "expires" => $expires]);
         
 				$ban_id = $pdo->lastInsertId();
@@ -118,6 +118,8 @@ if (isset($_POST["submit"]))
 			$modlog->ban_id = $ban_id;
 			$modlog->unlawful = "";
 			$modlog->save();
+			
+			cache_delete("forum_".$post_object->forum_id); // delete page cache
     }
     
     // Delete all by this user
@@ -147,6 +149,8 @@ if (isset($_POST["submit"]))
 					$modlog->ban_id = $ban_id;
 					$modlog->unlawful = "";
 					$modlog->save();
+					
+					cache_delete("forum_".$row['forum_id']); // delete page cache
 					
 					/********/
 					$post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $row['post_id']]]);
@@ -202,6 +206,7 @@ ob_start();
         <option value="вайп">вайп</option>
         <option value="спам">спам</option>
         <option value="порно">порно</option>
+        <option value="флуд">флуд</option>
       </select>
       <br> Номер поста:  <input type="text" name="post_id" value="<?php if(isset($_POST["n"])) {echo intval($_POST["n"]);} ?>"> <input type="submit" name="submit" value="Отправить">
   </form>
@@ -212,7 +217,8 @@ ob_end_clean();
 
 $twig_data = array
 (
-  "html" => $html
+  "html" => $html,
+	"final_title" => "Удалить пост"
 );
 
 echo render($twig_data);

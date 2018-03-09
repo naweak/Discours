@@ -2,13 +2,17 @@ $(document).ready(function ()
 {
     on_resize();
 	
-		$.get("/twig", function(data)
-    {
-    	window.template = data;
-    });
+		var hash = window.location.hash.substr(1);
+		if (hash)
+		{
+			console.log ("Highlighting reply: "+hash);
+			scroll_to_reply(hash);
+			highlight_reply(hash);
+		}
 
     $("img.embedded").css("cursor", "pointer");
-    $("img.embedded").click(function () {
+    $("img.embedded").click(function ()
+		{
         var win = window.open(this.src, "_blank");
     });
 	
@@ -49,6 +53,16 @@ $(document).ready(function ()
 				}
 			});
 		});
+	
+		var scroll_speed = 1;
+		$("#up").click(function ()
+		{
+        $("html, body").animate({scrollTop : 0}, scroll_speed);
+    });
+		$("#down").click(function ()
+		{
+        $("html, body").animate({scrollTop : $(document).height()}, scroll_speed);
+    });
 	
 		bind_event_handlers();
 	
@@ -155,6 +169,15 @@ function ajax_form (args)
 	on_submit.args = args;
 	//$(args.selector).submit(on_submit);
 	$(document).on("submit", args.selector, on_submit);
+}
+
+function time_link_click (hash)
+{
+	if (topic_id)
+	{
+		$("*").removeClass("highlighted");
+		highlight_reply(hash);
+	}
 }
 
 function bind_event_handlers ()
@@ -277,16 +300,27 @@ function bind_event_handlers ()
 			console.log("Server response:");
 			console.log(data);
 			data = $.parseJSON(data);
-			if (typeof data.topic !== "undefined")
+			//if (typeof data.topic !== "undefined")
+			if (typeof data.success !== "undefined" && data.success)
 			{
 				$("#new_topic_form_error_message").html("");
 
 				// prepend thread
-				rendered = data.html;
-				$("#topics").prepend(rendered);
-
-				// clear form
-				clear_new_topic_form();
+				//rendered = data.html;
+				//$("#topics").prepend(rendered);
+				$.get("/topic/"+data.post_id, function(data)
+				{
+					var parser = new DOMParser();
+					var html_doc = parser.parseFromString(data, "text/html");
+					var post_with_replies = $(html_doc).find("post_with_replies[topic_id]");
+					
+					console.log(post_with_replies);
+					
+					$("#topics").prepend(post_with_replies);
+					
+					// clear form
+					clear_new_topic_form();
+				});
 			}
 			else
 			{
@@ -353,14 +387,20 @@ function bind_event_handlers ()
 				textarea.val("");
 				autosize.update(textarea);
 
-				// resize textarea
-				textarea.trigger("paste");
+				textarea.trigger("paste"); // resize textarea
 				
 				$(form).find("input[type='submit']").prop("disabled", false);
 				$(form).find(".submit_button").removeClass("is-loading");
+	
+				var reply_form = $(form);
+				$(reply_form).prev().detach();
+				$(form).parent().append("<div class='hr'></div>", reply_form.detach());
+				
+				//$("html, body").animate({scrollTop: $(document).height() }, 1); // scroll to bottom
 			}
 			
-			if (typeof data.reply !== "undefined")
+			//if (typeof data.reply !== "undefined")
+			if (typeof data.success !== "undefined" && data.success)
 			{
 				if ($(form).hasClass("notification_form"))
 				{
@@ -368,30 +408,10 @@ function bind_event_handlers ()
 					$(form).hide();
 					return true;
 				}
-				
-				// append reply
-				/*rendered = data.html;
-				rendered += "<div class='hr'></div>";
-				$(form).parent().find("replies").append(rendered);
-				clean_and_resize();*/
-
 				var parent_topic = $(form).find("[name='parent_topic']").val();
 				console.log("Parent topic: " + parent_topic);
 				
-				/*if (topic_id)
-				{
-					load_new_replies(parent_topic, clean_and_resize);
-				}
-				else
-				{
-					// append reply
-					rendered = data.html;
-					rendered += "<div class='hr'></div>";
-					$(form).parent().find("replies").append(rendered);
-					clean_and_resize();
-				}*/
-				
-				load_new_replies(parent_topic, clean_and_resize);
+				load_new_replies(parent_topic, clean_and_resize, false);
 			}
 			else
 			{
@@ -426,7 +446,7 @@ function bind_event_handlers ()
 
 /* Functions: */
 
-function render (data)
+/*function render (data)
 {
 	var twig = Twig.twig;
 	//var twig = require('twig');
@@ -436,7 +456,7 @@ function render (data)
 	});
 	var output = template.render(data);
 	return output;
-}
+}*/
 
 function clear_new_topic_form ()
 {
@@ -460,54 +480,70 @@ function reply_to_topic (topic_id, reply_id, index)
 {
 	console.log("reply_to_topic triggered!");
 	
+	var topic = $("post_with_replies[topic_id='"+topic_id+"']");
+	var reply_form = $(topic).find(".reply_form");
+	$(reply_form).prev().detach();
+	if (typeof reply_id === "undefined") // replying to topic
+	{
+		$(topic).find("reply").last().after("<div class='hr'></div>", reply_form.detach());
+	}
+	else // replying to reply
+	{
+		$("#reply_"+reply_id).after("<div class='hr'></div>", reply_form.detach());
+	}
+	
 	var contenteditable = $("#text_"+topic_id);
 	var textarea = document.querySelector("#text_"+topic_id);
-
+	var quote_text = "";
+	
 	if (typeof reply_id !== "undefined")
 	{
-		var quote_text = ">>"+index;
-		
-		//contenteditable.html(quote_text+"\n"+contenteditable.html());
+		quote_text = ">>"+index;
 		textarea.value = quote_text+"\n"+textarea.value;
-		
-		//autosize(textarea);
-		
-		if ($(window).width() > 700)  // normal design
+	}
+	
+	if ($(window).width() > 700)  // normal design
+	{
+		autosize(textarea);
+	}
+
+	else // adaptive design
+	{
+		$(textarea).keypress(function()
 		{
 			autosize(textarea);
-		}
-
-		else // adaptive design
-		{
-			$(textarea).keypress(function()
-			{
-				autosize(textarea);
-				$(textarea).keypress(function(){});
-			});
-		}
-
-		var pos = quote_text.length + 1;
-		contenteditable.selectRange(pos,pos);
-		
-		/* Copied from Autoresize Plugin */
-		var ta = contenteditable[0];
-		var style = window.getComputedStyle(ta, null);
-		if (style.boxSizing === 'content-box')
-		{
-			heightOffset = -(parseFloat(style.paddingTop)+parseFloat(style.paddingBottom));
-		}
-		else
-		{
-			heightOffset = parseFloat(style.borderTopWidth)+parseFloat(style.borderBottomWidth);
-		}
-		if (isNaN(heightOffset))
-		{
-			heightOffset = 0;
-		}
-		var endHeight = ta.scrollHeight+heightOffset;
-		contenteditable.css("height", endHeight);
-		/* /Copied from Autoresize Plugin */
+			$(textarea).keypress(function(){});
+		});
 	}
+
+	var pos = quote_text.length + 1;
+	if (typeof reply_id !== "undefined")
+	{
+		contenteditable.selectRange(pos,pos);
+	}
+	else
+	{
+		contenteditable.focus();
+	}
+
+	/* Copied from Autoresize Plugin */
+	var ta = contenteditable[0];
+	var style = window.getComputedStyle(ta, null);
+	if (style.boxSizing === 'content-box')
+	{
+		heightOffset = -(parseFloat(style.paddingTop)+parseFloat(style.paddingBottom));
+	}
+	else
+	{
+		heightOffset = parseFloat(style.borderTopWidth)+parseFloat(style.borderBottomWidth);
+	}
+	if (isNaN(heightOffset))
+	{
+		heightOffset = 0;
+	}
+	var endHeight = ta.scrollHeight+heightOffset;
+	contenteditable.css("height", endHeight);
+	/* /Copied from Autoresize Plugin */
 }
 
 function isScrolledIntoView(elem)
@@ -524,42 +560,45 @@ function isScrolledIntoView(elem)
 function link_click (parent_topic, order_in_topic)
 {
 	var elem = $("[topic_id='"+parent_topic+"']").find("[order_in_topic='"+order_in_topic+"']");
-	var post = elem.find("text");
-	
-	var html = $(post).html();
-	html = html.trim();
-	//html = html.replace(/<(?:.|\n)*?>/gm, '');
-	
-	function html2text (html)
+	if (elem.length) // element exists on page
 	{
-		var tag = document.createElement('div');
-		tag.innerHTML = html;
-		return tag.innerText;
-	}
-	
-	html = html2text (html);
-	
-	console.log(html);
-	
-	if (isScrolledIntoView(elem) && $(elem).is(":visible"))
-	{
-		console.log("element visible");
-		/*$(elem).animate
-		({
-			opacity: 0.25,
-			left: "+=50",
-			height: "toggle"
-		}, 500);*/
-		$(elem).fadeOut(250).fadeIn(250);
+		var post = elem.find("text");
+
+		var html = $(post).html();
+		html = html.trim();
+
+		function html2text (html)
+		{
+			var tag = document.createElement('div');
+			tag.innerHTML = html;
+			return tag.innerText;
+		}
+
+		html = html2text (html);
+
+		console.log(html);
+
+		if (isScrolledIntoView(elem) && $(elem).is(":visible"))
+		{
+			console.log("element visible");
+			$(elem).fadeOut(250).fadeIn(250);
+		}
+
+		else
+		{
+			alert(html);
+		}
 	}
 	
 	else
 	{
-		alert(html);
+		console.log("Element does not exist on page");
+		var win = window.open("/topic/"+parent_topic+"#"+order_in_topic, '_blank');
+		win.focus();
 	}
 }
 
-function delete_post(post_id)
+function delete_post (post_id)
 {
     document.getElementById(post_id + "_delete_form").submit();
 }
@@ -650,23 +689,39 @@ function load_more_topics (on_finish)
 	});
 }
 
-function load_new_replies (topic_id, on_finish)
+function load_new_replies (id, on_finish, highlight)
 {
-	$.get("/topic/"+topic_id, function( data )
+	if(typeof highlight === "undefined")
+	{
+		highlight = false;
+	}
+	
+	$.get("/topic/"+id, function( data )
 	{
 		var parser = new DOMParser();
 		var html_doc = parser.parseFromString(data, "text/html");
 		var replies_element = $(html_doc).find("replies");
-		if (replies_element)
+		if (replies_element.length)
 		{
+			if (highlight)
+			{
+				$("*").removeClass("highlighted");
+			}
+			var last_reply = $("post_with_replies[topic_id='"+id+"'] replies reply").last();
+			var last_reply_order_in_topic = parseInt($(last_reply).attr("order_in_topic"));
+			if (!last_reply_order_in_topic) {last_reply_order_in_topic = 0;}
 			$(replies_element).find("reply").each(function(index)
 			{
 				console.log($(this).attr("id"));
-				if (!document.getElementById($(this).attr("id")))
+				if (parseInt($(this).attr("order_in_topic")) > last_reply_order_in_topic)
 				{
-					console.log("New reply!");
-					$("post_with_replies[topic_id='"+topic_id+"'] replies").append(this);
-					$("post_with_replies[topic_id='"+topic_id+"'] replies").append("<div class='hr'></div>");
+					console.log("Appending reply");
+					$("post_with_replies[topic_id='"+id+"'] replies").append("<div class='hr'></div>");
+					$("post_with_replies[topic_id='"+id+"'] replies").append(this);
+					if (highlight)
+					{
+						highlight_reply($(this).attr("order_in_topic"));
+					}
 				}
 			});
 			if(typeof on_finish !== "undefined")
@@ -675,6 +730,40 @@ function load_new_replies (topic_id, on_finish)
 			}
 		}
 	});
+}
+
+function load_new_replies_click (element)
+{
+	$(element).prop("disabled", "true");
+	load_new_replies(topic_id, function ()
+	{
+		$(element).prop("disabled", "");
+	}, true);
+}
+
+function hamburger_click ()
+{
+	if ($("#mobile_menu").is(":hidden"))
+	{
+		$("#mobile_menu").show();
+	}
+	else
+	{
+		$("#mobile_menu").hide();
+	}
+}
+
+function scroll_to_reply (order_in_topic)
+{
+	$('html, body').animate
+	({
+		scrollTop: $("reply[order_in_topic='"+order_in_topic+"']").offset().top - $(".navbar").height() - 10
+	}, 1);
+}
+
+function highlight_reply (order_in_topic)
+{
+	$("reply[order_in_topic='"+order_in_topic+"']").addClass("highlighted");
 }
 
 /* Page logic: */

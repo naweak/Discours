@@ -17,7 +17,7 @@ function microtime_from_start ()
 $memcache = new Memcache;
 $memcache->connect("127.0.0.1", 11211);
 
-function cache_set ($name, $data, $time = 25) // time in seconds
+function cache_set ($name, $data, $time = 24*60*60) // time in seconds
 {
 	global $memcache;
 	return $memcache->set($name, $data, false, $time);
@@ -27,6 +27,30 @@ function cache_get ($name)
 {
 	global $memcache;
 	return $memcache->get($name);
+}
+
+function cache_delete ($name)
+{
+	global $memcache;
+	return $memcache->delete($name);
+}
+
+function page_cache_set ($name, $data)
+{
+	if(!preg_match("/^[a-zA-Z0-9_-]*$/", $name)) {die("Incorrect page name!");}
+	return @file_put_contents(ROOT_DIR."/cache/".$name, $data);
+}
+
+function page_cache_get ($name)
+{
+	if(!preg_match("/^[a-zA-Z0-9_-]*$/", $name)) {die("Incorrect page name!");}
+	return @file_get_contents(ROOT_DIR."/cache/".$name);
+}
+
+function page_cache_delete ($name)
+{
+	if(!preg_match("/^[a-zA-Z0-9_-]*$/", $name)) {die("Incorrect page name!");}
+	return @unlink(ROOT_DIR."/cache/".$name);
 }
 
 function pdo ($encoding = "utf8")
@@ -134,21 +158,10 @@ function markup ($text, $data = null)
 	
 		$text = preg_replace("/%%([^\n]*?)%%/iu", "<span class='spoiler'>$1</span>", $text); // spoiler
 		$text = preg_replace("/\[spoiler\]([^\n]*?)\[\/spoiler\]/iu", "<span class='spoiler'>$1</span>", $text);
-	
-    // Imgur
-    // $text = preg_replace("/^http(s)?:\/\/imgur.com\/([a-zA-Z0-9]{5,15})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
-    // $text = preg_replace("/^http(s)?:\/\/i.imgur.com\/([a-zA-Z0-9]{5,15}).([a-z]{3})((<br>|\n| )*)/u", "<img class='embedded' src='HTTPS://i.imgur.com/$2.jpg'>", $text, 1);
-  
+
 		// Links
     $text = preg_replace('!(((f|ht)tp(s)?://)[-a-zA-Zа-яА-Я()0-9@:%_+.~#?&;//=]+)!u', '<a href="$1" target="_blank">$1</a>', $text);
-  
-		/*// Smiles
-		$text = preg_replace("/:(sheez):/iu", "<img src='https://1chan.ca/img/$1.png' alt='$1' width='30px' height='30px'>", $text);
-		$text = preg_replace("/:(rage):/iu", "<img src='https://1chan.ca/img/$1.png' alt='$1' width='28px' height='30px'>", $text);
-		// Smiles (animated)
-		$text = preg_replace("/:(nyan):/iu", "<img src='https://1chan.ca/img/$1.gif' alt='$1' width='53px' height='21px'>", $text);
-		$text = preg_replace("/:(popka):/iu", "<img src='https://1chan.ca/img/$1.gif' alt='$1' width='45px' height='35px'>", $text);*/
-	
+
     return $text;
 }
 

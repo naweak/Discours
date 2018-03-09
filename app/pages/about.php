@@ -1,4 +1,12 @@
 <?php
+$pdo = pdo();
+
+/*echo "  <!-- START ".$topic->post_id." ".benchmark()." -->\n";
+$sql = $pdo->prepare("SELECT * FROM posts WHERE parent_topic = 68");
+$sql->execute();
+echo "  <!-- END ".$topic->post_id." ".benchmark()." -->\n";
+die();*/
+
 ob_start();
 ?>
 <style type="text/css">
@@ -19,6 +27,7 @@ p
     <li>Порно, гуро и прочий explicit content</li>
     <li>Спам</li>
     <li>Вайпы</li>
+    <li  style="color:red;">Флуд</li>
   </ol>
   </p>
   

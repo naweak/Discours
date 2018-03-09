@@ -65,6 +65,8 @@ if (isset($_POST["submit"]))
 			$modlog->unlawful = "";
 			$modlog->save();
     }
+
+		cache_delete("forum_".$post_obj->forum_id); // delete page cache
   }
 }
 
@@ -94,7 +96,8 @@ ob_end_clean();
 
 $twig_data = array
 (
-  "html" => $html
+  "html" => $html,
+	"final_title" => "Перенести пост"
 );
 
 echo render($twig_data);

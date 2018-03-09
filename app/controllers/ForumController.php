@@ -7,11 +7,19 @@ class ForumController extends Controller
 
 	public function indexAction()
 	{
+		//ignore_user_abort(true); // used for cURL
+		
 		$pdo = pdo();
 	
 		$default_limit = 20;
 		$replies_to_show = 3;
 		$limit = $default_limit;
+		
+		$use_page_cache = true;
+		if (isset($_GET["fresh"]) or isset($_GET["page"]))
+		{
+			$use_page_cache = false;
+		}
 		
 		if (isset($_GET["forum"]))
 		{
@@ -27,33 +35,38 @@ class ForumController extends Controller
 		$offset = 0;
 		$query_bind = [];
 
-		if (isset($_GET["topic"])) // show topic
+		if (!isset($_GET["topic"])) // show forum (default action)
 		{
-			$topic_id = intval($_GET["topic"]);
-			$query_annex = " AND post_id = :post_id:";
-			$query_bind["post_id"] = $topic_id;
+			///////////////
+			if ($use_page_cache) // try to render from cache
+			{
+				/*$page_cache = page_cache_get("forum_".$forum_id);
+				if ($page_cache !== false)
+				{
+					echo "<!-- GOT PAGE FROM CACHE ".benchmark()." -->\n";
+					echo $page_cache;
+					exit();
+				}*/
+				$twig_data = cache_get("forum_".$forum_id);
+				if ($twig_data !== false)
+				{
+					echo "<!-- GOT DATA FROM CACHE ".benchmark()." -->\n";
+					$twig_template = $twig_data["template"];
+					echo "<!-- RENDERING STARTED ".benchmark()." -->\n";
+					$rendered = render($twig_data, ROOT_DIR."/app/templates/$twig_template", $twig_template);
+					echo "<!-- RENDERING FINISHED ".benchmark()." -->\n";
+					echo $rendered;
+					exit();
+				}
+			}
+			///////////////
 			
-			$forum_obj = Forum::findFirst
-			(
-			[
-				"forum_id = (SELECT Post.forum_id FROM Post WHERE post_id = :topic_id: LIMIT 1)",
-
-				"bind" =>
-				[
-					"topic_id" => $topic_id
-				]
-			]
-			);
-		}
-
-		else // or show forum (default action)
-		{
-			$query_annex = " AND forum_id = :forum_id:";
+			$query_annex = "AND forum_id = :forum_id:";
 			$query_bind["forum_id"] = $forum_id;
 			
 			if ($forum_id == 1) // Главная
 			{
-				$query_annex = " AND forum_id != 3 AND forum_id != 6 AND forum_id != 12 AND forum_id != 14";
+				$query_annex = "AND forum_id NOT IN (3, 6, 12, 14)";
 				unset($query_bind["forum_id"]);
 			}
 				
@@ -72,9 +85,48 @@ class ForumController extends Controller
 				]
 			]
 			);
+			
+			$description = "Дискурс — ".anti_xss($forum_obj->title); // use forum title as description
 		}
 		
-		if (!$forum_obj)
+		else // or show topic
+		{
+			$topic_id = intval($_GET["topic"]);
+			$query_annex = " AND post_id = :post_id:";
+			$query_bind["post_id"] = $topic_id;
+			
+			$forum_obj = Forum::findFirst
+			(
+			[
+				"forum_id = (SELECT Post.forum_id FROM Post WHERE post_id = :topic_id: LIMIT 1)",
+
+				"bind" =>
+				[
+					"topic_id" => $topic_id
+				]
+			]
+			);
+			
+			$topic = $topics[0];
+			
+			if ($topic->title) // if topic has title, use it as description
+			{
+				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($topic->title);
+			}
+			elseif (mb_strlen($topic->text) > 3) // otherwise, use topic text
+			{
+				$trim_chars = 250;
+				$text_summary = mb_strlen($topic->text) > $trim_chars ? mb_substr($topic->text,0,$trim_chars)."..." : $topic->text;
+				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($text_summary);
+			}
+			
+			if ($topic->file_url) // set preview image
+			{
+				$twig_data["meta"]["image"] = $topic->file_url;
+			}
+		}
+		
+		if (!$forum_obj) // forum or topic not found (404)
 		{
 			if ($topic_id == 1)
 			{
@@ -98,6 +150,8 @@ class ForumController extends Controller
     ]
 		);
 		
+		echo "<!-- TOPICS QUERY EXECUTED: ".benchmark()." -->\n";
+		
 		$twig_data = array
 		(
 			"topics" => array(),
@@ -115,68 +169,41 @@ class ForumController extends Controller
 			"is_mod" => is_mod()
 		);
 		
+		if (isset($posting_error))
+		{
+			$twig_data["posting_error"] = $posting_error;
+		}
+		
+		if (isset($declined_text))
+		{
+			$twig_data["declined_text"] = anti_xss($declined_text);
+		}
+		
 		if (isset($topic_id))
 		{
 			$twig_data["topic_id"] = $topic_id;
 			$twig_data["replies_to_show"] = 9000;
 		}
-		/******/
-		// transfer to array declaration
-		if (isset($posting_error))
-		{
-			$twig_data["posting_error"] = $posting_error;
-		}
-		if (isset($declined_text))
-		{
-			$declined_text = anti_xss($declined_text);
-			$twig_data["declined_text"] = $declined_text;
-		}
-		/******/
-		
-		if (!isset($topic_id)) // forum page
-		{
-			$description = "Дискурс — ".anti_xss($forum_obj->title);
-		}
-		
-		else // topic page
-		{
-			$topic = $topics[0];
-			
-			if ($topic->title)
-			{
-				//$description = "Дискурс — ".anti_xss($topic->title);
-				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($topic->title);
-			}
-			
-			elseif (mb_strlen($topic->text) > 3)
-			{
-				$trim_chars = 250;
-				$text_summary = mb_strlen($topic->text) > $trim_chars ? mb_substr($topic->text,0,$trim_chars)."..." : $topic->text;
-				//$description = "Дискурс — ".anti_xss($text_summary);
-				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($text_summary);
-			}
-			
-			if ($topic->file_url)
-			{
-				$twig_data["meta"]["image"] = $topic->file_url;
-			}
-		}
-		
+
 		foreach ($topics as $topic)
 		{
 			$topic_array = $topic->to_array();
 			$topic_array["replies"] = array();
 			
-			$omit_replies = false;
-			
-			if (in_array($forum_obj->forum_id, array(3, 14))) // /test/, /old/
+			//$omit_replies = false;
+			$omit_replies = true;
+			/*if (in_array($forum_obj->forum_id, array(3, 14))) // /test/, /old/
 			{
 				if (!$topic_id)
 				{
 					$omit_replies = true;
 				}
+			}*/
+			if (isset($topic_id))
+			{
+				$omit_replies = false;
 			}
-			
+	
 			$replies = Post::find
 			(
 			[
@@ -188,6 +215,11 @@ class ForumController extends Controller
 			]
 			);
 			
+			if ($topic_id)
+			{
+				echo "<!-- TOPIC REPLIES EXECUTED: ".benchmark()." -->\n";
+			}
+			
 			foreach ($replies as $reply)
 			{
 				array_push ($topic_array["replies"], $reply->to_array());
@@ -196,10 +228,6 @@ class ForumController extends Controller
 			if ($omit_replies)
 			{
 				$topic_array["replies"] = array_reverse($topic_array["replies"]);
-				
-				/*$result = $pdo->prepare("SELECT post_id FROM posts WHERE parent_topic = :parent_topic");
-				$result ->bindParam(":parent_topic", $topic->post_id, PDO::PARAM_INT);
-				$result->execute();*/
 				$sql = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE parent_topic = :parent_topic");
 				$sql->bindParam(":parent_topic", $topic->post_id, PDO::PARAM_INT);
 				$sql->execute();
@@ -213,39 +241,36 @@ class ForumController extends Controller
 			
 			array_push ($twig_data["topics"], $topic_array);
 			
-			echo "<!-- ".$topic->post_id." ".benchmark()." -->\n";
+			echo "<!-- GOT REPLIES FOR TOPIC #".$topic->post_id." ".benchmark()." -->\n";
 		}
-		
-		/*if (isset($description))
-		{
-			$twig_data["description"] = $description;
-		}*/
-		
+
 		$query = $pdo->query("SELECT COUNT(*) FROM notifications WHERE is_read = 0");
 		$twig_data["notifications_unread"] = $query->fetchColumn();
 		
 		$twig_template = "default";
-
 		if ($forum_obj->forum_id == 3)
 		{
 			$twig_template = "test";
 		}
-		
 		if ($forum_obj->forum_id == 14)
 		{
 			$twig_template = "wakaba";
 		}
 		
-		/*if (isset($_GET["wakaba"]))
+		if (!isset($_GET["page"])) // only cache first page
 		{
-			$twig_template = "wakaba";
-		}*/
+			if (!isset($topic_id)) // only cache forum page
+			{
+				$twig_data["template"] = $twig_template; // will be used later when the data is restored from cache
+				//page_cache_set("forum_".$forum_obj->forum_id, $rendered);	
+				cache_set("forum_".$forum_obj->forum_id, $twig_data, 24*60*60);
+			}
+		}
 		
-		if ($forum_obj->forum_id == 3) {echo "<!-- ".benchmark()." -->";}
-		
-		echo render($twig_data, ROOT_DIR."/app/templates/$twig_template", $twig_template);
-		
-		if ($forum_obj->forum_id or true) {echo "<!-- ".benchmark()." -->";}
+		echo "<!-- RENDERING STARTED ".benchmark()." -->\n";
+		$rendered = render($twig_data, ROOT_DIR."/app/templates/$twig_template", $twig_template);
+		echo "<!-- RENDERING FINISHED ".benchmark()." -->\n";
+		echo $rendered;
 	}
 
 }

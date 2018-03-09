@@ -9,15 +9,18 @@ public/phpinfo.php
 app/controllers/NotificationController.php
 app/pages/notifications*
 
-# Images:
-public/files/
-
 # Contains passwords:
 app/config.php
 app/config/config.php
 
 # Contains sensitive data:
 sessions/
+
+# Images:
+public/files/
+
+# Cache:
+cache/
 
 # Contains database dumps:
 backup/
