@@ -14,14 +14,23 @@
 7) ImageMagick
 
 Инструкции по установке несложно найти в интернете:
+
 https://www.digitalocean.com/community/tutorials/linux-apache-mysql-php-lamp-ubuntu-16-04-ru
+
 https://docs.phalconphp.com/ru/3.2/installation
+
 https://stackoverflow.com/a/37141822/8392705
+
 https://nodejs.org/en/download/package-manager/
+
 https://www.digitalocean.com/community/questions/problem-installing-imagemagick-ubuntu-14-04
+
 https://www.digitalocean.com/community/tutorials/how-to-set-up-mod_rewrite-for-apache-on-ubuntu-14-04
+
 https://stackoverflow.com/questions/17666249/how-to-import-an-sql-file-using-the-command-line-in-mysql
+
 https://twig.symfony.com/doc/2.x/installation.html
+
 http://php.net/manual/en/mbstring.installation.php
 
 Рекомендуемый дистрибутив — Ubuntu последней стабильной версии.
