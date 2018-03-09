@@ -14,25 +14,25 @@ function microtime_from_start ()
 	echo microtime(true)-$start_microtime;
 }
 
-$memcache = new Memcache;
-$memcache->connect("127.0.0.1", 11211);
+$memcached = new Memcached();
+$memcached->addServer("localhost", 11211);
 
 function cache_set ($name, $data, $time = 24*60*60) // time in seconds
 {
-	global $memcache;
-	return $memcache->set($name, $data, false, $time);
+ global $memcached;
+ return $memcached->set($name, $data, $time);
 }
 
 function cache_get ($name)
 {
-	global $memcache;
-	return $memcache->get($name);
+ global $memcached;
+ return $memcached->get($name);
 }
 
 function cache_delete ($name)
 {
-	global $memcache;
-	return $memcache->delete($name);
+ global $memcached;
+ return $memcached->delete($name);
 }
 
 function page_cache_set ($name, $data)

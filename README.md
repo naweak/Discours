@@ -9,7 +9,7 @@
 2) PHP версии 7.0 или выше (на работает на более ранних версиях)
 3) MySQL (phpMyAdmin — по желанию)
 4) Phalcon
-5) Memcache (не memcached!)
+5) Memcached
 6) Node.JS
 7) ImageMagick
 
@@ -20,6 +20,8 @@ https://www.digitalocean.com/community/tutorials/linux-apache-mysql-php-lamp-ubu
 https://docs.phalconphp.com/ru/3.2/installation
 
 https://stackoverflow.com/a/37141822/8392705
+
+https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-memcached-on-ubuntu-16-04
 
 https://nodejs.org/en/download/package-manager/
 
@@ -34,7 +36,7 @@ https://twig.symfony.com/doc/2.x/installation.html
 http://php.net/manual/en/mbstring.installation.php
 
 Рекомендуемый дистрибутив — Ubuntu последней стабильной версии.
-Следите за совместимостью версий PHP! Например php5-memcache может быть не совместим с PHP 7.2. В этом случае просто подставьте нужную версию в названии пакета.
+Следите за совместимостью версий PHP! Например php5-memcached может быть не совместим с PHP 7.2. В этом случае просто подставьте нужную версию в названии пакета.
 
 **ВНИМАНИЕ!** Установка  ПО может занять несколько часов. Это нормально. Также для установки понадобятся прямые руки и понимание принципов работы Linux.
 
