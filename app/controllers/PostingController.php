@@ -380,7 +380,7 @@ class PostingController extends Controller
 		
 		if ($forum_id == 11 and $parent_topic == 0) // posting to Changelog
 		{
-			send_message_to_telegram_channel("@DiscoursChangelog", $text . "\nОбсудить: https://discou.rs/topic/".$post->post_id, TELEGRAM_TOKEN);
+			send_message_to_telegram_channel("@DiscoursChangelog", $text . "\nОбсудить: https://".MAIN_HOST."/topic/".$post->post_id, TELEGRAM_TOKEN);
 		}
 		
 		/*elseif ($parent_topic == 0) // posting to Discours Topics
@@ -390,6 +390,7 @@ class PostingController extends Controller
 		
 		//page_cache_delete("forum_".$forum_obj->forum_id); // delete page cache
 		cache_delete("forum_".$forum_obj->forum_id); // delete page cache
+		cache_delete("forum_1"); // delete main page cache
 		//exec("curl --max-time 0.01 https://domain/forum/?forum=".$forum_obj->forum_id); // update page cache
 	
 		if ($request->getPost("ajax")) // report success to user
@@ -479,6 +480,11 @@ class PostingController extends Controller
     {
       $this->error("Image too large ($max_file_width x $max_file_height max)");
     }
+    
+    	if (in_array($file_extension, array("jpg", "jpeg"))) // JPEG image
+    	{
+    		//exec("$tmp_name"); // remove EXIF
+    	}
 
 		$thumb_path = tempnam(sys_get_temp_dir(), "thumb");
 		if ($post->forum_id != 3)
@@ -487,10 +493,17 @@ class PostingController extends Controller
 		}
 		else // /test/
 		{
-			exec("convert -thumbnail 150x150 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
+			// 300x300
+			exec("convert -thumbnail 300x300 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
 		}
 
 		list($thumb_w, $thumb_h) = getimagesize($thumb_path);
+		
+		if ($post->forum_id == 3)
+		{
+			$thumb_w = intval($thumb_w / 2);
+			$thumb_h = intval($thumb_h / 2);
+		}
 		
 		function random_str ($length, $keyspace = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 		{

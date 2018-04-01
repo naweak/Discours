@@ -131,8 +131,8 @@ and (max-width : 700px)
 	
 	.topic_header
 	{
-		font-size: 1.2em;
-		margin-bottom: 5px;
+		/*font-size: 1.2em;
+		margin-bottom: 5px;*/
 	}
 	
 	#up, #down
@@ -666,7 +666,7 @@ post_info
 .post_footnote a.order_in_topic_link
 {
 	color: inherit;
-	opacity: 0.2;
+	opacity: 0.4;
 }
 
 .post_footnote a.order_in_topic_link:hover
@@ -768,11 +768,18 @@ post_info
 	font-size: 0.75em;
 	margin-top: 0.5em;
 	padding: 0px;
+	white-space: nowrap;
 }
 
 .topic_footnote
 {
 	margin-top: 1em;
+}
+
+.time_formatted
+{
+	color: inherit;
+  white-space: nowrap;
 }
 
 .attach_button
@@ -880,4 +887,13 @@ input[name=sage]:checked ~ abbr
 #load_new_replies
 {
 	margin-top: 2em;
+}
+
+.link_preview
+{
+	float: left;
+	text-align: left;
+	background: white;
+	padding: var(--post_with_replies_padding);
+	border: 1px solid #e7e8ec;
 }

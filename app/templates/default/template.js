@@ -1,6 +1,7 @@
 $(document).ready(function ()
 {
     on_resize();
+		link_preview_tree_init();
 	
 		var hash = window.location.hash.substr(1);
 		if (hash)
@@ -480,6 +481,12 @@ function reply_to_topic (topic_id, reply_id, index)
 {
 	console.log("reply_to_topic triggered!");
 	
+	$(".link_preview").remove(); // remove previews tree
+	if (!$("#reply_"+reply_id).length) // reply does not exist on page
+	{
+		document.location = "/topic/"+topic_id+"#"+index;
+		return false;
+	}
 	var topic = $("post_with_replies[topic_id='"+topic_id+"']");
 	var reply_form = $(topic).find(".reply_form");
 	$(reply_form).prev().detach();
@@ -559,7 +566,7 @@ function isScrolledIntoView(elem)
 
 function link_click (parent_topic, order_in_topic)
 {
-	var elem = $("[topic_id='"+parent_topic+"']").find("[order_in_topic='"+order_in_topic+"']");
+	var elem = $("[topic_id='"+parent_topic+"']").find("reply[order_in_topic='"+order_in_topic+"']");
 	if (elem.length) // element exists on page
 	{
 		var post = elem.find("text");
@@ -746,10 +753,12 @@ function hamburger_click ()
 	if ($("#mobile_menu").is(":hidden"))
 	{
 		$("#mobile_menu").show();
+		$.scrollLock(true);
 	}
 	else
 	{
 		$("#mobile_menu").hide();
+		$.scrollLock(false);
 	}
 }
 
@@ -764,6 +773,187 @@ function scroll_to_reply (order_in_topic)
 function highlight_reply (order_in_topic)
 {
 	$("reply[order_in_topic='"+order_in_topic+"']").addClass("highlighted");
+}
+
+function link_preview_tree_init ()
+{
+	function assing_random_identifiers () // assigns a "rand" attribute to each post or preview
+	{
+		$("post, reply, .link_preview").each(function(index)
+		{
+			if (!$(this).attr("rand"))
+			{
+				$(this).attr("rand", Math.random());
+			}
+		});
+	}
+	
+	assing_random_identifiers();
+	
+	// Trigger click event on a >> link
+	$("body").on("click", "a.preview", function(e) // doesn't work with $(document)
+	{
+		console.log("Preview link clicked");
+		if (mobile())
+		{
+			$(this).trigger("mouseenter");
+		}
+		else
+		{
+			document.location = $(this).attr("href");
+		}
+		return false;
+	});
+	
+	// Trigger tap event on any element
+	$(document).on("tap", "*", function(e)
+	{
+		var target = e.toElement || e.relatedTarget || e.target;
+		if ($(target).is("a.preview")) // tap on a.preview
+		{
+			$(this).trigger("mouseenter");
+		}
+		else if ($(target).is("a.answer_link")) // tap on a reply link
+		{
+			$(this).trigger("click");
+		}
+		else if (!$(target).parents(".link_preview").length) // tap outside of previews tree
+		{
+			console.log("Remove all previews!");
+			$(".link_preview").remove();
+		}
+		//return false; // prevent default
+	});
+	
+	// Mouse enters a >> link
+	$(document).on("mouseenter", "a.preview", function(e)
+	{
+		var preview_link = e.toElement || e.relatedTarget || e.target; // preview link
+		var my_rand = $(this).parent().attr("rand") || $(this).parent().parent().attr("rand");
+		if (!my_rand)
+		{
+			console.error("my_rand undefined");
+			console.log("This element:");
+			console.log(this);
+		}
+		console.log("My_rand: "+my_rand);
+		if($("[parent_rand='"+my_rand+"']").length) // if a child preview exists
+		{
+			var child_rand = my_rand;
+			while (true) // remove all it and remove all of its child previews
+			{
+				var child = $("[parent_rand='"+child_rand+"']");
+				if (!child.length)
+				{
+					break;
+				}
+				child_rand = $(child).attr("rand");
+				$(child).remove();
+			}
+			return false;
+		}
+		
+		if // mouse entered a root link
+		(
+			!$(this).parent().hasClass("link_preview") &&
+			!$(this).parent().parent().hasClass("link_preview")
+		)
+		{
+			console.log("Remove all previews!");
+			$(".link_preview").remove();
+		}
+		
+		var post_footnotes_width = [$(".post_footnote.left").width(), $(".post_footnote.right").width()];
+		console.log("post_footnotes_width:");
+		console.log(post_footnotes_width);
+		var reply_padding = parseInt($("reply").css("padding"));
+		console.log("reply_padding: " + reply_padding);
+		var link_preview_min_width = (reply_padding*2) + post_footnotes_width[0] + post_footnotes_width[1] + 20;
+		console.log("link_preview_min_width: " + link_preview_min_width);
+		
+		var topic_id = $(this).attr("topic_id");
+		var order_in_topic = $(this).attr("order_in_topic");
+		var preview_link_position = $(preview_link).offset();
+
+		var x = preview_link_position.left;
+		var y = preview_link_position.top + $(preview_link).height();
+		
+		var element; // declared here because it will be changet in AJAX get function
+		var html = $("post_with_replies[topic_id='"+topic_id+"'] reply[order_in_topic='"+order_in_topic+"']").html();
+		if (typeof html !== "undefined") // if reply found on page, use its HTML
+		{
+			html = "<div class='link_preview' style='min-width:"+link_preview_min_width+"px;'>"+html+"</div>";
+		}
+		else // if not, load it with AJAX
+		{
+			html = "<div class='link_preview' style='min-width:"+link_preview_min_width+"px;'>Загрузка...</div>";
+
+			$.get("/topic/"+topic_id, function(data)
+			{
+				var parser = new DOMParser();
+				var html_doc = parser.parseFromString(data, "text/html");
+				
+				var html = $(html_doc).find("post_with_replies[topic_id='"+topic_id+"'] reply[order_in_topic='"+order_in_topic+"']").html();
+				if (typeof html === "undefined") // error
+				{
+					html = "<div class='link_preview' style='min-width:"+link_preview_min_width+"px;'><span style='color:red;'>Не удалось получить ответ</span></div>";
+				}
+				$(element).html(html);
+			});
+		}
+		element = $(html);
+		$("body").append(element);
+		$(element).css({position: "absolute", "left": x, "top": y});
+		$(element).attr("parent_rand", my_rand);
+		$(element).children().each(function(index)
+		{
+			$(this).removeAttr("rand");
+		});
+		assing_random_identifiers();
+	});
+	
+	// Mouse leaves a >> link or a preview div
+	$(document).on("mouseleave", "post, reply, .link_preview, a.preview", function(e)
+	{
+		if (!$(".link_preview").length)
+		{
+			return false;
+		}
+		var target = e.toElement || e.relatedTarget || e.target; // element mouse is entering
+		if
+		(
+			!$(target).hasClass("link_preview") &&
+			!$(target).parent().hasClass("link_preview") &&
+			!$(target).parent().parent().hasClass("link_preview")
+		) // mouse out of previews tree
+		{
+			console.log("Remove all previews!");
+			$(".link_preview").remove();
+    }
+		else // mouse moves inside previews tree
+		{
+			var target_rand = $(target).attr("rand") || $(target).parent().attr("rand") || $(target).parent().parent().attr("rand");
+			if (!target_rand)
+			{
+				console.error("target_rand undefined");
+				console.log("Target:");
+				console.log(target);
+			}
+			$("[parent_rand='"+target_rand+"']").remove();
+		}
+	});
+}
+
+function mobile ()
+{
+	if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 /* Page logic: */
@@ -798,3 +988,226 @@ $.fn.selectRange = function(start, end)
         }
     });
 };
+
+$.scrollLock = (function scrollLockClosure()
+{
+    'use strict';
+
+    var $html      = $( 'html' ),
+        // State: unlocked by default
+        locked     = false,
+        // State: scroll to revert to
+        prevScroll = {
+            scrollLeft : $( window ).scrollLeft(),
+            scrollTop  : $( window ).scrollTop()
+        },
+        // State: styles to revert to
+        prevStyles = {},
+        lockStyles = {
+            'overflow-y' : 'scroll',
+            'position'   : 'fixed',
+            'width'      : '100%'
+        };
+
+    // Instantiate cache in case someone tries to unlock before locking
+    saveStyles();
+
+    // Save context's inline styles in cache
+    function saveStyles() {
+        var styleAttr = $html.attr( 'style' ),
+            styleStrs = [],
+            styleHash = {};
+
+        if( !styleAttr ){
+            return;
+        }
+
+        styleStrs = styleAttr.split( /;\s/ );
+
+        $.each( styleStrs, function serializeStyleProp( styleString ){
+            if( !styleString ) {
+                return;
+            }
+
+            var keyValue = styleString.split( /\s:\s/ );
+
+            if( keyValue.length < 2 ) {
+                return;
+            }
+
+            styleHash[ keyValue[ 0 ] ] = keyValue[ 1 ];
+        } );
+
+        $.extend( prevStyles, styleHash );
+    }
+
+    function lock() {
+        var appliedLock = {};
+
+        // Duplicate execution will break DOM statefulness
+        if( locked ) {
+            return;
+        }
+
+        // Save scroll state...
+        prevScroll = {
+            scrollLeft : $( window ).scrollLeft(),
+            scrollTop  : $( window ).scrollTop()
+        };
+
+        // ...and styles
+        saveStyles();
+
+        // Compose our applied CSS
+        $.extend( appliedLock, lockStyles, {
+            // And apply scroll state as styles
+            'left' : - prevScroll.scrollLeft + 'px',
+            'top'  : - prevScroll.scrollTop  + 'px'
+        } );
+
+        // Then lock styles...
+        $html.css( appliedLock );
+
+        // ...and scroll state
+        $( window )
+            .scrollLeft( 0 )
+            .scrollTop( 0 );
+
+        locked = true;
+    }
+
+    function unlock() {
+        // Duplicate execution will break DOM statefulness
+        if( !locked ) {
+            return;
+        }
+
+        // Revert styles
+        $html.attr( 'style', $( '<x>' ).css( prevStyles ).attr( 'style' ) || '' );
+
+        // Revert scroll values
+        $( window )
+            .scrollLeft( prevScroll.scrollLeft )
+            .scrollTop(  prevScroll.scrollTop );
+
+        locked = false;
+    }
+
+    return function scrollLock( on ) {
+        // If an argument is passed, lock or unlock depending on truthiness
+        if( arguments.length ) {
+            if( on ) {
+                lock();
+            }
+            else {
+                unlock();
+            }
+        }
+        // Otherwise, toggle
+        else {
+            if( locked ){
+                unlock();
+            }
+            else {
+                lock();
+            }
+        }
+    };
+}());
+
+(function($, specialEventName) {
+  'use strict';
+
+  /**
+   * Native event names for creating custom one.
+   *
+   * @type {Object}
+   */
+  var nativeEvent = Object.create(null);
+  /**
+   * Get current time.
+   *
+   * @return {Number}
+   */
+  var getTime = function() {
+    return new Date().getTime();
+  };
+
+  nativeEvent.original = 'click';
+
+  if ('ontouchstart' in document) {
+    nativeEvent.start = 'touchstart';
+    nativeEvent.end = 'touchend';
+  } else {
+    nativeEvent.start = 'mousedown';
+    nativeEvent.end = 'mouseup';
+  }
+
+  $.event.special[specialEventName] = {
+    setup: function(data, namespaces, eventHandle) {
+      var $element = $(this);
+      var eventData = {};
+
+      $element
+        // Remove all handlers that were set for an original event.
+        .off(nativeEvent.original)
+        // Prevent default actions.
+        .on(nativeEvent.original, false)
+        // Split original event by two different and collect an information
+        // on every phase.
+        .on(nativeEvent.start + ' ' + nativeEvent.end, function(event) {
+          // Handle the event system of touchscreen devices.
+          eventData.event = event.originalEvent.changedTouches ? event.originalEvent.changedTouches[0] : event;
+        })
+        .on(nativeEvent.start, function(event) {
+          // Stop execution if an event is simulated.
+          if (event.which && event.which !== 1) {
+            return;
+          }
+
+          eventData.target = event.target;
+          eventData.pageX = eventData.event.pageX;
+          eventData.pageY = eventData.event.pageY;
+          eventData.time = getTime();
+        })
+        .on(nativeEvent.end, function(event) {
+          // Compare properties from two phases.
+          if (
+            // The target should be the same.
+            eventData.target === event.target &&
+            // Time between first and last phases should be less than 750 ms.
+            getTime() - eventData.time < 750 &&
+            // Coordinates, when event ends, should be the same as they were
+            // on start.
+            (
+              eventData.pageX === eventData.event.pageX &&
+              eventData.pageY === eventData.event.pageY
+            )
+          ) {
+            event.type = specialEventName;
+            event.pageX = eventData.event.pageX;
+            event.pageY = eventData.event.pageY;
+
+            eventHandle.call(this, event);
+
+            // If an event wasn't prevented then execute original actions.
+            if (!event.isDefaultPrevented()) {
+              $element
+                // Remove prevention of default actions.
+                .off(nativeEvent.original)
+                // Bring the action.
+                .trigger(nativeEvent.original);
+            }
+          }
+        });
+    },
+
+    remove: function() {
+      $(this).off(nativeEvent.start + ' ' + nativeEvent.end);
+    }
+  };
+
+  $.fn[specialEventName] = function(fn) {
+    return this[fn ? 'on' : 'trigger'](specialEventName, fn);
+  };
+})(jQuery, 'tap');

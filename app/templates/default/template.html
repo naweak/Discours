@@ -23,14 +23,7 @@ Topic with replies:
 {% if root is defined %}
   <post_with_replies class="{{ topic.post_id }}" topic_id="{{ topic.post_id }}">
     <post>
-      {% if is_mod %}
-        {# different code for topic and reply! #}
-        <!--<form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
-        <div class="delete" style="float:right;" onclick="delete_post({{ topic.post_id }});"></div>-->
-      {% endif %}
-      
       <div class="topic_header">
-        
         {% if forum_title == "Главная" %}
         <a href="/forum/{{ topic.forum_id }}" style="display: inline-block; overflow: hidden;">{{ topic.forum_title }}</a>
         {% endif %}
@@ -66,17 +59,14 @@ Topic with replies:
         {% endif %}
       </text>
       
-      <div class="post_footnote" style="float:right;">
-      </div>
+      <!--<div class="post_footnote" style="float:right;">
+      </div>-->
       
       <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
 
       <div class="post_footnote topic_footnote">
-        <!-- #a9a9a9 -->
-        <!-- up-to-date color in reply block -->
         <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }});" class="answer_link">Ответить</a>
         <span style="opacity:0.5;">&#8729;</span>
-        <!--<a href="/report" target="_blank" style="color:#a9a9a9;">Report</a>-->
         <a href="/report" target="_blank" style="color:inherit;">Report</a>
         <span style="opacity:0.5;">&#8729;</span>
         {% if is_mod %}
@@ -84,8 +74,7 @@ Topic with replies:
         <a href="javascript:;" onclick="delete_post({{ topic.post_id }});" style="color:red;">Удалить</a>
         <span style="opacity:0.5;">&#8729;</span>
         {% endif %}
-        <!--<span style="opacity:0.5;">{{ topic.time_formatted }}</span>-->
-        <a href="/topic/{{ topic.post_id }}" style="color:inherit;">{{ topic.time_formatted }}</a>
+        <a href="/topic/{{ topic.post_id }}" class="time_formatted">{{ topic.time_formatted }}</a>
       </div>
       
     </post>
@@ -156,7 +145,6 @@ Reply:
 #}
 {% block reply %}
 {% if root is defined %}
-  <!--<a name="{{ reply.order_in_topic }}"></a>-->
   <reply id="reply_{{ reply.post_id }}" order_in_topic="{{ reply.order_in_topic }}">
     <text>
       {% if reply.file_url %}
@@ -170,25 +158,28 @@ Reply:
       {{ reply.text_formatted|raw }}
     </text>
     
-    <div class="post_footnote" style="float:right;">
-      <a href="/topic/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" class="order_in_topic_link">Пост #{{ reply.order_in_topic }}</a>
-    </div>
-    
     <form method="post" action="/delete" id="{{ reply.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
     
-    <div class="post_footnote">
-      <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ reply.order_in_topic }});" class="answer_link">Ответить</a>
-      <span style="opacity:0.5;">&#8729;</span>
-      <!--<a href="/report" target="_blank" style="color:#606060;">Report</a>-->
-      <a href="/report" target="_blank" style="color:inherit;">Report</a>
-      {% if is_mod %}
-      {# different code for topic and reply! #}
-      <span style="opacity:0.5;">&#8729;</span>
-      <a href="javascript:;" onclick="delete_post({{ reply.post_id }});" style="color:red;">Удалить</a>
-      {% endif %}
-      <span style="opacity:0.5;">&#8729;</span>
-      <!--{{ reply.time_formatted }}-->
-      <a href="/topic/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" style="color:inherit;">{{ reply.time_formatted }}</a>
+    <div style="overflow:hidden;margin:0px;padding:0px;">
+      
+      <div class="post_footnote left" style="float:left;">
+        <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ reply.order_in_topic }});" class="answer_link">Ответить</a>
+        <span style="opacity:0.5;">&#8729;</span>
+        <a href="/report" target="_blank" style="color:inherit;">Report</a>
+        {% if is_mod %}
+        {# different code for topic and reply! #}
+        <span style="opacity:0.5;">&#8729;</span>
+        <a href="javascript:;" onclick="delete_post({{ reply.post_id }});" style="color:red;">Удалить</a>
+        {% endif %}
+        <span style="opacity:0.5;">&#8729;</span>
+        <a class="time_formatted" href="/topic/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});">{{ reply.time_formatted }}</a>
+      </div>
+      
+      <!--<div class="post_footnote right" style="float:right;margin-left:10px;">-->
+      <div class="post_footnote right" style="float:right;">
+        <a href="/topic/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" class="order_in_topic_link">Пост #{{ reply.order_in_topic }}</a>
+      </div>
+      
     </div>
   </reply>
 {% endif %}
@@ -216,16 +207,6 @@ New topic form:
           {% endif %}
           
           <textarea name="text" class="new_post" spellcheck="false" placeholder="Введите текст...">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
- 
-          <!--<div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
-            <input id="topic_userfile" name="userfile" type="file" class="inputfile">
-            <label for="topic_userfile" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>
-          </div>
-          
-          <div style="text-align:right;">
-            <input id="topic_submit" type="submit" class="inputfile">
-            <label for="topic_submit" class="inputfile_label button is-small is-outlined">Новая тема</label>
-          </div>-->
           
           <div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
             <input id="topic_userfile" name="userfile" type="file" class="inputfile">
@@ -271,29 +252,17 @@ Main page block:
     {% endif %}
     <!-- / Meta -->
     
-    <script async src="/assets/{{ js_file }}"></script>
-    <link href="/assets/{{ css_file }}" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui">
     
+    <script async src="{% if file_host %}//{{ file_host }}{% endif %}/assets/{{ js_file }}"></script>
+    <link href="{% if file_host %}//{{ file_host }}{% endif %}/assets/{{ css_file }}" rel="stylesheet">
     <!-- FontAwesome -->
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui">
-    
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
-    
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <!--<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111575996-1"></script>
-    <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'UA-111575996-1');
-    </script>-->
-    <!--/ Google Analytics -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{% if file_host %}//{{ file_host }}{% endif %}/favicon.ico">
     
     <script>
-    var topic_id = {% if topic_id %}{{ topic_id }}{% else %}0{% endif %};
+      var topic_id = {% if topic_id %}{{ topic_id }}{% else %}0{% endif %};
     </script>
   </head>
 
@@ -329,12 +298,8 @@ Main page block:
         {% if is_mod %}
           {% if notifications_unread > 0 %}
             <button class="button is-small is-outlined" style="font-weight:bold;" onclick="document.location='/notifications';">{{ notifications_unread }} увед.</button>
-          {% else %}
-            <!--<button class="button is-small is-outlined" onclick="document.location='/notifications2';">Нет увед.</button>-->
           {% endif %}
         {% endif %}
-         
-        <!--<button class="button is-small is-outlined" onclick="$('.new_topic_form_container').css('display', 'block');">Новая тема</button>-->
        </div>
       
        <div class="navbar-brand">
@@ -414,6 +379,9 @@ Main page block:
                    <a class="navbar-item" href="/faq">
                    FAQ
                    </a>
+                   <a class="navbar-item" href="/why-us">
+                   Почему мы?
+                   </a>
                    <a class="navbar-item" href="/changelog/">
                    Changelog
                    </a>
@@ -429,8 +397,6 @@ Main page block:
             <a class="navbar-item" href="/notifications" target="_blank">
               {% if notifications_unread > 0 %}
                 <b>{{ notifications_unread }} новых уведомлений</b>
-              {% else %}
-                <!--Нет новых уведомлений-->
               {% endif %}
             </a>
             {% endif %}
@@ -512,7 +478,7 @@ Main page block:
       {% endif %}
     
       <footer>
-        <div>Пожалуйста, прочтите <a href="https://discou.rs/topic/13988" target="_blank">новогоднее обращение</a> администрации Дискурса.</div>
+        <div>Будем рады вашим отзывам в разделе <a href="https://discou.rs/d/" target="_blank">отзывы и предложения</a>.</div>
         From discou.rs with love!
       </footer>
   </body>

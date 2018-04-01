@@ -51,6 +51,9 @@ class ForumController extends Controller
 				if ($twig_data !== false)
 				{
 					echo "<!-- GOT DATA FROM CACHE ".benchmark()." -->\n";
+					$twig_data["is_mod"] = is_mod();
+					$query = $pdo->query("SELECT COUNT(*) FROM notifications WHERE is_read = 0");
+					$twig_data["notifications_unread"] = $query->fetchColumn();
 					$twig_template = $twig_data["template"];
 					echo "<!-- RENDERING STARTED ".benchmark()." -->\n";
 					$rendered = render($twig_data, ROOT_DIR."/app/templates/$twig_template", $twig_template);
@@ -106,24 +109,6 @@ class ForumController extends Controller
 				]
 			]
 			);
-			
-			$topic = $topics[0];
-			
-			if ($topic->title) // if topic has title, use it as description
-			{
-				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($topic->title);
-			}
-			elseif (mb_strlen($topic->text) > 3) // otherwise, use topic text
-			{
-				$trim_chars = 250;
-				$text_summary = mb_strlen($topic->text) > $trim_chars ? mb_substr($topic->text,0,$trim_chars)."..." : $topic->text;
-				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($text_summary);
-			}
-			
-			if ($topic->file_url) // set preview image
-			{
-				$twig_data["meta"]["image"] = $topic->file_url;
-			}
 		}
 		
 		if (!$forum_obj) // forum or topic not found (404)
@@ -165,6 +150,7 @@ class ForumController extends Controller
 			"final_title" => $forum_obj->title,
 			
 			"meta" => array(),
+			"file_host" => FILE_HOST,
 			
 			"is_mod" => is_mod()
 		);
@@ -179,10 +165,28 @@ class ForumController extends Controller
 			$twig_data["declined_text"] = anti_xss($declined_text);
 		}
 		
-		if (isset($topic_id))
+		if (isset($topic_id)) // show topic
 		{
 			$twig_data["topic_id"] = $topic_id;
 			$twig_data["replies_to_show"] = 9000;
+			
+			$topic = $topics[0]; // topic object
+			
+			if ($topic->title) // if topic has title, use it as description
+			{
+				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($topic->title);
+			}
+			elseif (mb_strlen($topic->text) > 3) // otherwise, use topic text
+			{
+				$trim_chars = 250;
+				$text_summary = mb_strlen($topic->text) > $trim_chars ? mb_substr($topic->text,0,$trim_chars)."..." : $topic->text;
+				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($text_summary);
+			}
+			
+			if ($topic->file_url) // set preview image
+			{
+				$twig_data["meta"]["image"] = $topic->file_url;
+			}
 		}
 
 		foreach ($topics as $topic)

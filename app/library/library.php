@@ -123,9 +123,12 @@ function markup ($text, $data = null)
 			if ($forum_template == "default") // normal link
 			{
 				$text = preg_replace("/(^|\n)&gt;&gt;([0-9]+)/i",
-													 //"$1<a onclick='link_click(".$data["parent_topic"].",$2);'>&gt;&gt;Ответ на пост #$2</a>",
-														 "$1<a onclick='link_click(".$data["parent_topic"].",$2);'>Ответ на пост #$2</a>",
-													 $text); // >>123
+														 //"$1<a onclick='link_click(".$data["parent_topic"].",$2);'>Ответ на пост #$2</a>",
+														 //"$1<a onclick='link_click(".$data["parent_topic"].",$2);' class='preview'>Ответ на пост #$2</a>",
+														 
+														 //"$1<a class='preview' onclick='link_click(".$data["parent_topic"].",$2);' topic_id='".$data["parent_topic"]."' order_in_topic='$2'>Ответ на пост #$2</a>",
+														 "$1<a class='preview' href='/topic/{$data["parent_topic"]}#$2' topic_id='".$data["parent_topic"]."' order_in_topic='$2'>Ответ на пост #$2</a>",
+														 $text); // >>123
 			}
 			elseif ($forum_template == "wakaba") // wakaba link
 			{
