@@ -25,7 +25,8 @@ class PostingController extends Controller
 		$forum_id     = intval($request->getPost("forum_id"));
 		$parent_topic = intval($request->getPost("parent_topic"));
     $reply_to     = intval($request->getPost("reply_to"));
-		$title        = $request->getPost("title");
+		//$title        = $request->getPost("title");
+    $title        = "";
 		$name         = $request->getPost("name");
 		$text         = $request->getPost("text");
     

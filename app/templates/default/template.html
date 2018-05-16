@@ -98,7 +98,7 @@ Topic with replies:
         {% endif %}
         
         {% if topic.title_formatted %}
-        <b>{{ topic.title_formatted }}</b>
+        <b>{{ topic.title_formatted|raw }}</b>
         <br>
         {% endif %}
         

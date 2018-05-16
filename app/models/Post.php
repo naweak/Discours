@@ -49,20 +49,23 @@ class Post extends Model
 			}
 		}
 
-		$text_formatted_from_cache_name = "text_formatted_".$this->post_id;
-		$text_formatted_from_cache = cache_get($text_formatted_from_cache_name);
-		if ($text_formatted_from_cache === false)
-		{
-			$text_formatted = markup($this->text,
-				["forum_id" => $this->forum_id,
-				 "parent_topic" => $this->parent_topic]
-			);
-			cache_set($text_formatted_from_cache_name, $text_formatted, 24*60*60); // save formatted text in cache
-		}
-		else
-		{
-			$text_formatted = $text_formatted_from_cache;
-		}
+    if ($this->deleted_by == 0)
+    {
+      $text_formatted_from_cache_name = "text_formatted_".$this->post_id;
+      $text_formatted_from_cache = cache_get($text_formatted_from_cache_name);
+      if ($text_formatted_from_cache === false)
+      {
+        $text_formatted = markup($this->text,
+          ["forum_id" => $this->forum_id,
+           "parent_topic" => $this->parent_topic]
+        );
+        cache_set($text_formatted_from_cache_name, $text_formatted, 24*60*60); // save formatted text in cache
+      }
+      else
+      {
+        $text_formatted = $text_formatted_from_cache;
+      }
+    }
 		
 		$output = array
 		(
@@ -106,7 +109,8 @@ class Post extends Model
 			$output["title_formatted"] = str_replace(" ", "&nbsp;", anti_xss($this->title));
 		}
     
-    $plain_text = strip_tags($text_formatted);
+    //$plain_text = strip_tags($text_formatted);
+    $plain_text = strip_tags($output["text_formatted"]);
     $e = explode("\n", $plain_text);
     
     $max_lines_to_show = 5;
@@ -122,6 +126,7 @@ class Post extends Model
     }
     
     elseif (mb_strlen($text_formatted) > $max_chars_to_show)
+    //elseif (mb_strlen($output["text_formatted"]) > $max_chars_to_show)
 		{
 			$output["text_preview"] = mb_substr($plain_text, 0, $max_chars_to_show);
 		}
