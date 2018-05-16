@@ -116,6 +116,10 @@ function ajax_form (args)
 			form_data[window.submit] = true;
 			delete window.submit;
 		}
+    if (form_data.get("userfile").size === 0) // Prevent CloudFlare from returning "400 Bad Request"
+    {
+      form_data.delete("userfile");
+    }
 		form_data.append("ajax", true);
 		console.log("Form data for submission:");
 		console.log(form_data);
@@ -806,24 +810,26 @@ function link_preview_tree_init ()
 	});
 	
 	// Trigger tap event on any element
-	$(document).on("tap", "*", function(e)
+	if (mobile())
 	{
-		var target = e.toElement || e.relatedTarget || e.target;
-		if ($(target).is("a.preview")) // tap on a.preview
+		$(document).on("tap", "*", function(e)
 		{
-			$(this).trigger("mouseenter");
-		}
-		else if ($(target).is("a.answer_link")) // tap on a reply link
-		{
-			$(this).trigger("click");
-		}
-		else if (!$(target).parents(".link_preview").length) // tap outside of previews tree
-		{
-			console.log("Remove all previews!");
-			$(".link_preview").remove();
-		}
-		//return false; // prevent default
-	});
+			/*var target = e.toElement || e.relatedTarget || e.target;
+			if ($(target).is("a.preview")) // tap on a.preview
+			{
+				$(this).trigger("mouseenter");
+			}
+			else if ($(target).is("a.answer_link")) // tap on a reply link
+			{
+				//$(this).trigger("click");
+			}
+			else if (!$(target).parents(".link_preview").length) // tap outside of previews tree
+			{
+				console.log("Remove all previews!");
+				$(".link_preview").remove();
+			}*/
+		});
+	}
 	
 	// Mouse enters a >> link
 	$(document).on("mouseenter", "a.preview", function(e)

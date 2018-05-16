@@ -15,8 +15,13 @@ class ForumController extends Controller
 		$replies_to_show = 3;
 		$limit = $default_limit;
 		
+		$pageviews_cache_name = "pageviews_".date("d-m");
+		$pageviews_from_cache = intval(cache_get($pageviews_cache_name));
+		cache_set($pageviews_cache_name, $pageviews_from_cache + 1);
+		echo "<!-- P/V: $pageviews_from_cache -->";
+		
 		$use_page_cache = true;
-		if (isset($_GET["fresh"]) or isset($_GET["page"]))
+		if (isset($_GET["fresh"]) or isset($_GET["page"]) or isset($_GET["order"]))
 		{
 			$use_page_cache = false;
 		}
@@ -29,6 +34,12 @@ class ForumController extends Controller
 		else
 		{
 			$forum_id = 0;
+		}
+		
+		if ($forum_id == 3 and !is_mod()) # /test/
+		{
+			header("HTTP/1.0 403 Forbidden");
+			die("403 Forbidden");
 		}
 
 		$query_annex = "";
@@ -119,15 +130,29 @@ class ForumController extends Controller
 				exit();
 			}
 			
-			error_page(404);
+			error_page(["code" => 404]);
 			exit();
+		}
+    
+    if ($forum_obj->forum_id == 14 and $topic_id and mb_strpos($_SERVER["REQUEST_URI"], "topic")) # /old/
+		{
+			header("Location: /old/res/$topic_id.html");
+			die();
+		}
+		
+		$topics_order = "ord DESC";
+		
+		if (isset($_GET["order"]) and $_GET["order"] == "new")
+		{
+			echo "<div align='center'><h2>Сортировка по времени создания темы работает только на первой странице!</h2></div>";
+			$topics_order = "creation_time DESC";
 		}
 		
 		$topics = Post::find
 		(
     [
 			"parent_topic = 0 $query_annex",
-			"order" => "ord DESC",
+			"order" => $topics_order,
 			"limit" => $default_limit,
 			"offset" => $offset,
 			
@@ -136,6 +161,8 @@ class ForumController extends Controller
 		);
 		
 		echo "<!-- TOPICS QUERY EXECUTED: ".benchmark()." -->\n";
+    
+    $topic = $topics[0]; // topic object
 		
 		$twig_data = array
 		(
@@ -147,7 +174,7 @@ class ForumController extends Controller
 			
 			"forum_id" => $forum_obj->forum_id,
 			"forum_title" => $forum_obj->title,
-			"final_title" => $forum_obj->title,
+			"final_title" => ($topic_id != 0 and $topic->title) ? "Дискурс — ".anti_xss($topic->title) : $forum_obj->title,
 			
 			"meta" => array(),
 			"file_host" => FILE_HOST,
@@ -169,8 +196,6 @@ class ForumController extends Controller
 		{
 			$twig_data["topic_id"] = $topic_id;
 			$twig_data["replies_to_show"] = 9000;
-			
-			$topic = $topics[0]; // topic object
 			
 			if ($topic->title) // if topic has title, use it as description
 			{
@@ -254,7 +279,14 @@ class ForumController extends Controller
 		$twig_template = "default";
 		if ($forum_obj->forum_id == 3)
 		{
-			$twig_template = "test";
+      if (file_exists(ROOT_DIR."/app/templates/test/template.html"))
+      {
+			  $twig_template = "test";
+      }
+      else
+      {
+        die("Test template not set");
+      }
 		}
 		if ($forum_obj->forum_id == 14)
 		{

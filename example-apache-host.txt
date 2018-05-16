@@ -1,0 +1,28 @@
+<VirtualHost *:443> # HTTPs
+	Protocols h2 http/1.1
+	ServerName discou.rs
+	ServerAlias www.discou.rs
+	ServerAdmin webmaster@localhost
+  DocumentRoot /var/www
+  ErrorLog ${APACHE_LOG_DIR}/error.log
+  CustomLog ${APACHE_LOG_DIR}/access.log combined
+  
+  RewriteEngine On
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ http://%1%{REQUEST_URI} [R=301,L] # remove WWW
+
+	SSLEngine on
+	SSLCertificateFile /var/ssl/discou.rs/certificate.crt
+	SSLCertificateKeyFile /var/ssl/discou.rs/private.key
+	SSLCertificateChainFile /var/ssl/discou.rs/ca_bundle.crt
+</VirtualHost>
+
+<VirtualHost *:80> # HTTP
+	Protocols h2 http/1.1
+	ServerName discou.rs
+	ServerAlias www.discou.rs
+	ServerAdmin webmaster@localhost
+
+  RewriteEngine On
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301] # redirect to HTTPs
+</VirtualHost>

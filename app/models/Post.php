@@ -12,7 +12,7 @@ class Post extends Model
 	
 	public function beforeValidation()
   {
-		foreach (["title", "name", "file_url", "thumb_url", "thumb_w", "thumb_h"] as $element)
+		foreach (["deleted_by", "user_id", "session_id", "title", "name", "file_url", "thumb_url", "thumb_w", "thumb_h", "reply_to"] as $element)
 		{
 			if ($this->$element == NULL)
 			{
@@ -70,6 +70,7 @@ class Post extends Model
 			"parent_topic" => $this->parent_topic,
 			"forum_id" => $this->forum_id,
 			"order_in_topic" => $this->order_in_topic,
+      "reply_to" => $this->reply_to,
 			"time_formatted" => smart_time_format($this->creation_time),
 			"name_formatted" => anti_xss($this->name),
 			"text_formatted" => $text_formatted,
@@ -80,6 +81,20 @@ class Post extends Model
 			"thumb_w" => $this->thumb_w,
 			"thumb_h" => $this->thumb_h,
 		);
+    
+    if ($this->deleted_by)
+    {
+      $modlog_action = Modlog::findFirst
+      (
+        [
+          "post_id = :post_id:",
+          "bind" => ["post_id" => $this->post_id]
+        ]
+      );
+      $output["text_formatted"] = "<span class='deleted_post'>
+      Пост удален модератором.
+      Номер действия в модлоге: ".$modlog_action->action_id.".</span>";
+    }
 		
 		if (isset($forum_title))
 		{
@@ -88,14 +103,28 @@ class Post extends Model
 		
 		if ($this->parent_topic == 0)
 		{
-			$output["title_formatted"] = ($this->title != "") ? str_replace(" ", "&nbsp;", anti_xss($this->title)) : "Тема без заголовка";
+			$output["title_formatted"] = str_replace(" ", "&nbsp;", anti_xss($this->title));
 		}
-		
-		// /test/
-		/*if ($this->forum_id == 3 and $output["title_formatted"] == "Тема без заголовка")
+    
+    $plain_text = strip_tags($text_formatted);
+    $e = explode("\n", $plain_text);
+    
+    $max_lines_to_show = 5;
+    $max_chars_to_show = 700;
+    
+    if (count($e) > $max_lines_to_show)
+    {
+      $output["text_preview"] = "";
+      for ($i = 0; $i < $max_lines_to_show; $i++)
+      {
+        $output["text_preview"] .= $e[$i] . "<br>";
+      }
+    }
+    
+    elseif (mb_strlen($text_formatted) > $max_chars_to_show)
 		{
-			$output["title_formatted"] = "";
-		}*/
+			$output["text_preview"] = mb_substr($plain_text, 0, $max_chars_to_show);
+		}
 		
 		return $output;
 	}
@@ -112,15 +141,25 @@ class Post extends Model
 		{
 			unlink($thumb_path);
 		}
+	
+    $this->file_url = "";
+    $this->thumb_url = "";
+    $this->thumb_w = 0;
+    $this->thumb_h = 0;
+    $this->save();
 	}
 
 	public $post_id;
   public $forum_id;
   public $parent_topic;
   public $creation_time;
+  public $deleted_by;
   public $ip;
+	public $user_id;
+	public $session_id;
   public $ord;
 	public $order_in_topic;
+  public $reply_to;
   public $text;
   public $title;
   public $name;

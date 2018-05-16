@@ -16,7 +16,7 @@ if (isset($_POST["logout"]))
 
 if (is_mod())
 {
-  $message = "You are mod!";
+  $message = "Вы авторизованы как модератор";
 }
 
 ob_start();
@@ -24,14 +24,14 @@ ob_start();
 <h2>Вход</h2>
 
 <?php
-echo session_cache_expire();
+/*echo session_cache_expire();
 echo "<br>";
 echo session_id();
 echo "<br>";
-echo var_dump($_SESSION);
+echo var_dump($_SESSION);*/
 ?>
 
-<content style="text-align:center;">
+<content style="text-align:center;margin-bottom:1.2em;">
 <?php
 if (isset($message))
 {
@@ -53,7 +53,8 @@ ob_end_clean();
 
 $twig_data = array
 (
-  "html" => $html
+  "html" => $html,
+  "final_title" => "Вход"
 );
 
 echo render($twig_data);

@@ -68,17 +68,20 @@ RewriteRule ^(delete)$ /page?page=$1
 RewriteRule ^(backup)$ /page?page=$1
 RewriteRule ^(backu)$ /page?page=backup
 RewriteRule ^(move)$ /page?page=$1
+RewriteRule ^(tidyup)$ /page?page=$1
 
 RewriteRule ^(about)$ /page?page=$1
+RewriteRule ^(rules)$ /page?page=$1
 RewriteRule ^(principles)$ /page?page=$1
 RewriteRule ^(modlog)$ /page?page=$1&%{QUERY_STRING}
 RewriteRule ^(faq)$ /page?page=$1
 RewriteRule ^(contact)$ /page?page=$1
 RewriteRule ^(developers)$ /page?page=$1
 RewriteRule ^(why-us)$ /page?page=$1
+RewriteRule ^(settings)$ /page?page=$1
 RewriteRule ^(stat)$ /page?page=$1
 RewriteRule ^(report)$ /page?page=$1
-RewriteRule ^(tidyup)$ /page?page=$1
+RewriteRule ^(my-topics)$ /page?page=$1
 
 RewriteRule ^(notifications1)$ /page?page=$1
 RewriteRule ^(notifications2)$ /page?page=$1

@@ -16,7 +16,8 @@ ob_end_clean();
 
 $twig_data = array
 (
-  "html" => $html
+  "html" => $html,
+  "title" => "Контакты"
 );
 
 echo render($twig_data);

@@ -1,13 +1,4 @@
 <?php
-date_default_timezone_set("Europe/Kaliningrad"); // bug in server settings, in fact it's Moscow time
-
-/*if (!isset($_SERVER["HTTP_CF_CONNECTING_IP"]))
-{
-	die("Cloudflare not detected!");
-}
-
-$GLOBALS["client_ip"] = $_SERVER["HTTP_CF_CONNECTING_IP"];*/
-
 function microtime_from_start ()
 {
 	global $start_microtime;
@@ -213,21 +204,26 @@ function is_mod ()
 	}
 }
 
-function error_page ($code) // 404 Not Found
+function error_page ($params) // 404 Not Found
 {
-	header("HTTP/1.0 404 Not Found");
+  if (isset($params["code"]) and $params["code"] == 404)
+  {
+	  header("HTTP/1.0 404 Not Found");
+  }
+  
+  $header  = isset($params["header"]) ? $params["header"]   : "Вы попали на страницу 404";
+  $message = isset($params["message"]) ? $params["message"] : "Это значит, что контент, который вы пытаетесь найти, был удален, либо вовсе никогда не существовал.
+		Вы можете <a href='/contact'>связаться</a> с нами, но вряд ли это поможет.
+		Поэтому лучше посмотрите видеоролик сверху и успокойтесь.";
+  $media = isset($params["media"]) ? $params["media"] : "<div align='center'><iframe src='//coub.com/embed/12hxbn?muted=false&autostart=false&originalSize=false&startWithHD=false' allowfullscreen='true' frameborder='0' width='480' height='270'></iframe></div><br>";
+  
 	echo "<!--".benchmark()."-->";
 	ob_start();
 	?>
-	<h2>Вы попали на страницу 404</h2>
+	<h2><?php echo $header; ?></h2>
 	<content>
-		<div align="center">
-			<iframe src="//coub.com/embed/12hxbn?muted=false&autostart=false&originalSize=false&startWithHD=false" allowfullscreen="true" frameborder="0" width="480" height="270"></iframe>
-		</div>
-		<br>
-		Это значит, что контент, который вы пытаетесь найти, был удален, либо вовсе никогда не существовал.
-		Вы можете <a href="/contact">связаться</a> с нами, но вряд ли это поможет.
-		Поэтому лучше посмотрите видеоролик сверху и успокойтесь.
+    <?php echo $media; ?>
+		<?php echo $message; ?>
 	</content>
 	<?php
 	$html = ob_get_contents();
@@ -235,7 +231,7 @@ function error_page ($code) // 404 Not Found
 	$twig_data = array
 	(
 		"html" => $html,
-		"final_title" => "Не найдено!"
+		"final_title" => "Ошибка!"
 	);
 	echo render($twig_data);
 	echo "<!--".benchmark()."-->";
@@ -329,6 +325,6 @@ function smart_time_format ($timestamp)
 	{
 		$dm = "Сегодня";
 	}
-	return $dm." @ ".date("H:i", $timestamp);
+	return $dm." в ".date("H:i", $timestamp);
 }
 ?>

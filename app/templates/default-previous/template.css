@@ -175,6 +175,7 @@ text
 
 html, body
 {
+	height: 100%;
 	text-align: center;
 	
 	/*font-family: 'Arimo', sans-serif;*/

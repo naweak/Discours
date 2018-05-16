@@ -1,15 +1,88 @@
+var topic_userfile_html = '<i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>';
+
 $(document).ready(function ()
 {
+    window.percent_gradient_color = "#efefef";
+  
+    window.onerror = function (msg, url, linenumber)
+    {
+      alert('Error message: '+msg+'\nURL: '+url+'\nLine Number: '+linenumber);
+      return true;
+    }
+  
     on_resize();
 		link_preview_tree_init();
 	
-		var hash = window.location.hash.substr(1);
+		var hash = get_hash();
 		if (hash)
 		{
 			console.log ("Highlighting reply: "+hash);
 			scroll_to_reply(hash);
 			highlight_reply(hash);
 		}
+  
+    if (topic_id !== 0)
+    {
+      setInterval(function ()
+      {
+        load_new_replies(topic_id, function (args)
+        {
+          console.log("Loaded new replies");
+          if (args.appended_replies > 0)
+          {
+            if (document.hidden)
+            {
+              console.log("Window has no focus");
+              pageTitleNotification.on("Новый пост");
+            }
+            else
+            {
+              console.log("Window has focus");
+              setTimeout(function()
+              {
+                remove_highlight_from_new_replies();
+              }, 5000);
+            }
+          }
+        }, true);
+      }, 5000);
+    }
+
+    document.addEventListener("visibilitychange",
+    function ()
+    {
+      console.log("Visibility changed");
+      if (!document.hidden)
+      {
+        console.log("Turning off title notification");
+        pageTitleNotification.off();
+        setTimeout(function()
+        {
+          remove_highlight_from_new_replies();
+        }, 5000);
+      }
+    }
+    , false);
+  
+    /*document.onpaste = function(event){
+      var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+      console.log(JSON.stringify(items)); // will give you the mime types
+      for (var index in items) {
+        var item = items[index];
+        if (item.kind === 'file') {
+          var blob = item.getAsFile();
+          var reader = new FileReader();
+          reader.onload = function(event){
+            console.log(event.target.result)}; // data url!
+          reader.readAsDataURL(blob);
+        }
+      }
+    }*/
+  
+    if(/iPhone|iPad|iPod/i.test(navigator.userAgent))
+    {
+      append_style(".reply_to_topic {margin-left: 2px;}");
+    }
 
     $("img.embedded").css("cursor", "pointer");
     $("img.embedded").click(function ()
@@ -116,9 +189,22 @@ function ajax_form (args)
 			form_data[window.submit] = true;
 			delete window.submit;
 		}
-		form_data.append("ajax", true);
+    // form.data.get() doesn't work in Safari
+    /*if (form_data.get("userfile").size === 0) // Prevent CloudFlare from returning "400 Bad Request"
+    {
+      form_data.delete("userfile");
+    }*/
+    form_data.append("ajax", true);
 		console.log("Form data for submission:");
 		console.log(form_data);
+
+    /*var object = {};
+    form_data.forEach(function(value, key){
+        object[key] = value;
+    });
+    var json = JSON.stringify(object);
+    alert(json);*/
+    
 		on_submit.args.success.form = form;
 		if (typeof args.error !== "undefined")
 		{
@@ -176,8 +262,15 @@ function time_link_click (hash)
 {
 	if (topic_id)
 	{
-		$("*").removeClass("highlighted");
-		highlight_reply(hash);
+    $("reply").remove_highlight();
+    if (get_hash() != hash)
+    {
+		  highlight_reply(hash);
+    }
+    else // click on a highlighted reply
+    {
+      setTimeout(function(){remove_hash_from_url();}, 100); // doesn't work instantly
+    }
 	}
 }
 
@@ -269,13 +362,21 @@ function bind_event_handlers ()
 	$(document).on("focus", window.new_topic_form_selector, function()
 	{
 		autosize(this);
-		$(this).parent().find("[name='title']").css("display", "block");
+		//$(this).parent().find("[name='title']").css("display", "block");
+	});
+	
+	$(document).on("click tap", "a.more", function()
+	{
+		var text_formatted = $(this).prevAll(".text_formatted").html();
+		$(this).parent().append(text_formatted);
+		$(this).prev(".text_preview").remove();
+		$(this).remove();
 	});
 
-	$("text").each(function(index)
+	/*$("text").each(function(index)
 	{
 		var height = $(this).height();
-		var display_height = 200; /* duplicated in CSS file */
+		var display_height = 200; // duplicated in CSS file
 		var expand_html = "<a class='expand_text' onclick='expand_previous(this);'>Показать текст полностью</a>";
 
 		//if (height > display_height)
@@ -284,7 +385,7 @@ function bind_event_handlers ()
 			//$(this).css("max-height", display_height);
 			$(this).after(expand_html);
 		}
-	});
+	});*/
 
 	// New topic form
 	ajax_form
@@ -354,7 +455,7 @@ function bind_event_handlers ()
 		{
 			var form = percent.form;
 			console.log(data);
-			$(form).find("label[for='topic_submit']").css("background", "linear-gradient(90deg, #ffdd57 "+data+"%, transparent "+(data+1)+"%)");
+			$(form).find("label[for='topic_submit']").css("background", "linear-gradient(90deg, "+window.percent_gradient_color+" "+data+"%, transparent "+(data+1)+"%)");
 			if (data == 100)
 			{
 				$(form).find("label[for='topic_submit']").css("background", "");
@@ -382,13 +483,16 @@ function bind_event_handlers ()
 			{
 				// clear form
 				$(form).find("[name='userfile']").val("");
-				$(form).find(".attach_button").html("Прикрепить картинку");
+				$(form).find(".attach_button").html(topic_userfile_html);
+        $(form).find(".attach_button").css("font-weight", "normal");
 				var textarea = $(form).find("textarea");
 				//$(textarea).blur();
 				textarea.val("");
 				autosize.update(textarea);
 
 				textarea.trigger("paste"); // resize textarea
+        
+        change_reply_to($(form).find("[name='parent_topic']").val(), 0);
 				
 				$(form).find("input[type='submit']").prop("disabled", false);
 				$(form).find(".submit_button").removeClass("is-loading");
@@ -428,7 +532,7 @@ function bind_event_handlers ()
 			var form = error.form;
 			console.log(form);
 			console.log("Error!");
-			alert("Запрос не был отправлен! Попробуйте еще раз.");
+			alert("Запрос не был отправлен! Попробуйте еще раз.\n\nОшибка: "+JSON.stringify(data));
 			$(form).find("input[type='submit']").prop("disabled", false);
 			$(form).find(".submit_button").removeClass("is-loading");
 		},
@@ -436,7 +540,7 @@ function bind_event_handlers ()
 		{
 			var form = percent.form;
 			console.log(data);
-			$(form).find(".submit_button").css("background", "linear-gradient(90deg, #ffdd57 "+data+"%, transparent "+(data+1)+"%)");
+			$(form).find(".submit_button").css("background", "linear-gradient(90deg, "+window.percent_gradient_color+" "+data+"%, transparent "+(data+1)+"%)");
 			if (data == 100)
 			{
 				$(form).find(".submit_button").css("background", "");
@@ -471,17 +575,41 @@ function clear_new_topic_form ()
 	$(".new_topic_form").find(".picrandom").val($(".new_topic_form").find(".picrandom option:first").val());
 	$(".new_topic_form").find("[name='userfile']").val("");
 	
-	$(".new_topic_form").find("[for='topic_userfile']").html("Прикрепить картинку");
+	$(".new_topic_form").find("[for='topic_userfile']").html(topic_userfile_html);
+  $(".new_topic_form").find("[for='topic_userfile']").css("font-weight", "normal");
 	
 	// resize textarea
 	$(".new_topic_form").find("[name='text']").trigger("paste");
 }
 
+function change_reply_to (topic_id, index)
+{
+  var topic = $("post_with_replies[topic_id='"+topic_id+"']");
+	var reply_form = $(topic).find(".reply_form");
+  
+  $(reply_form).find(".reply_to").html(index);
+  $(reply_form).find("[name='reply_to']").val(index);
+  
+  if (index != 0)
+  {
+    $(reply_form).find(".reply_to_topic").css("display", "block");
+  }
+  
+  else
+  {
+    $(reply_form).find(".reply_to_topic").css("display", "none");
+  }
+}
+
 function reply_to_topic (topic_id, reply_id, index)
 {
 	console.log("reply_to_topic triggered!");
-	
 	$(".link_preview").remove(); // remove previews tree
+  if (typeof reply_id === "undefined") // replying to original post
+  {
+      $("#text_"+topic_id).focus();
+      return true;
+  }
 	if (!$("#reply_"+reply_id).length) // reply does not exist on page
 	{
 		document.location = "/topic/"+topic_id+"#"+index;
@@ -498,11 +626,16 @@ function reply_to_topic (topic_id, reply_id, index)
 	{
 		$("#reply_"+reply_id).after("<div class='hr'></div>", reply_form.detach());
 	}
+  
+  change_reply_to (topic_id, index);
 	
-	var contenteditable = $("#text_"+topic_id);
+  var contenteditable = $("#text_"+topic_id);
 	var textarea = document.querySelector("#text_"+topic_id);
 	var quote_text = "";
+  
+  $(contenteditable).focus();
 	
+  /*
 	if (typeof reply_id !== "undefined")
 	{
 		quote_text = ">>"+index;
@@ -533,7 +666,7 @@ function reply_to_topic (topic_id, reply_id, index)
 		contenteditable.focus();
 	}
 
-	/* Copied from Autoresize Plugin */
+	// Copied from Autoresize Plugin
 	var ta = contenteditable[0];
 	var style = window.getComputedStyle(ta, null);
 	if (style.boxSizing === 'content-box')
@@ -550,7 +683,8 @@ function reply_to_topic (topic_id, reply_id, index)
 	}
 	var endHeight = ta.scrollHeight+heightOffset;
 	contenteditable.css("height", endHeight);
-	/* /Copied from Autoresize Plugin */
+	// /Copied from Autoresize Plugin
+  */
 }
 
 function isScrolledIntoView(elem)
@@ -710,16 +844,17 @@ function load_new_replies (id, on_finish, highlight)
 		var replies_element = $(html_doc).find("replies");
 		if (replies_element.length)
 		{
-			if (highlight)
+			/*if (highlight)
 			{
 				$("*").removeClass("highlighted");
-			}
+			}*/
 			var last_reply = $("post_with_replies[topic_id='"+id+"'] replies reply").last();
 			var last_reply_order_in_topic = parseInt($(last_reply).attr("order_in_topic"));
 			if (!last_reply_order_in_topic) {last_reply_order_in_topic = 0;}
+      var appended_replies = 0;
 			$(replies_element).find("reply").each(function(index)
 			{
-				console.log($(this).attr("id"));
+				//console.log($(this).attr("id"));
 				if (parseInt($(this).attr("order_in_topic")) > last_reply_order_in_topic)
 				{
 					console.log("Appending reply");
@@ -729,11 +864,12 @@ function load_new_replies (id, on_finish, highlight)
 					{
 						highlight_reply($(this).attr("order_in_topic"));
 					}
+          appended_replies++;
 				}
 			});
 			if(typeof on_finish !== "undefined")
 			{
-				on_finish();
+				on_finish({appended_replies: appended_replies});
 			}
 		}
 	});
@@ -742,9 +878,11 @@ function load_new_replies (id, on_finish, highlight)
 function load_new_replies_click (element)
 {
 	$(element).prop("disabled", "true");
+	$(element).addClass("is-loading");
 	load_new_replies(topic_id, function ()
 	{
 		$(element).prop("disabled", "");
+		$(element).removeClass("is-loading");
 	}, true);
 }
 
@@ -772,7 +910,8 @@ function scroll_to_reply (order_in_topic)
 
 function highlight_reply (order_in_topic)
 {
-	$("reply[order_in_topic='"+order_in_topic+"']").addClass("highlighted");
+	//$("reply[order_in_topic='"+order_in_topic+"']").addClass("highlighted");
+  $("reply[order_in_topic='"+order_in_topic+"']").highlight();
 }
 
 function link_preview_tree_init ()
@@ -806,29 +945,33 @@ function link_preview_tree_init ()
 	});
 	
 	// Trigger tap event on any element
-	$(document).on("tap", "*", function(e)
+	if (mobile())
 	{
-		var target = e.toElement || e.relatedTarget || e.target;
-		if ($(target).is("a.preview")) // tap on a.preview
+		$(document).on("tap", "*", function(e)
 		{
-			$(this).trigger("mouseenter");
-		}
-		else if ($(target).is("a.answer_link")) // tap on a reply link
-		{
-			$(this).trigger("click");
-		}
-		else if (!$(target).parents(".link_preview").length) // tap outside of previews tree
-		{
-			console.log("Remove all previews!");
-			$(".link_preview").remove();
-		}
-		//return false; // prevent default
-	});
+			/*var target = e.toElement || e.relatedTarget || e.target;
+			if ($(target).is("a.preview")) // tap on a.preview
+			{
+				$(this).trigger("mouseenter");
+			}
+			else if ($(target).is("a.answer_link")) // tap on a reply link
+			{
+				//$(this).trigger("click");
+			}
+			else if (!$(target).parents(".link_preview").length) // tap outside of previews tree
+			{
+				console.log("Remove all previews!");
+				$(".link_preview").remove();
+			}*/
+		});
+	}
 	
 	// Mouse enters a >> link
 	$(document).on("mouseenter", "a.preview", function(e)
 	{
-		var preview_link = e.toElement || e.relatedTarget || e.target; // preview link
+		//var preview_link = e.toElement || e.relatedTarget || e.target; // preview link
+    // new order for Firefox
+    var preview_link = e.target || e.toElement || e.relatedTarget; // preview link
 		var my_rand = $(this).parent().attr("rand") || $(this).parent().parent().attr("rand");
 		if (!my_rand)
 		{
@@ -868,7 +1011,7 @@ function link_preview_tree_init ()
 		console.log(post_footnotes_width);
 		var reply_padding = parseInt($("reply").css("padding"));
 		console.log("reply_padding: " + reply_padding);
-		var link_preview_min_width = (reply_padding*2) + post_footnotes_width[0] + post_footnotes_width[1] + 20;
+		var link_preview_min_width = (reply_padding*2) + post_footnotes_width[0] + post_footnotes_width[1] + 175;
 		console.log("link_preview_min_width: " + link_preview_min_width);
 		
 		var topic_id = $(this).attr("topic_id");
@@ -955,6 +1098,51 @@ function mobile ()
 		return false;
 	}
 }
+
+function get_hash ()
+{
+  return window.location.hash.substr(1);
+}
+
+function remove_highlight_from_new_replies ()
+{
+  $("reply").each(function()
+  {
+    if ($(this).attr("order_in_topic") != get_hash())
+    {
+      //$(this).removeClass("highlighted");
+      $(this).remove_highlight();
+    }
+  });
+}
+
+function remove_hash_from_url ()
+{
+    var uri = window.location.toString();
+    if (uri.indexOf("#") > 0)
+    {
+      var clean_uri = uri.substring(0, uri.indexOf("#"));
+      window.history.replaceState({}, document.title, clean_uri);
+    }
+}
+
+function append_style (str)
+{
+  var style = $("<style>"+str+"</style>");
+  $("html > head").append(style);
+}
+
+jQuery.fn.highlight = function()
+{
+    $(this).addClass("highlighted");
+    return this; // This is needed so others can keep chaining off of this
+};
+
+jQuery.fn.remove_highlight = function()
+{
+    $(this).removeClass("highlighted");
+    return this; // This is needed so others can keep chaining off of this
+};
 
 /* Page logic: */
 
@@ -1211,3 +1399,41 @@ $.scrollLock = (function scrollLockClosure()
     return this[fn ? 'on' : 'trigger'](specialEventName, fn);
   };
 })(jQuery, 'tap');
+
+(function(window, document){
+
+  window.pageTitleNotification = (function () {
+
+      var config = {
+          currentTitle: null,
+          interval: null
+      };
+
+      var on = function (notificationText, intervalSpeed) {
+          if (!config.interval) {
+              config.currentTitle = document.title;
+              config.interval = window.setInterval(function() {
+                  document.title = (config.currentTitle === document.title)
+                      ? notificationText
+                      : config.currentTitle;
+              }, (intervalSpeed) ? intervalSpeed : 1000);
+          }
+      };
+
+      var off = function () {
+          window.clearInterval(config.interval);
+          config.interval = null;
+          if (config.currentTitle !== null)
+          {
+            document.title = config.currentTitle;
+          }
+      };
+
+      return {
+          on: on,
+          off: off
+      };
+
+  })();
+
+}(window, document));

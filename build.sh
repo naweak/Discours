@@ -2,10 +2,13 @@
 
 # git status
 # git add .
+# git status
 # git commit -m ""
 # git push
 
-template="default"
+template="test"
+
+if  [[ -n "$1" ]]; then template=$1; fi
 
 echo "Template: ${template}"
 
@@ -19,7 +22,7 @@ timestamp=$(get_timestamp)
 temp_file_js=$(mktemp)
 temp_file_css=$(mktemp)
 
-browserify bundle.js | uglifyjs >> public/assets/${template}_${timestamp}.js
+browserify app/templates/${template}/bundle.js | uglifyjs >> public/assets/${template}_${timestamp}.js
 uglifyjs app/templates/${template}/template.js >> public/assets/${template}_${timestamp}.js
 
 #browserify bundle.js | uglifyjs >> $temp_file_js

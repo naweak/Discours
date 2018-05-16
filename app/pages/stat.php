@@ -12,12 +12,25 @@ $pdo = pdo();
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
+Server time: <?php echo date(DATE_RFC822); ?>
+
+<hr>
+
+<?php
+$beginning_of_this_day = strtotime("midnight", time());
+
+$sql = $pdo->query("SELECT COUNT(DISTINCT ip) FROM posts WHERE creation_time >= $beginning_of_this_day");
+$row = $sql->fetch();
+
+echo "Unique IPs today: ".$row[0];
+?>
+
 <hr>
 <?php
 $i = 0;
 $date = date('Y-m-d H:i:s', strtotime("-$i hour"));
-$beginnig_of_this_hour_str = substr($date, 0, -5)."00:00";
-$beginning_of_this_hour = strtotime($beginnig_of_this_hour_str);
+$beginning_of_this_hour_str = substr($date, 0, -5)."00:00";
+$beginning_of_this_hour = strtotime($beginning_of_this_hour_str);
 while ($i < 24)
 {
 	$end = strtotime("-$i hour", $beginning_of_this_hour);

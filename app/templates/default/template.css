@@ -34,7 +34,6 @@ and (max-width : 700px)
 	
 	h2
 	{
-		/*font-size: 20px;*/
 		font-size: 18px;
 		font-weight: bold;
 		margin-top: 12px;
@@ -43,7 +42,6 @@ and (max-width : 700px)
 	
 	.embedded, .topic_thumb, .reply_thumb
 	{
-		/*max-width: 25% !important;*/
 		margin-right: 15px !important;
 	}
 	
@@ -118,7 +116,8 @@ and (max-width : 700px)
 		background-color: transparent !important;
 	}
 	
-	#nav-toggle, .navbar-item
+	/*#nav-toggle, .navbar-item*/
+  .navbar-item
 	{
 		-webkit-tap-highlight-color: transparent;
 	}
@@ -127,12 +126,6 @@ and (max-width : 700px)
 	{
 		padding-left: 1px;
 		padding-right: 1px;
-	}
-	
-	.topic_header
-	{
-		/*font-size: 1.2em;
-		margin-bottom: 5px;*/
 	}
 	
 	#up, #down
@@ -145,16 +138,34 @@ and (max-width : 700px)
 		margin-top: 1.5em !important;
 		margin-bottom: 1.5em;
 	}
+  
+  .brand
+  {
+    display: none;
+  }
+  
+  .brand_centered
+  {
+    display: block !important;
+  }
 }
 
 @media only screen
 and (min-width : 700px)
-and (max-width : 1000px)
+and (max-width : 900px)
 {
 	content
 	{
-		/*width: 75% !important;*/
 		width: 80% !important;
+	}
+}
+@media only screen
+and (min-width : 900px)
+and (max-width : 1100px)
+{
+	content
+	{
+		width: 65% !important;
 	}
 }
 
@@ -170,11 +181,12 @@ and (max-width : 1000px)
 text
 {
 	font-weight: 400 !important; /* a bug in Safari */
-	max-height: 200px; /* duplicated in JS file */
+	/*max-height: 300px;*/
 }
 
 html, body
 {
+	height: 100%;
 	text-align: center;
 	
 	/*font-family: 'Arimo', sans-serif;*/
@@ -207,7 +219,8 @@ html, body
 
 content
 {
-	width: 50%;
+	/*width: 50%;*/
+  width: 55%;
 	display: block;
 	margin: 0 auto;
 	text-align: left;
@@ -310,11 +323,12 @@ footer
 post_with_replies
 {
 	display: block;
-	box-shadow: 0 1px 0 0 #d7d8db, 0 0 0 1px #e3e4e8;
+	/*box-shadow: 0 1px 0 0 #d7d8db, 0 0 0 1px #e3e4e8;*/
+  box-shadow: 0 1px 5px 0 #d1d1d1;
 	background: white;
 	margin: 25px 0 0;
-	/* 15px */
-	border-radius: 4px;
+	/*border-radius: 4px;*/
+  border-radius: 4px;
 }
 
 a.topic_title
@@ -369,15 +383,6 @@ expand
 	/*padding: 6px;*/
 }
 
-.expand_text
-{
-	/*background: #eee;*/
-	/*margin-top: 0.5em;*/
-	/*text-align: center;*/
-	cursor: pointer;
-	padding: 0px;
-}
-
 .hr
 {
 	border-top: 1px solid #e7e8ec;
@@ -385,6 +390,7 @@ expand
 
 reply
 {
+  position: relative;
 	border: none;
 	background: var(--reply-background);
 	-moz-box-sizing: border-box;
@@ -396,8 +402,8 @@ reply
 
 reply.highlighted
 {
-	/* #ffe3e3 */
-	background: #e3ffe4;
+	/*background: #e3ffe4;*/
+  background: #f2f4f7;
 }
 
 form.post
@@ -413,7 +419,8 @@ form.post
 text
 {
 	display: block;
-	overflow: hidden;
+	overflow-x: hidden;
+	overflow-y: scroll;
 	text-overflow: ellipsis;
 	font-size: inherit;
 }
@@ -628,6 +635,8 @@ textarea.new_post
 	-webkit-box-shadow: 0px 1px 5px 0px #d1d1d1;
 	-moz-box-shadow: 0px 1px 5px 0px #d1d1d1;
 	box-shadow: 0px 1px 5px 0px #d1d1d1;
+  z-index: 10;
+  position: relative;
 }
 
 .controls
@@ -710,7 +719,7 @@ post_info
 	border-top: 0;
 }
 
-.night .brand
+.night .brand, .night .brand_centered
 {
 	color: #c6c6c6;
 	text-shadow: 0 1px 0 black;
@@ -765,7 +774,8 @@ post_info
 
 .post_footnote
 {
-	font-size: 0.75em;
+	/*font-size: 0.75em;*/
+  font-size: 0.85em;
 	margin-top: 0.5em;
 	padding: 0px;
 	white-space: nowrap;
@@ -773,7 +783,8 @@ post_info
 
 .topic_footnote
 {
-	margin-top: 1em;
+	/*margin-top: 1em;*/
+	/*display: none;*/
 }
 
 .time_formatted
@@ -896,4 +907,223 @@ input[name=sage]:checked ~ abbr
 	background: white;
 	padding: var(--post_with_replies_padding);
 	border: 1px solid #e7e8ec;
+  box-shadow: 0 1px 5px 0 #d1d1d1;
+}
+
+.topic_header_with_avatar
+{
+	/*background: #ddd;*/
+	padding: 0;
+	overflow: hidden;
+
+	position: relative;
+
+	margin-bottom: 5px;
+}
+
+.avatar
+{
+	display: block;
+	position: relative;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+}
+
+.name, .date
+{
+	left: 38px;
+	font-size: 13px;
+	line-height: 13px;
+	height: 13px;
+}
+
+.name
+{
+  position: absolute;
+  top: 0px;
+	padding: 0px !important;
+	font-weight: bold;
+}
+
+.date
+{
+  position: absolute;
+  bottom: 0px;
+	padding: 0px !important;
+	opacity: 0.4;
+}
+
+.date:hover
+{
+	opacity: 0.75;
+}
+
+.dots
+{
+  position: absolute;
+	right: 0px;
+  bottom: 0px;
+	padding: 0px !important;
+}
+
+a.more
+{
+	color: #999999;
+}
+
+a.more:hover
+{
+	color: #b3b3b3;
+}
+
+.reply_to_topic
+{
+  margin-bottom: 4px;
+}
+
+.topic_header
+{
+  display: none;
+}
+
+.deleted_post
+{
+  color: red;
+}
+
+.dots-dropdown
+{
+  position: absolute;
+  top: 0px;
+  right: 4px;
+  z-index: 2;
+}
+
+.dots-dropdown-trigger
+{
+  opacity: 0.2;
+  line-height: 0px;
+}
+
+.dots-dropdown-trigger:hover
+{
+  opacity: 0.5;
+}
+
+.dots-dropdown-menu
+{
+  padding-top: 0px;
+  min-width: 0px;
+}
+
+.dots-dropdown-menu > .dropdown-content > .dropdown-item
+{
+  padding-right: 16px;
+}
+
+.brand, .brand_centered
+{
+  font-size: 1.25em;
+  font-weight: bold !important;
+}
+
+.brand_centered
+{
+  display: none;
+  color: inherit;
+  position: absolute;
+  top: calc(50%);
+  left: calc(50%);
+  transform: translate(-50%, -50%);
+}
+
+/* SASS format */
+/* https://www.sassmeister.com */
+/* Switch to Webpack later */
+/*
+$size: 15px;
+$background: black;
+
+.dots_container
+{
+  display: inline-block;
+  position: relative;
+  width: $size;
+  height: $size;
+  cursor: pointer;
+}
+
+.dots
+{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: $size / 5;
+  height: $size / 5;
+  background: $background;
+  border-radius: 50%;
+  backface-visibility: hidden;
+  
+  &::before, &::after
+  {
+    display: block;
+    content: '';
+    position: absolute;
+    bottom: 0;
+    background: $background;
+    width: $size / 5;
+    height: $size / 5;
+    border-radius: 50%;
+    transition: all 0.35s ease;
+  }
+  
+  &::before
+  {
+    left: -(($size / 5) * 2);
+  }
+  
+  &::after
+  {
+    right: -(($size / 5) * 2);
+  }
+}
+*/
+
+.dots_container {
+  display: inline-block;
+  position: relative;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.dots {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px;
+  height: 3px;
+  background: black;
+  border-radius: 50%;
+  backface-visibility: hidden;
+}
+.dots::before, .dots::after {
+  display: block;
+  content: "";
+  position: absolute;
+  bottom: 0;
+  background: black;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  transition: all 0.35s ease;
+}
+.dots::before {
+  left: -6px;
+}
+.dots::after {
+  right: -6px;
 }

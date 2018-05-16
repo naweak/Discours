@@ -17,25 +17,12 @@ p
 </style>
 
 <content style="margin-top:2em;">
-
-  <p>
-  Есть три основных категории контента, которые здесь, <i>мягко говоря</i>, не приветствуются:
-  </p>
-
-  <p>
-  <ol style="margin:none;font-weight:bold;list-style-position:inside;">
-    <li>Порно, гуро и прочий explicit content</li>
-    <li>Спам</li>
-    <li>Вайпы</li>
-    <li  style="color:red;">Флуд</li>
-  </ol>
-  </p>
   
-  <p>
-  Почему? В двух словах: чтобы у Дискурса была перспектива.
-  </p>
+  <h2 style="text-align:center;">Где я нахожусь?</h2>
 
-  Более подробно можно прочитать в <a href="/faq">FAQ</a>.
+  <p>
+  Дискурс — это место, где люди могут общаться с интересными им собеседниками на любые темы.
+  </p>
   
 </content>
 <?php
@@ -44,7 +31,8 @@ ob_end_clean();
 
 $twig_data = array
 (
-  "html" => $html
+  "html" => $html,
+  "title" => "О проекте"
 );
 
 echo render($twig_data);

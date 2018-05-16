@@ -8,6 +8,8 @@ class PostingController extends Controller
 
 	public function postAction()
 	{
+    session_start();
+    
 		$request = new Request();
 		
 		$reply_delay     = 5;
@@ -17,13 +19,20 @@ class PostingController extends Controller
 		$max_name_length = 25;
 		$min_text_length = 3;
 		$max_text_length = 15000;
+		$max_replies_in_topic = 500;
 		$allow_sage = true;
 		
 		$forum_id     = intval($request->getPost("forum_id"));
 		$parent_topic = intval($request->getPost("parent_topic"));
+    $reply_to     = intval($request->getPost("reply_to"));
 		$title        = $request->getPost("title");
 		$name         = $request->getPost("name");
 		$text         = $request->getPost("text");
+    
+    if ($request->getPost("field3")) // wakaba
+    {
+      $title = $request->getPost("field3");
+    }
 		
 		if ($request->getPost("parent")) // Dollchan Extension Tools patch
 		{
@@ -66,9 +75,12 @@ class PostingController extends Controller
 			$this->error("Только администраторы могут создавать темы на этом форуме.");
 		}
 		
-		if ($forum_id == 3 and user_id() != 1) // /test/
-		{
-			$this->error("Этот форум закрыт для постинга.");
+		if ($forum_id == 3) // /test/
+		{ 
+      if (user_id() != 1)
+      {
+			  $this->error("Этот форум закрыт для постинга.");
+      }
 		}
 		
 		// Text
@@ -119,6 +131,16 @@ class PostingController extends Controller
 		{
 			$ban_id = $active_ban->ban_id;
 			$this->error("Ваш IP находится в бан-листе (бан #$ban_id). Для разбана обратитесь в телеграм-конференцию.");
+		}
+		
+		$tor_file_path = ROOT_DIR."/app/config/tor.txt";
+		if (file_exists($tor_file_path))
+		{
+			$tor_nodes = file($tor_file_path, FILE_IGNORE_NEW_LINES);
+			if (in_array($ip, $tor_nodes))
+			{
+				$this->error("В связи с постоянными вайпами постинг с Tor закрыт. Благодаря этому на Дискурсе нет обязательной капчи. Пожалуйста, отнеситесь с пониманием.");
+			}
 		}
 		
 		$forum_obj = Forum::findFirst
@@ -246,6 +268,26 @@ class PostingController extends Controller
 		
 		$order_in_topic = count($topic_replies) + 1;
 		
+		if ($order_in_topic > $max_replies_in_topic and $parent_topic)
+		{
+			$this->error("Тема закрыта! Нельзя добавлять больше $max_replies_in_topic ответов.");
+		}
+    
+    if ($reply_to)
+    {
+      $reply_to_object = Post::findFirst
+      (
+      [
+        "parent_topic = '$parent_topic' AND order_in_topic = '$reply_to'"
+      ]
+      );
+      
+      if (!$reply_to_object)
+      {
+        $this->error("Вы отвечаете на несуществующий пост");
+      }
+    }
+		
 		// Create post object
 		$post = new Post();
 		$post->forum_id = $forum_id; // will be used in process_file()
@@ -302,8 +344,13 @@ class PostingController extends Controller
 		
 		$post->creation_time = $time;
 		$post->ip = $ip;
+		
+		$post->user_id = 0;
+		$post->session_id = session_id();
+		
 		$post->ord = $ord;
 		$post->order_in_topic = $order_in_topic;
+    $post->reply_to = $reply_to;
 		$post->text = $text;
 		$post->title = $title;
 		$post->name = $name;
@@ -332,7 +379,7 @@ class PostingController extends Controller
 					$parent_topic_obj->ord = $ord;
 
 					$result = $parent_topic_obj->save();
-					if (!result)
+					if (!$result)
 					{
 						foreach ($post->getMessages() as $message)
 						{
@@ -378,7 +425,7 @@ class PostingController extends Controller
 			$notification->notify(1, $notification_text, $post_id, $parent_topic);
 		}
 		
-		if ($forum_id == 11 and $parent_topic == 0) // posting to Changelog
+		if ($forum_id == 11 and $parent_topic == 0) // if posting to changelog
 		{
 			send_message_to_telegram_channel("@DiscoursChangelog", $text . "\nОбсудить: https://".MAIN_HOST."/topic/".$post->post_id, TELEGRAM_TOKEN);
 		}
@@ -456,6 +503,7 @@ class PostingController extends Controller
 		$max_file_size = 5 * 1048576; // in bytes
     $max_file_width  = 8192;
     $max_file_height = 8192;
+    $remove_exif = true;
 		
 		$allowed_extensions = ["jpg", "jpeg", "png", "gif", "bmp"];
 		
@@ -481,15 +529,19 @@ class PostingController extends Controller
       $this->error("Image too large ($max_file_width x $max_file_height max)");
     }
     
-    	if (in_array($file_extension, array("jpg", "jpeg"))) // JPEG image
+    if ($remove_exif)
+    {
+    	if (in_array($file_extension, array("jpg", "jpeg"))) // if JPEG image
     	{
-    		//exec("$tmp_name"); // remove EXIF
+    		exec("convert $tmp_name -strip $tmp_name"); // remove EXIF
     	}
+    }
 
 		$thumb_path = tempnam(sys_get_temp_dir(), "thumb");
 		if ($post->forum_id != 3)
 		{
-			exec("convert -thumbnail 150x150 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
+			//exec("convert -thumbnail 150x150 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
+      exec("convert -thumbnail 300x300 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
 		}
 		else // /test/
 		{
@@ -499,11 +551,13 @@ class PostingController extends Controller
 
 		list($thumb_w, $thumb_h) = getimagesize($thumb_path);
 		
-		if ($post->forum_id == 3)
+		/*if ($post->forum_id == 3)
 		{
 			$thumb_w = intval($thumb_w / 2);
 			$thumb_h = intval($thumb_h / 2);
-		}
+		}*/
+    $thumb_w = intval($thumb_w / 2);
+		$thumb_h = intval($thumb_h / 2);
 		
 		function random_str ($length, $keyspace = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 		{

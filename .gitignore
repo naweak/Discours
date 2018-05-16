@@ -1,20 +1,26 @@
 vendor/
 node_modules/
-public/assets/
+public/phpmyadmin/
 public/test.php
 public/phpinfo.php
 
 /websocket
+/webpack
 
 app/controllers/NotificationController.php
+app/controllers/DummyController.php
+app/views
 app/pages/notifications*
 
 # Contains passwords:
-app/config.php
 app/config/config.php
+app/config/txt.php
 
 # Contains sensitive data:
 sessions/
+
+# Compiled assets:
+public/assets/
 
 # Images:
 public/files/

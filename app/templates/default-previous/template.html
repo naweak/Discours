@@ -267,6 +267,21 @@ Main page block:
   </head>
 
   <body>
+    <script>
+    function getCookie(name)
+    {
+      var matches = document.cookie.match(new RegExp(
+        "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+      ));
+      return matches ? decodeURIComponent(matches[1]) : undefined;
+    }
+    if (getCookie("night") == 1)
+    {
+      console.log("Night theme");
+      document.body.className += ' ' + 'night';
+    }
+    </script>
+    
     {{ block("noscript") }}
     
     <div id="up">
@@ -387,6 +402,16 @@ Main page block:
                    </a>
                    <a class="navbar-item" href="/contact">
                    Обратная связь
+                   </a>
+                </div>
+             </div>
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link is-active">
+                Мой аккаунт
+                </a>
+                <div class="navbar-dropdown is-boxed">
+                   <a class="navbar-item" href="/my-topics">
+                   Мои темы
                    </a>
                 </div>
              </div>

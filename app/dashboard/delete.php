@@ -1,4 +1,6 @@
 <?php
+// Rewrite this script using Phalcon MVC
+
 require_bundle();
 
 $pdo = pdo();
@@ -7,8 +9,6 @@ if (!is_mod())
 {
   die("Restricted");
 }
-
-/* DO NOT DELETE FROM DB, JUST FLAG AS DELETED!!! */
 
 $delete_all_by_user_hours = 72;
 
@@ -63,16 +63,16 @@ if (isset($_POST["submit"]))
     $ip = $row["ip"];
     $reason = $_POST["reason"];
 		
-		/********/
 		$post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $post_id]]);
 		if (!$post_object)
 		{
 			die("Post not found!");
 		}
+    
 		$post_object->delete_files();
-		/********/
   
-		$query = $pdo->prepare("DELETE FROM posts WHERE post_id = '$post_id' OR parent_topic = '$post_id'");
+		//$query = $pdo->prepare("DELETE FROM posts WHERE post_id = '$post_id' OR parent_topic = '$post_id'");
+    $query = $pdo->prepare("UPDATE posts SET deleted_by = '$mod_id' WHERE post_id = '$post_id' OR parent_topic = '$post_id'");
 		$query->execute();
 		$affected_rows = $query->rowCount();
     $message = "Post deleted rows: $affected_rows<br>";
@@ -139,7 +139,36 @@ if (isset($_POST["submit"]))
 					$text_sample = $row["text"];
     			$ip = $row["ip"];
 					
-					$modlog = new Modlog();
+					$post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $row['post_id']]]);
+					if (!$post_object)
+					{
+						die("Post not found!");
+					}
+          
+					$post_object->delete_files();
+					
+					//$query = $pdo->prepare("DELETE FROM posts WHERE post_id = :post_id");
+          $query = $pdo->prepare("UPDATE posts SET deleted_by = '$mod_id' WHERE post_id = :post_id");
+					$query->execute(["post_id" => $row['post_id']]);
+					
+					$pdo->query("DELETE FROM notifications WHERE post_id = '{$row['post_id']}'");
+					
+					if ($row['parent_topic'] != 0) // reply to topic
+					{
+						update_topic_ord($row['parent_topic']);
+					}
+          
+          else // topic
+          {
+            // delete all child posts
+            $child_posts = Post::find(["parent_topic = :post_id:", "bind" => ["post_id" => $row['post_id']]]);
+            foreach ($child_posts as $child_post)
+            {
+              echo "CHILD POST <u>NOT</u> DELETED (".$child_post->post_id.")!<br>";
+            }
+          }
+          
+          $modlog = new Modlog();
 					$modlog->mod_id = $mod_id;
 					$modlog->timestamp = $timestamp;
 					$modlog->post_id = $row['post_id'];
@@ -151,25 +180,6 @@ if (isset($_POST["submit"]))
 					$modlog->save();
 					
 					cache_delete("forum_".$row['forum_id']); // delete page cache
-					
-					/********/
-					$post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $row['post_id']]]);
-					if (!$post_object)
-					{
-						die("Post not found!");
-					}
-					$post_object->delete_files();
-					/********/
-					
-					$query = $pdo->prepare("DELETE FROM posts WHERE post_id = :post_id");
-					$query->execute(["post_id" => $row['post_id']]);
-					
-					$pdo->query("DELETE FROM notifications WHERE post_id = '{$row['post_id']}'");
-					
-					if ($row['parent_topic'] != 0) // reply to thread
-					{
-						update_topic_ord($row['parent_topic']);
-					}
           
           $wipe_deleted_rows++;
         }
@@ -193,12 +203,12 @@ ob_start();
     <?php if (isset($error)) {echo str_replace("\n", "<br>", $error);} ?>
   </div>
   
-  <a href="/backup" target="_blank">Backup!</a>
+  <a href="/backup" target="_blank">Make a backup!</a>
 
   <form action="" method="post">
       <input type="checkbox" name="ban_user" id="checkbox1"> <label for="checkbox1">Ban user?</label>
       <br>
-		<input type="checkbox" name="delete_all_by_user" id="checkbox2"> <label for="checkbox2">Delete all posts by this user (anti-WIPE only) (&lt; <?php echo $delete_all_by_user_hours; ?> hours from now) <b>Пермабан</b></label>
+		<input type="checkbox" name="delete_all_by_user" id="checkbox2"> <label for="checkbox2">Delete all recent posts by this user (anti-WIPE only) <b>+Permaban</b></label>
       <br> Причина бана:
       <!--<input type="text" name="reason" placeholder="Reason" value="вайп">-->
       <select name="reason">
