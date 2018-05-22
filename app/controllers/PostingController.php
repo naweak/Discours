@@ -346,7 +346,7 @@ class PostingController extends Controller
 		$post->creation_time = $time;
 		$post->ip = $ip;
 		
-		$post->user_id = 0;
+		$post->user_id = user_id();
 		$post->session_id = session_id();
 		
 		$post->ord = $ord;

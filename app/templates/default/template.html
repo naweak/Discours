@@ -40,7 +40,7 @@ Topic with replies:
         Главная Сегодня в 12:15
       </div>-->
       
-      <div class="topic_header">
+      <!--<div class="topic_header">
         <a href="/forum/{{ topic.forum_id }}" style="display: inline-block; overflow: hidden;">{{ topic.forum_title }}</a>
         {% if topic.title_formatted is not empty %}
           <span style="display: inline-block; overflow: hidden;">&#x2192;</span>
@@ -51,7 +51,7 @@ Topic with replies:
             {% endif %}
           </a>
         {% endif %}
-      </div>
+      </div>-->
 
       <div style="float:left;padding:0px;margin-top:-3px;margin-bottom:2px;font-size:0.85em;">
         <a href="/forum/{{ topic.forum_id }}">{{ topic.forum_title }}</a>
@@ -80,6 +80,9 @@ Topic with replies:
             </a>
             {% if is_mod %}
               {# different code for topic and reply! #}
+              <a class="dropdown-item move_post" onclick="move_post({{ topic.post_id }});">
+                На свалку
+              </a>
               <a class="dropdown-item" style="color:red;" onclick="delete_post({{ topic.post_id }});">
                 Удалить
               </a>
@@ -90,9 +93,8 @@ Topic with replies:
 
       <text>
         {% if topic.file_url %}
-        <a href="{{ topic.file_url }}" target="_blank">
+        <a href="{{ topic.file_url }}" class="topic_thumb_container" target="_blank">
           {% if topic.thumb_w and topic.thumb_h %}{% set style = ' style="width:'~topic.thumb_w~'px;height:'~topic.thumb_h~'px;"' %}{% endif %}
-          
           <img class="topic_thumb" src="{{ topic.thumb_url }}" alt="Картинка"{{ style|raw }}>
         </a>
         {% endif %}
@@ -121,7 +123,8 @@ Topic with replies:
       </div>-->
       
       <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
-
+      <form method="post" action="/move"   id="{{ reply.post_id }}_move_form"   target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
+      
       <div class="post_footnote topic_footnote">
         <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }});" class="answer_link">Ответить</a>
         <span style="opacity:0.5;">&#8729;</span>
@@ -168,8 +171,13 @@ Topic with replies:
         <div class="reply_to_topic" style="display:none;">
           <a href="javascript:;" onclick="change_reply_to({{ topic.post_id }}, 0);$('#text_{{ topic.post_id }}').focus();">Ответ на пост #<span class="reply_to"></span></a>
         </div>
-        
+
+
         <textarea style="padding-top: 2px; font-size: 15px; line-height: 15px; height:20px; margin-bottom:0px;" class="reply" name="text" id="text_{{ topic.post_id }}" spellcheck="false" placeholder="Написать ответ..."></textarea>
+
+        <!--
+        <div contenteditable="true" name="text">yyyy</div>
+        -->
 
         <div class="controls" style="margin-top: 7px;">
           <div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
@@ -217,6 +225,9 @@ Reply:
           </a>
           {% if is_mod %}
             {# different code for topic and reply! #}
+            <a class="dropdown-item move_post" onclick="move_post({{ reply.post_id }});">
+              На свалку
+            </a>
             <a class="dropdown-item" style="color:red;" onclick="delete_post({{ reply.post_id }});">
               Удалить
             </a>
@@ -233,7 +244,6 @@ Reply:
       {% if reply.file_url %}
         <a href="{{ reply.file_url }}" target="_blank">
           {% if reply.thumb_w and reply.thumb_h %}{% set style = ' style="width:'~reply.thumb_w~'px;height:'~reply.thumb_h~'px;"' %}{% endif %}
-          
           <img class="reply_thumb" src="{{ reply.thumb_url }}" alt="Картинка"{{ style|raw }}>
         </a>
       {% endif %}
@@ -253,6 +263,7 @@ Reply:
     </text>
     
     <form method="post" action="/delete" id="{{ reply.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
+    <form method="post" action="/move"   id="{{ reply.post_id }}_move_form"   target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
     
     <div style="overflow:hidden;margin:0px;padding:0px;">
       
@@ -348,27 +359,7 @@ Main page block:
     <!-- FontAwesome -->
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     
-    <!--<link rel="icon" type="image/png" sizes="32x32" href="{% if file_host %}//{{ file_host }}{% endif %}/favicon.ico">-->
-    
-    <!--<link rel="apple-touch-icon" sizes="57x57" href="//static.disku.rs/favicon/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="//static.disku.rs/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="//static.disku.rs/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="//static.disku.rs/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="//static.disku.rs/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="//static.disku.rs/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="//static.disku.rs/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="//static.disku.rs/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="//static.disku.rs/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192"  href="//static.disku.rs/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="//static.disku.rs/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="//static.disku.rs/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="//static.disku.rs/favicon-16x16.png">
-    <link rel="manifest" href="//static.disku.rs/manifest.json">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="//static.disku.rs/ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff">-->
-    
-    <link rel="icon" type="image/png" sizes="96x96" href="//static.disku.rs/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="//static.disku.rs/favicon/favicon-32x32-new.png">
     
     <script>
       var topic_id = {% if topic_id %}{{ topic_id }}{% else %}0{% endif %};
@@ -414,6 +405,7 @@ Main page block:
         <li><a href="/news/">Новости</a></li>
         <li><a href="/old/">Старый дизайн</a></li>
         <li><a href="/1chan/">1chan</a></li>
+        <li><a href="/my-topics" style="font-weight:bold;">Мои темы</a></li>
       </ol>
     </div>
     
@@ -524,7 +516,7 @@ Main page block:
              </div>
              <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link is-active">
-                Мой аккаунт
+                Аккаунт
                 </a>
                 <div class="navbar-dropdown is-boxed">
                    <a class="navbar-item" href="/my-topics">
@@ -627,7 +619,7 @@ Main page block:
       {% endif %}
     
       <footer>
-        <div>Будем рады вашим отзывам в разделе <a href="https://discou.rs/d/" target="_blank">отзывы и предложения</a>.</div>
+        <div>Произведено командой Дискурса. Будем рады <a href="https://discou.rs/d/" target="_blank">отзывам</a>.</div>
         From discou.rs with love!
       </footer>
     

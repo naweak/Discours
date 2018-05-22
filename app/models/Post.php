@@ -85,6 +85,13 @@ class Post extends Model
 			"thumb_h" => $this->thumb_h,
 		);
     
+    /*if ($this->parent_topic)
+    {
+      $ratio = 0.5;
+      $output["thumb_w"] = intval($output["thumb_w"] * $ratio);
+      $output["thumb_h"] = intval($output["thumb_h"] * $ratio);
+    }*/
+    
     if ($this->deleted_by)
     {
       $modlog_action = Modlog::findFirst

@@ -1,2 +1,2 @@
 global.$ = require("jquery-browserify");
-global.autosize = require("autosize");
+global.autosize = require("./autosize.js");

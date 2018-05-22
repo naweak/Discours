@@ -151,7 +151,7 @@ class ForumController extends Controller
 		$topics = Post::find
 		(
     [
-			"parent_topic = 0 $query_annex",
+			"parent_topic = 0 AND deleted_by = 0 $query_annex",
 			"order" => $topics_order,
 			"limit" => $default_limit,
 			"offset" => $offset,
@@ -236,7 +236,8 @@ class ForumController extends Controller
 			$replies = Post::find
 			(
 			[
-				"parent_topic = :parent_topic:",
+				//"parent_topic = :parent_topic:",
+        "parent_topic = :parent_topic: AND deleted_by = 0",
 				"order" => $omit_replies ? "creation_time DESC" : "creation_time",
 				"limit" => $omit_replies ? "3" : "",
 

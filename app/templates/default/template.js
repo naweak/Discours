@@ -4,11 +4,11 @@ $(document).ready(function ()
 {
     window.percent_gradient_color = "#efefef";
   
-    window.onerror = function (msg, url, linenumber)
+    /*window.onerror = function (msg, url, linenumber)
     {
       alert('Error message: '+msg+'\nURL: '+url+'\nLine Number: '+linenumber);
       return true;
-    }
+    }*/
   
     on_resize();
 		link_preview_tree_init();
@@ -81,7 +81,8 @@ $(document).ready(function ()
   
     if(/iPhone|iPad|iPod/i.test(navigator.userAgent))
     {
-      append_style(".reply_to_topic {margin-left: 2px;}");
+      append_style(".reply_to_topic {margin-left: 2px !important;}");
+      append_style(".attach_button {margin-left: 3px !important;}");
     }
 
     $("img.embedded").css("cursor", "pointer");
@@ -278,14 +279,6 @@ function bind_event_handlers ()
 {
 	console.log("Binding event handlers");
 
-	//$(window.reply_form_selector).focusin(function ()
-	/*$(document).on("focus", window.reply_form_selector, function()
-	{
-		console.log("Reply form focus");
-		$(this).next().css("display", "block");
-	});*/
-
-	//$(window.new_topic_form_selector).keydown(function (e)
 	$(document).on("keydown", window.new_topic_form_selector, function(e)
 	{
 		if (e.ctrlKey && e.keyCode == 13) // Ctrl-Enter pressed
@@ -300,13 +293,10 @@ function bind_event_handlers ()
 		}
 	});
 
-	//$(window.reply_form_selector).keydown(function (e)
 	$(document).on("keydown", window.reply_form_selector, function(e)
 	{
 		if (e.ctrlKey && e.keyCode == 13) // Ctrl-Enter pressed
 		{
-			//console.log("ctrl+enter");
-
 			var controls = $(e.target).next();
 			var submit = $(controls).find(":submit");
 
@@ -317,15 +307,10 @@ function bind_event_handlers ()
 	});
 
 	// Textarea autoresize
-	//autosize(document.querySelectorAll(reply_form_selector));
-	//autosize(document.querySelectorAll(new_topic_form_selector));
-	//$(window.reply_form_selector).focus(function()
 	$(document).on("focus", window.reply_form_selector, function()
 	{
 		console.log("Reply form focus");
 		$(this).next().css("display", "block");
-		
-		//autosize(this);
 
 		if ($(window).width() > 700)  // normal design
 		{
@@ -334,22 +319,28 @@ function bind_event_handlers ()
 
 		else // adaptive design
 		{
-			/*$("html, body").animate
-			({
-				scrollTop:
-						$(this).offset().top - $(window).height() + $(this).height()
-			}, 0);*/
 			$(this).keypress(function()
 			{
-				//console.log( "Handler for .keypress() called." );
 				autosize(this);
 				$(this).keypress(function(){});
 			});
 		}
 	});
-	
+  
+  /*
+  // Intended use: fix the input form to the bottom of the screen
+  
+  $(document).on("keypress, input", window.reply_form_selector, function(event)
+	{
+    // fix
+  });
+  
+  $(document).on("blur", window.reply_form_selector, function()
+	{
+    // unfix
+  });*/
+
 	// if hidden, it's impossible to select a picture before writing text
-	//$(window.reply_form_selector).focusout(function ()
 	$(document).on("blur", window.reply_form_selector, function()
 	{
 			/*if ($(this).val() === "")
@@ -358,11 +349,9 @@ function bind_event_handlers ()
 			}*/
 	});
 
-	//$(window.new_topic_form_selector).focus(function()
 	$(document).on("focus", window.new_topic_form_selector, function()
 	{
 		autosize(this);
-		//$(this).parent().find("[name='title']").css("display", "block");
 	});
 	
 	$(document).on("click tap", "a.more", function()
@@ -372,20 +361,6 @@ function bind_event_handlers ()
 		$(this).prev(".text_preview").remove();
 		$(this).remove();
 	});
-
-	/*$("text").each(function(index)
-	{
-		var height = $(this).height();
-		var display_height = 200; // duplicated in CSS file
-		var expand_html = "<a class='expand_text' onclick='expand_previous(this);'>Показать текст полностью</a>";
-
-		//if (height > display_height)
-		if (this.scrollHeight > $(this).innerHeight())
-		{
-			//$(this).css("max-height", display_height);
-			$(this).after(expand_html);
-		}
-	});*/
 
 	// New topic form
 	ajax_form
@@ -402,14 +377,9 @@ function bind_event_handlers ()
 			console.log("Server response:");
 			console.log(data);
 			data = $.parseJSON(data);
-			//if (typeof data.topic !== "undefined")
 			if (typeof data.success !== "undefined" && data.success)
 			{
 				$("#new_topic_form_error_message").html("");
-
-				// prepend thread
-				//rendered = data.html;
-				//$("#topics").prepend(rendered);
 				$.get("/topic/"+data.post_id, function(data)
 				{
 					var parser = new DOMParser();
@@ -500,8 +470,6 @@ function bind_event_handlers ()
 				var reply_form = $(form);
 				$(reply_form).prev().detach();
 				$(form).parent().append("<div class='hr'></div>", reply_form.detach());
-				
-				//$("html, body").animate({scrollTop: $(document).height() }, 1); // scroll to bottom
 			}
 			
 			//if (typeof data.reply !== "undefined")
@@ -551,18 +519,6 @@ function bind_event_handlers ()
 
 /* Functions: */
 
-/*function render (data)
-{
-	var twig = Twig.twig;
-	//var twig = require('twig');
-	var template = twig
-	({
-		data: window.template
-	});
-	var output = template.render(data);
-	return output;
-}*/
-
 function clear_new_topic_form ()
 {
 	$(".new_topic_form").find("[name='title']").val("");
@@ -590,7 +546,7 @@ function change_reply_to (topic_id, index)
   $(reply_form).find(".reply_to").html(index);
   $(reply_form).find("[name='reply_to']").val(index);
   
-  if (index != 0)
+  if (index !== 0)
   {
     $(reply_form).find(".reply_to_topic").css("display", "block");
   }
@@ -634,57 +590,6 @@ function reply_to_topic (topic_id, reply_id, index)
 	var quote_text = "";
   
   $(contenteditable).focus();
-	
-  /*
-	if (typeof reply_id !== "undefined")
-	{
-		quote_text = ">>"+index;
-		textarea.value = quote_text+"\n"+textarea.value;
-	}
-	
-	if ($(window).width() > 700)  // normal design
-	{
-		autosize(textarea);
-	}
-
-	else // adaptive design
-	{
-		$(textarea).keypress(function()
-		{
-			autosize(textarea);
-			$(textarea).keypress(function(){});
-		});
-	}
-
-	var pos = quote_text.length + 1;
-	if (typeof reply_id !== "undefined")
-	{
-		contenteditable.selectRange(pos,pos);
-	}
-	else
-	{
-		contenteditable.focus();
-	}
-
-	// Copied from Autoresize Plugin
-	var ta = contenteditable[0];
-	var style = window.getComputedStyle(ta, null);
-	if (style.boxSizing === 'content-box')
-	{
-		heightOffset = -(parseFloat(style.paddingTop)+parseFloat(style.paddingBottom));
-	}
-	else
-	{
-		heightOffset = parseFloat(style.borderTopWidth)+parseFloat(style.borderBottomWidth);
-	}
-	if (isNaN(heightOffset))
-	{
-		heightOffset = 0;
-	}
-	var endHeight = ta.scrollHeight+heightOffset;
-	contenteditable.css("height", endHeight);
-	// /Copied from Autoresize Plugin
-  */
 }
 
 function isScrolledIntoView(elem)
@@ -742,6 +647,11 @@ function link_click (parent_topic, order_in_topic)
 function delete_post (post_id)
 {
     document.getElementById(post_id + "_delete_form").submit();
+}
+
+function move_post (post_id)
+{
+    document.getElementById(post_id + "_move_form").submit();
 }
 
 function expand_previous (element)

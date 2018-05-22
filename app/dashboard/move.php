@@ -84,10 +84,33 @@ ob_start();
   </div>
 
   <form action="" method="post">
-     Номер поста:  <input type="text" name="post_id" value="<?php if(isset($_POST["n"])) {echo intval($_POST["n"]);} ?>">
-		 <input type="submit" name="submit" value="Отправить">
-		 <br>
-  	 Перенести в:  <input type="text" name="new_forum_id" value="6">
+     <div align="center">
+       <table>
+         <tr>
+           <td>
+             Номер поста:
+           </td>
+
+           <td>
+            <input type="text" name="post_id" value="<?php if(isset($_POST["n"])) {echo intval($_POST["n"]);} ?>">
+           </td>
+         </tr>
+         <tr>
+           <td>
+             Перенести в:
+           </td>
+
+           <td>
+            <input type="text" name="new_forum_id" value="6">
+           </td>
+         </tr>
+       </table>
+       
+       <br>
+       <input type="submit" name="submit" value="Отправить">
+       
+     </div>
+    
 	</form>
 </content>
 <?php
