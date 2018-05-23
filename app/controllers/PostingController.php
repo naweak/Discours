@@ -501,7 +501,7 @@ class PostingController extends Controller
 		$file_size = $file->getSize(); // file size in bytes
 		$file_type = $file->getRealType();
 		$file_extension = strtolower($file->getExtension());
-		$max_file_size = 5 * 1048576; // in bytes
+		$max_file_size = 7 * 1048576; // in bytes
     $max_file_width  = 8192;
     $max_file_height = 8192;
     $remove_exif = true;

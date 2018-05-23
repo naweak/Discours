@@ -23,57 +23,45 @@ Topic with replies:
 {% if root is defined %}
   <post_with_replies class="{{ topic.post_id }}" topic_id="{{ topic.post_id }}">
     <post style="position:relative;">
-      
-      <!--<div class="topic_header_with_avatar" style="margin-bottom:0px;">
-        <span style="opacity:0.4;font-size:13px;">Главная</span>
-      </div>-->
-      
-      <!--<div class="topic_header_with_avatar">
-        <img class="avatar" src="https://pp.userapi.com/c625620/v625620167/2ac9c/aqvP2mwKWvQ.jpg">
-          <div class="name">Главная</div>
-          <div class="date">Сегодня в 12:15</div>
-        
-          <div class="dots"></div>
-      </div>-->
-      
-      <!--<div class="topic_header" style='font-size: 13px;'>
-        Главная Сегодня в 12:15
-      </div>-->
-      
-      <!--<div class="topic_header">
-        <a href="/forum/{{ topic.forum_id }}" style="display: inline-block; overflow: hidden;">{{ topic.forum_title }}</a>
-        {% if topic.title_formatted is not empty %}
-          <span style="display: inline-block; overflow: hidden;">&#x2192;</span>
-          <a href="/topic/{{ topic.post_id }}" style="display: inline-block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: calc(100%);">
-            {{ topic.title_formatted|raw }}
-            {% if topic.sticky %}
-            <span style='color:red;'>[тема закреплена]</span>
-            {% endif %}
-          </a>
-        {% endif %}
-      </div>-->
 
       <div style="float:left;padding:0px;margin-top:-3px;margin-bottom:2px;font-size:0.85em;">
         <a href="/forum/{{ topic.forum_id }}">{{ topic.forum_title }}</a>
-        <!--<span style="opacity:0.5;">&#8729;</span>
-        <span style="opacity:0.5;">Анонимно</span>
-        <span style="opacity:0.5;">&#8729;</span>
-        <span style="opacity:0.5;">
-          <a href="/topic/{{ topic.post_id }}" class="time_formatted">{{ topic.time_formatted }}</a>
-        </span>-->
       </div>
-      <!--<div style="float:right;padding:0px;margin-top:-3px;margin-bottom:0.5em;font-size:0.85em;">
-        <a href="/forum/">forum_title</a>
-      </div>-->
+
       <div style="clear:both;padding:0px;"></div>
+      
+      <div class="modal">
+        <div class="modal-background" onclick="$(this).parent().removeClass('is-active');$.scrollLock(false);"></div>
+        <div class="modal-content">
+          
+          <div class="container" style="width:auto;min-width:auto;">
+            <div class="notification" style="text-align:center;">
+              <a class="report_post" href="/report" target="_blank">
+                Пожаловаться
+              </a>
+              {% if is_mod %}
+                {# different code for topic and reply! #}
+                <a class="move_post" onclick="move_post({{ topic.post_id }});">
+                  На свалку
+                </a>
+                <a class="delete_post" onclick="delete_post({{ topic.post_id }});">
+                  Удалить
+                </a>
+              {% endif %}
+            </div>
+          </div>
+          
+        </div>
+        <button class="modal-close is-large" aria-label="close" onclick="$(this).prevAll('.modal-background').first().trigger('click');"></button>
+      </div>
       
       <div class="dropdown dots-dropdown is-hoverable is-right">
         <div class="dropdown-trigger dots-dropdown-trigger">
-          <div class="dots_container">
+          <div class="dots_container" onclick="$(this).parent().parent().prevAll('.modal').first().addClass('is-active');$.scrollLock(true);">
             <div class="dots"></div>
           </div>
         </div>
-        <div class="dropdown-menu dots-dropdown-menu" role="menu">
+        <!--<div class="dropdown-menu dots-dropdown-menu" role="menu">
           <div class="dropdown-content">
             <a class="dropdown-item" href="/report" target="_blank">
               Пожаловаться
@@ -88,7 +76,7 @@ Topic with replies:
               </a>
             {% endif %}
           </div>
-        </div>
+        </div>-->
       </div>
 
       <text>
@@ -123,7 +111,7 @@ Topic with replies:
       </div>-->
       
       <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
-      <form method="post" action="/move"   id="{{ reply.post_id }}_move_form"   target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
+      <form method="post" action="/move"   id="{{ topic.post_id }}_move_form"   target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
       
       <div class="post_footnote topic_footnote">
         <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }});" class="answer_link">Ответить</a>
@@ -172,12 +160,7 @@ Topic with replies:
           <a href="javascript:;" onclick="change_reply_to({{ topic.post_id }}, 0);$('#text_{{ topic.post_id }}').focus();">Ответ на пост #<span class="reply_to"></span></a>
         </div>
 
-
         <textarea style="padding-top: 2px; font-size: 15px; line-height: 15px; height:20px; margin-bottom:0px;" class="reply" name="text" id="text_{{ topic.post_id }}" spellcheck="false" placeholder="Написать ответ..."></textarea>
-
-        <!--
-        <div contenteditable="true" name="text">yyyy</div>
-        -->
 
         <div class="controls" style="margin-top: 7px;">
           <div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
@@ -211,14 +194,39 @@ Reply:
 {% block reply %}
 {% if root is defined %}
   <reply id="reply_{{ reply.post_id }}" order_in_topic="{{ reply.order_in_topic }}">
+    
+    <div class="modal">
+      <div class="modal-background" onclick="$(this).parent().removeClass('is-active');$.scrollLock(false);"></div>
+      <div class="modal-content">
+
+        <div class="container" style="width:auto;min-width:auto;">
+          <div class="notification" style="text-align:center;">
+            <a class="report_post" href="/report" target="_blank">
+              Пожаловаться
+            </a>
+            {% if is_mod %}
+              {# different code for topic and reply! #}
+              <a class="move_post" onclick="move_post({{ reply.post_id }});">
+                На свалку
+              </a>
+              <a class="delete_post" onclick="delete_post({{ reply.post_id }});">
+                Удалить
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+      <button class="modal-close is-large" aria-label="close" onclick="$(this).prevAll('.modal').first().trigger('click');"></button>
+    </div>
 
     <div class="dropdown dots-dropdown is-hoverable is-right">
       <div class="dropdown-trigger dots-dropdown-trigger">
-        <div class="dots_container">
+        <div class="dots_container" onclick="$(this).parent().parent().prevAll('.modal').first().addClass('is-active');$.scrollLock(true);">
           <div class="dots"></div>
         </div>
       </div>
-      <div class="dropdown-menu dots-dropdown-menu" role="menu">
+      <!--<div class="dropdown-menu dots-dropdown-menu" role="menu">
         <div class="dropdown-content">
           <a class="dropdown-item" href="/report" target="_blank">
             Пожаловаться
@@ -233,7 +241,7 @@ Reply:
             </a>
           {% endif %}
         </div>
-      </div>
+      </div>-->
     </div>
     
     <!--<div style="padding:0px;margin-bottom:0.3em;opacity:0.4;font-size:0.85em;">
@@ -392,7 +400,7 @@ Main page block:
     </div>
     
     <div id="mobile_menu" style="display:none;">
-      <ol>
+      <ol style="max-height:95%;overflow:auto;">   
         <li style="font-weight:bold;"><a href="/">Главная</a></li>
         <li><a href="/vg/">Видеоигры</a></li>
         <li><a href="/po/">Политика</a></li>
@@ -405,7 +413,8 @@ Main page block:
         <li><a href="/news/">Новости</a></li>
         <li><a href="/old/">Старый дизайн</a></li>
         <li><a href="/1chan/">1chan</a></li>
-        <li><a href="/my-topics" style="font-weight:bold;">Мои темы</a></li>
+        
+        <li style="font-weight:bold; margin-top:1em;"><a href="/my-topics">Мои темы</a></li>
       </ol>
     </div>
     

@@ -36,7 +36,6 @@ $topics = Post::Find
 echo "<!-- ".benchmark()." -->";
 
 $shown = count($topics) == $limit ? $limit : count($topics);
-echo "<div align='center' style='font-size:14px; margin-bottom:0.5em;'>Показаны $shown последних созданных вами тем</div>";
   
 echo "<table style='width: 100%; table-layout: fixed;'>";
 foreach ($topics as $topic)
@@ -53,7 +52,7 @@ foreach ($topics as $topic)
   
     echo "<td width='100%'>";
       echo "<div style='width: 100%; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; '>";
-      echo "<a href='/topic/".$topic->post_id."' target='_blank'>";
+      echo "<a href='/topic/".$topic->post_id."'>";
       echo mb_strimwidth(strip_tags($text_formatted), 0, 100, "");
       echo "</a>";
       echo "</div>";
@@ -61,6 +60,8 @@ foreach ($topics as $topic)
   echo "</tr>";
 }
 echo "</table>";
+  
+echo "<div align='center' style='font-size:14px; margin:0.5em 0em;'>Показано $shown последних созданных вами тем</div>";
 
 echo "<!-- ".benchmark()." -->";
 ?>

@@ -91,7 +91,7 @@ $(document).ready(function ()
         var win = window.open(this.src, "_blank");
     });
 	
-		var inputs = document.querySelectorAll( '.inputfile' );
+		/*var inputs = document.querySelectorAll( '.inputfile' );
 		Array.prototype.forEach.call( inputs, function( input )
 		{
 			var label	 = input.nextElementSibling,
@@ -107,7 +107,7 @@ $(document).ready(function ()
 
 				if(fileName)
 				{
-					/*label.innerHTML = fileName;*/
+					// label.innerHTML = fileName;
 					if (fileName.indexOf(".") > -1)
 					{
 						label.innerHTML = "<i class='fa fa-picture-o' aria-hidden='true'></i>" +
@@ -127,7 +127,41 @@ $(document).ready(function ()
 					label.style.fontWeight = "normal";
 				}
 			});
-		});
+		});*/
+  
+    var input_file_label_html = $(".inputfile").next().html();
+  
+    $(document).on("change", ".inputfile", function(e)
+    {
+      var label	 = $(this).next().get(0); // returns DOM element
+      var fileName = '';
+      if( this.files && this.files.length > 1 )
+        fileName = ( this.getAttribute( 'data-multiple-caption' ) || '' ).replace( '{count}', this.files.length );
+      else
+        fileName = e.target.value.split( '\\' ).pop();
+
+      if(fileName)
+      {
+        // label.innerHTML = fileName;
+        if (fileName.indexOf(".") > -1)
+        {
+          label.innerHTML = "<i class='fa fa-picture-o' aria-hidden='true'></i>" +
+            "&nbsp;" +
+            fileName.split('.').pop().toUpperCase() +
+            "-файл";
+        }
+        else
+        {
+          label.innerHTML = fileName;
+        }
+        label.style.fontWeight = "bold";
+      }
+      else
+      {
+        label.innerHTML = input_file_label_html;
+        label.style.fontWeight = "normal";
+      }
+    });
 	
 		var scroll_speed = 1;
 		$("#up").click(function ()
@@ -184,7 +218,7 @@ function ajax_form (args)
 			on_submit.args.before(form);
 		}
 
-		var form_data = new FormData($(this)[0]);
+		var form_data = new FormData($(this).get(0));
 		if (typeof window.submit !== "undefined")
 		{
 			form_data[window.submit] = true;

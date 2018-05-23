@@ -393,7 +393,9 @@ text
 {
 	display: block;
 	overflow-x: hidden;
-	overflow-y: scroll;
+	/*overflow-y: scroll;*/
+  /* https://stackoverflow.com/questions/14732448/ */
+  overflow-y: auto;
 	text-overflow: ellipsis;
 	font-size: inherit;
 }
@@ -1013,9 +1015,21 @@ a.more:hover
   transform: translate(-50%, -50%);
 }
 
-a.move_post, a.move_post:hover
+a.report_post, a.move_post, a.delete_post
 {
-  color: #e68a00;
+  display: block;
+  font-size: 16px;
+  text-decoration: none !important;
+}
+
+a.move_post
+{
+  color: #e68a00 !important;
+}
+
+a.delete_post
+{
+  color: red !important;
 }
 
 /* SASS format */

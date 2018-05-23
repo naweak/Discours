@@ -284,7 +284,7 @@ function how_long_ago ($age)
     return "более часа назад";
 }
 
-function time_format ($timestamp)
+function time_format ($timestamp) // NOT currently in use
 {	
 	$postDate = date( "d.m.Y", $timestamp );
 	$postMinute = date( "H:i", $timestamp );
@@ -318,13 +318,68 @@ function time_format ($timestamp)
 	return $datetime.$postMinute;
 }
 
-function smart_time_format ($timestamp)
+/*function ru_month ($timestamp)
 {
-	$dm = date("d M", $timestamp);
-	if ($dm == date("d M"))
+  $month = date("m", $timestamp );
+  switch( $month )
+  {
+    case  1: { $month='Января'; } break;
+    case  2: { $month='Февраля'; } break;
+    case  3: { $month='Марта'; } break;
+    case  4: { $month='Апреля'; } break;
+    case  5: { $month='Мая'; } break;
+    case  6: { $month='Июня'; } break;
+    case  7: { $month='Июля'; } break;
+    case  8: { $month='Августа'; } break;
+    case  9: { $month='Сентября'; } break;
+    case 10: { $month='Октября'; } break;
+    case 11: { $month='Ноября'; } break;
+    case 12: { $month='Декабря'; } break;
+  }
+  return $month;
+}*/
+
+function ru_M ($timestamp)
+{
+  $month = date("m", $timestamp );
+  switch( $month )
+  {
+    case  1: { $month='янв'; } break;
+    case  2: { $month='фев'; } break;
+    case  3: { $month='мар'; } break;
+    case  4: { $month='апр'; } break;
+    case  5: { $month='мая'; } break;
+    case  6: { $month='иню'; } break;
+    case  7: { $month='июл'; } break;
+    case  8: { $month='авг'; } break;
+    case  9: { $month='сен'; } break;
+    case 10: { $month='окт'; } break;
+    case 11: { $month='ноя'; } break;
+    case 12: { $month='дек'; } break;
+  }
+  return $month;
+}
+
+function smart_time_format ($timestamp) // currently in use
+{
+	if (date("d M y", $timestamp) == date("d M y"))
 	{
 		$dm = "Сегодня";
 	}
-	return $dm." в ".date("H:i", $timestamp);
+  else
+  {
+    $dm = date("d ", $timestamp);
+    $dm .= ru_M($timestamp);
+  }
+  if (date("Y", $timestamp) != date("Y"))
+  {
+    $y = " ".date("Y", $timestamp)." ";
+  }
+  else
+  {
+    $y = "";
+  }
+  $t = date("H:i", $timestamp);
+	return $dm.$y." в ".$t;
 }
 ?>
