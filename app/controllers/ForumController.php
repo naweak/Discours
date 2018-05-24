@@ -112,7 +112,7 @@ class ForumController extends Controller
 			$forum_obj = Forum::findFirst
 			(
 			[
-				"forum_id = (SELECT Post.forum_id FROM Post WHERE post_id = :topic_id: LIMIT 1)",
+				"forum_id = (SELECT Post.forum_id FROM Post WHERE post_id = :topic_id: AND deleted_by = 0 LIMIT 1)",
 
 				"bind" =>
 				[

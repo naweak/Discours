@@ -225,10 +225,10 @@ function ajax_form (args)
 			delete window.submit;
 		}
     // form.data.get() doesn't work in Safari
-    /*if (form_data.get("userfile").size === 0) // Prevent CloudFlare from returning "400 Bad Request"
+    if (form_data.get("userfile").size === 0) // Prevent CloudFlare from returning "400 Bad Request"
     {
       form_data.delete("userfile");
-    }*/
+    }
     form_data.append("ajax", true);
 		console.log("Form data for submission:");
 		console.log(form_data);
