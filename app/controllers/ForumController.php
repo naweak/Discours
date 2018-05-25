@@ -258,7 +258,7 @@ class ForumController extends Controller
 			if ($omit_replies)
 			{
 				$topic_array["replies"] = array_reverse($topic_array["replies"]);
-				$sql = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE parent_topic = :parent_topic");
+				$sql = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE parent_topic = :parent_topic AND deleted_by = 0");
 				$sql->bindParam(":parent_topic", $topic->post_id, PDO::PARAM_INT);
 				$sql->execute();
 				$total_posts_in_topic = $sql->fetchColumn();

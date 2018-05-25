@@ -91,6 +91,8 @@ RewriteRule ^(notifications)$ /page?page=notifications3
 RewriteRule ^(convert)$ /page?page=$1
 ########################
 
+Redirect /github https://github.com/DiscoursProject/Discours
+
 <IfModule mod_rewrite.c>
     RewriteEngine on
     RewriteRule  ^$ public/    [L]

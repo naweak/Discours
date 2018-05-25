@@ -61,7 +61,17 @@ foreach ($topics as $topic)
 }
 echo "</table>";
   
-echo "<div align='center' style='font-size:14px; margin:0.5em 0em;'>Показано $shown последних созданных вами тем</div>";
+if ($shown > 0)
+{
+  $message = "Показано $shown последних созданных вами тем";
+}
+  
+else
+{
+  $message = "Вы еще не создали ни одной темы";
+}
+  
+echo "<div align='center' style='font-size:14px; margin:0.5em 0em;'>$message</div>";
 
 echo "<!-- ".benchmark()." -->";
 ?>

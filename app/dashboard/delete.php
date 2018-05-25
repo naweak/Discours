@@ -38,7 +38,7 @@ if (isset($_POST["submit"]))
 	{
 		$pdo = pdo(); // really bad code
 		
-		$last_reply_row = $pdo->query("SELECT * FROM posts WHERE parent_topic = '$topic_id' ORDER BY ord DESC")->fetch();
+		$last_reply_row = $pdo->query("SELECT * FROM posts WHERE parent_topic = '$topic_id' AND deleted_by = 0 ORDER BY ord DESC")->fetch();
 		
 		if ($last_reply_row) // topic has replies
 		{

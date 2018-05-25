@@ -9,6 +9,7 @@ class PostingController extends Controller
 	public function postAction()
 	{
     session_start();
+    $pdo = pdo();
     
 		$request = new Request();
 		
@@ -209,8 +210,6 @@ class PostingController extends Controller
 				$this->error("Тема не найдена!");
 			}
 			
-			// CHECK FOR BUMP LIMIT!!!
-			
 			if ($last_reply)
 			{
 				$last_reply_age = $time-$last_reply->creation_time;
@@ -268,11 +267,19 @@ class PostingController extends Controller
 		);
 		
 		$order_in_topic = count($topic_replies) + 1;
-		
-		if ($order_in_topic > $max_replies_in_topic and $parent_topic)
-		{
-			$this->error("Тема закрыта! Нельзя добавлять больше $max_replies_in_topic ответов.");
-		}
+    
+    if ($parent_topic)
+    {
+      $sql = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE parent_topic = :parent_topic AND deleted_by = 0");
+      $sql->bindParam(":parent_topic", $parent_topic, PDO::PARAM_INT);
+      $sql->execute();
+      $total_posts_in_topic = $sql->fetchColumn();
+      
+      if ($total_posts_in_topic > $max_replies_in_topic)
+      {
+        $this->error("Тема закрыта! Нельзя добавлять больше $max_replies_in_topic ответов.");
+      }
+    }
     
     if ($reply_to)
     {
