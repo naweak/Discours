@@ -65,7 +65,7 @@ if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) // CloudFlare
   // Verify whether it's really CloudFlare
   
   // https://www.cloudflare.com/ips-v4
-  $cf_ip_ranges =
+  $cloudflare_ip_ranges =
   [
     "103.21.244.0/22",
     "103.22.200.0/22",
@@ -83,10 +83,11 @@ if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) // CloudFlare
     "198.41.128.0/17"
   ];
   
-  foreach ($cf_ip_ranges as $range)
+  foreach ($cloudflare_ip_ranges as $range)
   {
     if (ip_in_range($_SERVER["REMOTE_ADDR"], $range))
     {
+      $GLOBALS["cloudflare"] = true;
       $GLOBALS["client_ip"] = $_SERVER["HTTP_CF_CONNECTING_IP"];
       break;
     }
@@ -105,8 +106,6 @@ if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) // CloudFlare
     );
     die();
   }
-  
-  $GLOBALS["client_ip"] = $_SERVER["HTTP_CF_CONNECTING_IP"];
 }
 
 else // Direct Connection

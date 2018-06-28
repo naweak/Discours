@@ -25,13 +25,13 @@ Topic with replies:
     <post style="position:relative;">
 
       <div style="float:left;padding:0px;margin-top:-3px;margin-bottom:2px;font-size:0.85em;">
-        <a href="/forum/{{ topic.forum_id }}">{{ topic.forum_title }}</a>
+        <a href="{{ topic.forum_href }}">{{ topic.forum_title }}</a>
       </div>
 
       <div style="clear:both;padding:0px;"></div>
       
       <div class="modal">
-        <div class="modal-background" onclick="$(this).parent().removeClass('is-active');$.scrollLock(false);"></div>
+        <div class="modal-background" onclick="$(this).parent().removeClass('is-active');$.scrollLock(false);" ontap="$(this).click();"></div>
         <div class="modal-content">
           
           <div class="container" style="width:auto;min-width:auto;">
@@ -81,7 +81,7 @@ Topic with replies:
 
       <text>
         {% if topic.file_url %}
-        <a href="{{ topic.file_url }}" class="topic_thumb_container" target="_blank">
+        <a href="{{ topic.file_url }}" target="_blank">
           {% if topic.thumb_w and topic.thumb_h %}{% set style = ' style="width:'~topic.thumb_w~'px;height:'~topic.thumb_h~'px;"' %}{% endif %}
           <img class="topic_thumb" src="{{ topic.thumb_url }}" alt="Картинка"{{ style|raw }}>
         </a>
@@ -115,9 +115,19 @@ Topic with replies:
       
       <div class="post_footnote topic_footnote">
         <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }});" class="answer_link">Ответить</a>
-        <span style="opacity:0.5;">&#8729;</span>
-        <span style="opacity:0.5;">Анонимно</span>
-        <span style="opacity:0.5;">&#8729;</span>
+        <span style="color:#aaaaaa;">&#8729;</span>
+        <span style="color:#aaaaaa;">
+          {% if topic.author_href %}<a href="{{ topic.author_href }}" target="_blank" style="opacity:1;">{% endif %}
+            {% if topic.author_icon_href %}
+              <img src="{{ topic.author_icon_href }}" width="10px" height="10px">
+            {% endif %}
+            {{ topic.author_formatted }}
+            {% if topic.my_post %}
+            (это вы)
+            {% endif %}
+          {% if topic.author_href %}</a>{% endif %}
+        </span>
+        <span style="color:#aaaaaa;">&#8729;</span>
         <a href="/topic/{{ topic.post_id }}" class="time_formatted">{{ topic.time_formatted }}</a>
       </div>
       
@@ -226,27 +236,7 @@ Reply:
           <div class="dots"></div>
         </div>
       </div>
-      <!--<div class="dropdown-menu dots-dropdown-menu" role="menu">
-        <div class="dropdown-content">
-          <a class="dropdown-item" href="/report" target="_blank">
-            Пожаловаться
-          </a>
-          {% if is_mod %}
-            {# different code for topic and reply! #}
-            <a class="dropdown-item move_post" onclick="move_post({{ reply.post_id }});">
-              На свалку
-            </a>
-            <a class="dropdown-item" style="color:red;" onclick="delete_post({{ reply.post_id }});">
-              Удалить
-            </a>
-          {% endif %}
-        </div>
-      </div>-->
     </div>
-    
-    <!--<div style="padding:0px;margin-bottom:0.3em;opacity:0.4;font-size:0.85em;">
-      Анонимно
-    </div>-->
     
     <text>
       {% if reply.file_url %}
@@ -257,7 +247,13 @@ Reply:
       {% endif %}
       
       {% if reply.reply_to %}
-        <a class="preview" href="/topic/{{ reply.parent_topic }}#{{ reply.reply_to }}" topic_id="{{ reply.parent_topic }}" order_in_topic='{{ reply.reply_to }}'>Ответ на пост #{{ reply.reply_to }}</a>
+        <a class="preview" href="/topic/{{ reply.parent_topic }}#{{ reply.reply_to }}" topic_id="{{ reply.parent_topic }}" order_in_topic='{{ reply.reply_to }}'>
+          {% if reply.reply_to_my_post %}
+            <b>Ответ на ваш пост #{{ reply.reply_to }}</b>
+          {% else %}
+            Ответ на пост #{{ reply.reply_to }}
+          {% endif %}
+        </a>
         <br>
       {% endif %}
       
@@ -277,13 +273,22 @@ Reply:
       
       <div class="post_footnote left" style="float:left;">
         <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ reply.order_in_topic }});" class="answer_link">Ответить</a>
-        <span style="opacity:0.5;">&#8729;</span>
-        <span style="opacity:0.5;">Анонимно</span>
-        <span style="opacity:0.5;">&#8729;</span>
+        <span style="color:#aaaaaa;">&#8729;</span>
+        <span style="color:#aaaaaa;">
+          {% if reply.author_href %}<a href="{{ reply.author_href }}" target="_blank" style="opacity:1;">{% endif %}
+            {% if reply.author_icon_href %}
+              <img src="{{ reply.author_icon_href }}" width="10px" height="10px">
+            {% endif %}
+            {{ reply.author_formatted }}
+            {% if reply.my_post %}
+              (это вы)
+            {% endif %}
+          {% if reply.author_href %}</a>{% endif %}
+        </span>
+        <span style="color:#aaaaaa;">&#8729;</span>
         <a class="time_formatted" href="/topic/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});">{{ reply.time_formatted }}</a>
       </div>
       
-      <!--<div class="post_footnote right" style="float:right;margin-left:10px;">-->
       <div class="post_footnote right" style="float:right;">
         <a href="/topic/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" class="order_in_topic_link">#{{ reply.order_in_topic }}</a>
       </div>
@@ -371,6 +376,7 @@ Main page block:
     
     <script>
       var topic_id = {% if topic_id %}{{ topic_id }}{% else %}0{% endif %};
+      var is_admin = {% if is_mod %}true{% else %}false{% endif %};
     </script>
   </head>
 
@@ -400,8 +406,9 @@ Main page block:
     </div>
     
     <div id="mobile_menu" style="display:none;">
-      <ol style="max-height:95%;overflow:auto;">   
+      <ol style="max-height:95%;overflow:auto;">
         <li style="font-weight:bold;"><a href="/">Главная</a></li>
+        <li style="font-weight:bold;"><a href="/chat">Чатик</a></li>
         <li><a href="/vg/">Видеоигры</a></li>
         <li><a href="/po/">Политика</a></li>
         <li><a href="/a/">Аниме</a></li>
@@ -409,27 +416,27 @@ Main page block:
         <li><a href="/advice/">Советы и вопросы</a></li>
         <li><a href="/art/">Искусство и медиа</a></li>
         <li><a href="/hobby/">Хобби и увлечения</a></li>
+        <li><a href="/tech/">Технологии</a></li>
         
         <li><a href="/news/">Новости</a></li>
         <li><a href="/old/">Старый дизайн</a></li>
         <li><a href="/1chan/">1chan</a></li>
         
         <li style="font-weight:bold; margin-top:1em;"><a href="/my-topics">Мои темы</a></li>
+        <li style="font-weight:bold;"><a href="/settings">Настройки</a></li>
       </ol>
     </div>
     
     <nav class="navbar is-transparent">
        <div class="mobile_navbar_buttons">
-        {% if is_mod %}
-          {% if notifications_unread > 0 %}
-            <button class="button is-small is-outlined" style="font-weight:bold;" onclick="document.location='/notifications';">{{ notifications_unread }} увед.</button>
-          {% endif %}
+        {% if notifications_unread > 0 %}
+          <button class="button is-small is-outlined" style="font-weight:bold;" onclick="document.location='/notifications';">{{ notifications_unread }} увед.</button>
         {% endif %}
        </div>
       
        <a class="brand_centered" href="/" style="
-       height: 25px;
-       width: calc((216 / 65) * 25px);
+       height: 22px;
+       width: calc((216 / 65) * 22px);
 
        background-image: url('/cursive-logo-small.png');
        background-size: 100% 100%;
@@ -456,6 +463,9 @@ Main page block:
                 <div class="navbar-dropdown is-boxed">
                    <a class="navbar-item" href="/">
                    <b>Главная</b>
+                   </a>
+                   <a class="navbar-item" href="/chat">
+                   <b>Чатик</b>
                    </a>
                    <a class="navbar-item" href="/vg/">
                    Видеоигры
@@ -487,6 +497,9 @@ Main page block:
                    <a class="navbar-item" href="/hobby/">
                    Хобби и увлечения
                    </a>
+                   <a class="navbar-item" href="/tech/">
+                   Технологии
+                   </a>
                   
                    <!-- -->
 
@@ -511,6 +524,9 @@ Main page block:
                    </a>
                    <a class="navbar-item" href="/rules">
                    Правила
+                   </a>
+                   <a class="navbar-item" href="/markup">
+                   Разметка
                    </a>
                    <a class="navbar-item" href="/faq">
                    Вопросы
@@ -545,11 +561,9 @@ Main page block:
           </div>
          
           <div class="navbar-end">
-            {% if is_mod %}
-            <a class="navbar-item" href="/notifications" target="_blank">
-              {% if notifications_unread > 0 %}
-                <b>{{ notifications_unread }} новых уведомлений</b>
-              {% endif %}
+            {% if notifications_unread > 0 %}
+            <a class="navbar-item" href="/notifications">
+              <b>{{ notifications_unread }} новых уведомлений</b>
             </a>
             {% endif %}
           </div>
@@ -557,9 +571,25 @@ Main page block:
     </nav>
     
       {% if forum_title %}
-        <h2><a href="/forum/{{ forum_id }}" style="color:inherit;text-decoration:none;">{{ forum_title }}</a></h2>
+        <h2><a href="{{ forum_href }}" style="color:inherit;text-decoration:none;">{{ forum_title }}</a></h2>
       {% endif %}
-
+    
+      {% if forum_id %}
+      <!--<content class="news" style="display:none;">
+        <article class="message is-info" style="overflow: hidden;">
+          <div class="message-header">
+            <p>
+              Новости (18.06.2018)
+            </p>
+            <button class="delete" aria-label="delete"></button>
+          </div>
+          <div class="message-body">
+            Наконец-то <a href="/topic/42909" target="_blank" style="font-weight:bold;text-decoration:none;">доделаны</a> уведомления.
+          </div>
+        </article>
+      </content>-->
+      {% endif %}
+        
       {% if not topic_id and not display_new_topic_form and not html %}
     
         {% if forum_id == 6 %}
@@ -604,7 +634,7 @@ Main page block:
         {{ block("new_topic_form") }}
       {% endif %}
     
-      {% if topics %}
+      {% if html == false %}
         <content id="topics">
         {% for topic in topics %}
           {{ block("topic_with_replies") }}
@@ -614,7 +644,6 @@ Main page block:
         {% if topic_id %}
         <!-- in topic -->
         <!--<input type="button" id="load_new_replies" value="Загрузить новые посты" onclick="load_new_replies_click(this);">-->
-    
         <!--
         <label id="load_new_replies" class="inputfile_label submit_button button is-small is-outlined" onclick="load_new_replies_click(this);">Загрузить новые посты</label>
         -->
@@ -630,7 +659,6 @@ Main page block:
           </post_with_replies>
         </content>
         {% endif %}
-    
       {% endif %}
     
       <footer>

@@ -39,12 +39,7 @@ $shown = count($topics) == $limit ? $limit : count($topics);
   
 echo "<table style='width: 100%; table-layout: fixed;'>";
 foreach ($topics as $topic)
-{
-  echo "<!-- X ".benchmark()." -->";
-  $topic_array = $topic->to_array();
-  $text_formatted = $topic_array["text_formatted"];
-  echo "<!-- Y ".benchmark()." -->";
-  
+{ 
   echo "<tr>";
     //echo "<td style='width:0; padding-right:10px;'>";
     //  echo str_replace(" ", "&nbsp;", smart_time_format($topic->creation_time));
@@ -53,7 +48,7 @@ foreach ($topics as $topic)
     echo "<td width='100%'>";
       echo "<div style='width: 100%; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; '>";
       echo "<a href='/topic/".$topic->post_id."'>";
-      echo mb_strimwidth(strip_tags($text_formatted), 0, 100, "");
+      echo $topic->get_plain_text(500);
       echo "</a>";
       echo "</div>";
     echo "</td>";
@@ -70,7 +65,7 @@ else
 {
   $message = "Вы еще не создали ни одной темы";
 }
-  
+
 echo "<div align='center' style='font-size:14px; margin:0.5em 0em;'>$message</div>";
 
 echo "<!-- ".benchmark()." -->";
@@ -87,5 +82,11 @@ $twig_data = array
   "html" => $html,
   "final_title" => "Мои темы"
 );
-echo render($twig_data);
+$twig_template = "default";
+if (isset(domain_array()["template"]))
+{
+  $twig_template = domain_array()["template"];
+}
+$twig_filesystem = TWIG_TEMPLATES_DIR."/$twig_template";
+echo render($twig_data, $twig_filesystem, $twig_template);
 exit();

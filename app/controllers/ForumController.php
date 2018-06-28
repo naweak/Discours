@@ -15,10 +15,10 @@ class ForumController extends Controller
 		$replies_to_show = 3;
 		$limit = $default_limit;
 		
-		$pageviews_cache_name = "pageviews_".date("d-m");
-		$pageviews_from_cache = intval(cache_get($pageviews_cache_name));
-		cache_set($pageviews_cache_name, $pageviews_from_cache + 1);
-		echo "<!-- P/V: $pageviews_from_cache -->";
+		$pageviews_from_cache_name = "pageviews_".date("d-m");  
+    $pageviews_from_cache = cache_get($pageviews_from_cache_name, function () {return 0;});
+    cache_set($pageviews_from_cache_name, intval($pageviews_from_cache)+1);
+		echo "<!-- P/V: $pageviews_from_cache -->\n";
 		
 		$use_page_cache = true;
 		if (isset($_GET["fresh"]) or isset($_GET["page"]) or isset($_GET["order"]))
@@ -33,82 +33,51 @@ class ForumController extends Controller
 		
 		else
 		{
-			$forum_id = 0;
-		}
-		
-		if ($forum_id == 3 and !is_mod()) # /test/
-		{
-			header("HTTP/1.0 403 Forbidden");
-			die("403 Forbidden");
+      if (isset(domain_array()["default_forum_id"]))
+      {
+        $forum_id = domain_array()["default_forum_id"];
+      }
+      else
+      {
+        $forum_id = 1;
+      }
 		}
 
 		$query_annex = "";
 		$offset = 0;
 		$query_bind = [];
-
-		if (!isset($_GET["topic"])) // show forum (default action)
-		{
-			///////////////
-			if ($use_page_cache) // try to render from cache
-			{
-				/*$page_cache = page_cache_get("forum_".$forum_id);
-				if ($page_cache !== false)
-				{
-					echo "<!-- GOT PAGE FROM CACHE ".benchmark()." -->\n";
-					echo $page_cache;
-					exit();
-				}*/
-				$twig_data = cache_get("forum_".$forum_id);
-				if ($twig_data !== false)
-				{
-					echo "<!-- GOT DATA FROM CACHE ".benchmark()." -->\n";
-					$twig_data["is_mod"] = is_mod();
-					$query = $pdo->query("SELECT COUNT(*) FROM notifications WHERE is_read = 0");
-					$twig_data["notifications_unread"] = $query->fetchColumn();
-					$twig_template = $twig_data["template"];
-					echo "<!-- RENDERING STARTED ".benchmark()." -->\n";
-					$rendered = render($twig_data, ROOT_DIR."/app/templates/$twig_template", $twig_template);
-					echo "<!-- RENDERING FINISHED ".benchmark()." -->\n";
-					echo $rendered;
-					exit();
-				}
-			}
-			///////////////
-			
-			$query_annex = "AND forum_id = :forum_id:";
-			$query_bind["forum_id"] = $forum_id;
-			
-			if ($forum_id == 1) // Главная
-			{
-				$query_annex = "AND forum_id NOT IN (3, 6, 12, 14)";
-				unset($query_bind["forum_id"]);
-			}
-				
-			if (isset ($_GET["page"]))
-			{
-				$offset = $default_limit * abs(intval($_GET["page"])-1);
-			}
-			
-			$forum_obj = Forum::findFirst
-			(
-			[
-				"forum_id = :forum_id:",
-				"bind" =>
-				[
-					"forum_id" => $forum_id
-				]
-			]
-			);
-			
-			$description = "Дискурс — ".anti_xss($forum_obj->title); // use forum title as description
-		}
-		
-		else // or show topic
-		{
-			$topic_id = intval($_GET["topic"]);
-			$query_annex = " AND post_id = :post_id:";
-			$query_bind["post_id"] = $topic_id;
-			
+    
+    if (!isset($_GET["topic"])) // get $forum_obj while showing forum
+    {
+      $slug = (isset($_GET["slug"]) and $_GET["slug"] != "") ?
+        $_GET["slug"]: // if true
+        false; // if false
+      
+      if ($slug != false) // identify by $slug
+      {
+        $forum_obj_query = "slug = :slug:";
+        $forum_obj_bind = ["slug" => $slug];
+      }
+      else // identify by $forum_id
+      {
+        $forum_obj_query = "forum_id = :forum_id:";
+        $forum_obj_bind  = ["forum_id" => $forum_id];
+      }      
+      $forum_obj = Forum::findFirst // get $forum_obj
+      (
+      [
+        $forum_obj_query,
+        "bind" => $forum_obj_bind
+      ]
+      );
+      if ($slug and $forum_obj)
+      {
+        $forum_id = $forum_obj->forum_id;
+      }
+    }
+    
+    else // get $forum_obj while showing topic
+    {
 			$forum_obj = Forum::findFirst
 			(
 			[
@@ -116,13 +85,13 @@ class ForumController extends Controller
 
 				"bind" =>
 				[
-					"topic_id" => $topic_id
+					"topic_id" => intval($_GET["topic"])
 				]
 			]
 			);
-		}
-		
-		if (!$forum_obj) // forum or topic not found (404)
+    }
+    
+    if (!$forum_obj) // forum or topic not found (404)
 		{
 			if ($topic_id == 1)
 			{
@@ -134,11 +103,167 @@ class ForumController extends Controller
 			exit();
 		}
     
-    if ($forum_obj->forum_id == 14 and $topic_id and mb_strpos($_SERVER["REQUEST_URI"], "topic")) # /old/
+    if ($forum_obj->forum_id == 3 and !is_mod()) # /test/
 		{
-			header("Location: /old/res/$topic_id.html");
+			header("HTTP/1.0 403 Forbidden");
+			die("403 Forbidden");
+		}
+    
+    if (isset(domain_array()["forum_ids"])) // check whether forum is allowed for this domain
+    {
+      if (!in_array($forum_obj->forum_id, domain_array()["forum_ids"]))
+      {
+        header("HTTP/1.0 404 Not Found");
+			  die("404 Not Found");
+      }
+    }
+    
+    if ($forum_obj->forum_id == 14 and
+        isset($_GET["topic_id"]) and
+        mb_strpos($_SERVER["REQUEST_URI"], "topic")) # /old/
+		{
+			header("Location: /old/res/".intval($_GET["topic_id"]).".html");
 			die();
 		}
+    
+    $twig_template = "default";
+		if ($forum_obj->forum_id == 3)
+		{
+      if (file_exists(ROOT_DIR."/app/templates/test/template.html"))
+      {
+			  $twig_template = "test";
+      }
+      else
+      {
+        //die("Test template not set");
+        $twig_template = "default";
+      }
+		}
+		if ($forum_obj->forum_id == 14)
+		{
+			$twig_template = "wakaba";
+		}
+    if (isset(domain_array()["template"]))
+    {
+      $twig_template = domain_array()["template"];
+    }
+    
+    function assign_post_properties (&$post) // highlight my own posts, replies to my posts, etc.
+    {
+      // This is also an option, but takes too much time (usually 0.01-0.03 seconds)
+      /*$post_id = $post["post_id"];
+      
+      echo "<!-- X: ".benchmark()."-->\n";
+      $post_session_id = cache_get("post_{$post_id}_session_id",
+      function () use ($post_id)
+      {
+        $post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $post_id]]);
+        return $post_object->session_id;
+      });
+      echo "<!-- Y: ".benchmark()."-->\n";
+      
+      $post_user_id = cache_get("post_{$post_id}_user_id",
+      function () use ($post_id)
+      {
+        $post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $post_id]]);
+        return $post_object->user_id;
+      });
+      
+      if (user_id())
+      {
+        if (user_id() == $post_user_id)
+        {
+          $post["my_post"] = true;
+        }
+      }
+      
+      if ($post_session_id == session_id())
+      {
+        $post["my_post"] = true;
+      }*/
+      
+      if ($post["session_id"] == session_id())
+      {
+        $post["my_post"] = true;
+      }
+      
+      if (user_id())
+      {
+        if (user_id() == $post["user_id"])
+        {
+          $post["my_post"] = true;
+        }
+      }
+      
+      if ($post["reply_to_session_id"] == session_id())
+      {
+        $post["reply_to_my_post"] = true;
+      }
+      
+      if (user_id())
+      {
+        if (user_id() == $post["reply_to_user_id"] )
+        {
+          $post["reply_to_my_post"] = true;
+        }
+      }
+        
+      $post["session_id"] = false; // erase sensitive data to make it impossible to show in the template
+      $post["user_id"]    = false;
+      $post["reply_to_session_id"] = false;
+      $post["reply_to_user_id"] = false;
+    }
+    
+    function assign_post_properties_to_twig_data (&$twig_data) // proccess $twig_data elements with the function above
+    {
+      foreach ($twig_data["topics"] as &$topic)
+      {
+        assign_post_properties($topic);
+        foreach ($topic["replies"] as &$reply)
+        {
+          assign_post_properties($reply);
+        }
+      }
+    }
+
+		if (!isset($_GET["topic"])) // show forum (default action)
+		{
+			if ($use_page_cache) // try to render from cache
+			{
+				$twig_data = cache_get("forum_".$forum_id);
+				if ($twig_data !== false)
+				{
+          assign_post_properties_to_twig_data($twig_data);
+					echo "<!-- GOT DATA FROM CACHE ".benchmark()." -->\n";
+					echo "<!-- RENDERING STARTED ".benchmark()." -->\n";
+					$rendered = render($twig_data, ROOT_DIR."/app/templates/$twig_template", $twig_template);
+					echo "<!-- RENDERING FINISHED ".benchmark()." -->\n";
+					echo $rendered;
+					exit();
+				}
+			}
+			
+			$query_annex = "AND forum_id = :forum_id:";
+			$query_bind["forum_id"] = $forum_id;
+			
+			if ($forum_id == 1) // Главная
+			{
+				$query_annex = "AND forum_id NOT IN (3, 6, 12, 14, 19, 20)";
+				unset($query_bind["forum_id"]);
+			}
+				
+			if (isset ($_GET["page"]))
+			{
+				$offset = $default_limit * abs(intval($_GET["page"])-1);
+			}
+		}
+    
+    else // show topic
+    {
+      $topic_id = intval($_GET["topic"]);
+      $query_annex = " AND post_id = :post_id:";
+      $query_bind["post_id"] = $topic_id;
+    }
 		
 		$topics_order = "ord DESC";
 		
@@ -162,8 +287,11 @@ class ForumController extends Controller
 		
 		echo "<!-- TOPICS QUERY EXECUTED: ".benchmark()." -->\n";
     
-    $topic = $topics[0]; // topic object
-		
+    if (isset($topics[0]))
+    {
+      $topic = $topics[0]; // topic object
+    }
+ 
 		$twig_data = array
 		(
 			"topics" => array(),
@@ -174,7 +302,7 @@ class ForumController extends Controller
 			
 			"forum_id" => $forum_obj->forum_id,
 			"forum_title" => $forum_obj->title,
-			"final_title" => ($topic_id != 0 and $topic->title) ? "Дискурс — ".anti_xss($topic->title) : $forum_obj->title,
+			"final_title" => (isset($topic_id) and $topic_id != 0 and $topic->title) ? anti_xss($topic->title) : $forum_obj->title,
 			
 			"meta" => array(),
 			"file_host" => FILE_HOST,
@@ -191,6 +319,8 @@ class ForumController extends Controller
 		{
 			$twig_data["declined_text"] = anti_xss($declined_text);
 		}
+    
+    $twig_data["forum_href"] = full_forum_href(@$slug, $forum_obj->forum_id);
 		
 		if (isset($topic_id)) // show topic
 		{
@@ -199,13 +329,13 @@ class ForumController extends Controller
 			
 			if ($topic->title) // if topic has title, use it as description
 			{
-				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($topic->title);
+				$twig_data["meta"]["description"] = anti_xss($topic->title);
 			}
 			elseif (mb_strlen($topic->text) > 3) // otherwise, use topic text
 			{
 				$trim_chars = 250;
 				$text_summary = mb_strlen($topic->text) > $trim_chars ? mb_substr($topic->text,0,$trim_chars)."..." : $topic->text;
-				$twig_data["meta"]["description"] = "Дискурс — ".anti_xss($text_summary);
+				$twig_data["meta"]["description"] = anti_xss($text_summary);
 			}
 			
 			if ($topic->file_url) // set preview image
@@ -219,15 +349,7 @@ class ForumController extends Controller
 			$topic_array = $topic->to_array();
 			$topic_array["replies"] = array();
 			
-			//$omit_replies = false;
 			$omit_replies = true;
-			/*if (in_array($forum_obj->forum_id, array(3, 14))) // /test/, /old/
-			{
-				if (!$topic_id)
-				{
-					$omit_replies = true;
-				}
-			}*/
 			if (isset($topic_id))
 			{
 				$omit_replies = false;
@@ -236,7 +358,6 @@ class ForumController extends Controller
 			$replies = Post::find
 			(
 			[
-				//"parent_topic = :parent_topic:",
         "parent_topic = :parent_topic: AND deleted_by = 0",
 				"order" => $omit_replies ? "creation_time DESC" : "creation_time",
 				"limit" => $omit_replies ? "3" : "",
@@ -245,7 +366,7 @@ class ForumController extends Controller
 			]
 			);
 			
-			if ($topic_id)
+			if (isset($topic_id) and $topic_id)
 			{
 				echo "<!-- TOPIC REPLIES EXECUTED: ".benchmark()." -->\n";
 			}
@@ -273,37 +394,17 @@ class ForumController extends Controller
 			
 			echo "<!-- GOT REPLIES FOR TOPIC #".$topic->post_id." ".benchmark()." -->\n";
 		}
-
-		$query = $pdo->query("SELECT COUNT(*) FROM notifications WHERE is_read = 0");
-		$twig_data["notifications_unread"] = $query->fetchColumn();
-		
-		$twig_template = "default";
-		if ($forum_obj->forum_id == 3)
-		{
-      if (file_exists(ROOT_DIR."/app/templates/test/template.html"))
-      {
-			  $twig_template = "test";
-      }
-      else
-      {
-        die("Test template not set");
-      }
-		}
-		if ($forum_obj->forum_id == 14)
-		{
-			$twig_template = "wakaba";
-		}
 		
 		if (!isset($_GET["page"])) // only cache first page
 		{
 			if (!isset($topic_id)) // only cache forum page
 			{
 				$twig_data["template"] = $twig_template; // will be used later when the data is restored from cache
-				//page_cache_set("forum_".$forum_obj->forum_id, $rendered);	
 				cache_set("forum_".$forum_obj->forum_id, $twig_data, 24*60*60);
 			}
 		}
-		
+    
+		assign_post_properties_to_twig_data($twig_data);
 		echo "<!-- RENDERING STARTED ".benchmark()." -->\n";
 		$rendered = render($twig_data, ROOT_DIR."/app/templates/$twig_template", $twig_template);
 		echo "<!-- RENDERING FINISHED ".benchmark()." -->\n";

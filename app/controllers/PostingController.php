@@ -25,23 +25,33 @@ class PostingController extends Controller
 		
 		$forum_id     = intval($request->getPost("forum_id"));
 		$parent_topic = intval($request->getPost("parent_topic"));
-    $reply_to     = intval($request->getPost("reply_to"));
-		//$title        = $request->getPost("title");
-    $title        = "";
+    $reply_to     = intval($request->getPost("reply_to")); // not post_id, but order_in_topic
+    $title        = $request->getPost("title");
 		$name         = $request->getPost("name");
 		$text         = $request->getPost("text");
     
-    if ($request->getPost("field3")) // wakaba
+    $is_wakaba = $request->getPost("task");
+    
+    if ($request->getPost("field3") and $forum_id == 14) // title enabled in /old/
     {
       $title = $request->getPost("field3");
+    }
+    else // disabled otherwise
+    {
+      $title = "";
     }
 		
 		if ($request->getPost("parent")) // Dollchan Extension Tools patch
 		{
 			$parent_topic = $request->getPost("parent");
 		}
+    
+    if (!$parent_topic) // if creating new topic
+    {
+      $reply_to = 0; // cannot be replying to a post
+    }
 		
-		if ($forum_id == 12)
+		if ($forum_id == 12) // /1chan/
 		{
 			$new_topic_delay = 3*60;
 		}
@@ -68,10 +78,9 @@ class PostingController extends Controller
 		
 		if
 		(
-			//($forum_id == 9 or $forum_id == 11)
-			in_array($forum_id, array(9, 11))
+			in_array($forum_id, array(9, 11, 20))
 			and !$parent_topic
-			and user_id() != 1
+			and !is_admin()
 		)
 		{
 			$this->error("Только администраторы могут создавать темы на этом форуме.");
@@ -79,7 +88,7 @@ class PostingController extends Controller
 		
 		if ($forum_id == 3) // /test/
 		{ 
-      if (user_id() != 1)
+      if (!is_admin())
       {
 			  $this->error("Этот форум закрыт для постинга.");
       }
@@ -89,7 +98,7 @@ class PostingController extends Controller
     /* Somehow accepts one-letter strings like "a" */
     if (mb_strlen($text) < $min_text_length)
     {
-			if (!is_uploaded_file($_FILES["userfile"]["tmp_name"]))
+			if (!isset($_FILES["userfile"]["tmp_name"]) or !is_uploaded_file($_FILES["userfile"]["tmp_name"]))
 			{
 				$this->error("Текст слишком короткий!");
 			}
@@ -116,7 +125,24 @@ class PostingController extends Controller
     {
     	$this->error("Имя слишком длинное (>$max_name_length )!");
     }
+    
+    // Blacklist check:
+    require_if_exists(LIB_DIR."/check_ip.php");
+    if (function_exists("check_ip"))
+    {
+      $check_ip_result = check_ip($ip, ["forum_id" => $forum_id]);
+      if
+      (
+        (isset($check_ip_result["blocked"]) and $check_ip_result["blocked"] == true)
+        or
+        isset($check_ip_result["reason"])
+      )
+      {
+        $this->error("Ваш IP находится в черном списке.".($check_ip_result["reason"] ? " Причина: {$check_ip_result["reason"]}." : "")."\n\nДля разблокировки обратитесь в телеграм-конференцию.");
+      }
+    }
 		
+    // Banlist check:
 		$active_ban = Ban::findFirst
 		(
     [
@@ -132,7 +158,7 @@ class PostingController extends Controller
 		if ($active_ban)
 		{
 			$ban_id = $active_ban->ban_id;
-			$this->error("Ваш IP находится в бан-листе (бан #$ban_id). Для разбана обратитесь в телеграм-конференцию.");
+			$this->error("Ваш IP находится в бан-листе (бан #$ban_id).\n\nДля разбана обратитесь в телеграм-конференцию.");
 		}
 		
 		$tor_file_path = ROOT_DIR."/app/config/tor.txt";
@@ -157,6 +183,7 @@ class PostingController extends Controller
     ]
 		);
 		
+    // Check forum object
 		if (!$forum_obj)
 		{
 			$this->error("Форум не найден.");
@@ -164,57 +191,94 @@ class PostingController extends Controller
 		
 		if ($parent_topic) {$title = "";}
 		
-		// Last topic object
-		$last_topic = Post::findFirst
-		(
-		[
-			"ip = :ip: AND parent_topic = 0",
-			
-			"bind" =>
-			[
-				"ip" => $ip
-			],
-				
-			"order" => "post_id DESC"
-		]
-		);
-		
-		// Last reply object
-		$last_reply = Post::findFirst
-		(
-		[
-			"ip = :ip: AND parent_topic != 0",
-			
-			"bind" =>
-			[
-				"ip" => $ip
-			],
-				
-			"order" => "post_id DESC"
-		]
-		);
-		
-		// Parent topic object
-		$parent_topic_obj = Post::findFirst
+		$parent_topic_object = Post::findFirst
 		(
 		[
 			"post_id = '$parent_topic' AND parent_topic = 0"
 		]
 		);
+    
+    // Proccess Wakaba links
+    if ($is_wakaba)
+    {
+      $GLOBALS["links_in_text"] = 0; // "global" does not work in preg_replace_callback
+      $GLOBALS["new_reply_to_post_id"]  = 0;
+      $text = preg_replace_callback
+      (
+          "/>>([0-9]+)/",
+          function ($matches)
+          {
+            $GLOBALS["links_in_text"]++;
+            if ($GLOBALS["links_in_text"] > 1)
+            {
+              $this->error("В сообщении может быть только одна >>ссылка.");
+            }
+            $GLOBALS["new_reply_to_post_id"] = $matches[1];
+            return "";
+          },
+          $text
+      );
+      if ($GLOBALS["new_reply_to_post_id"])
+      {
+        $new_reply_to_post_id = $GLOBALS["new_reply_to_post_id"]; // "global" command does not work by some reason
+        
+        
+        
+        
+        
+        
+        //$this->error("xxx: $new_reply_to_post_id");
+        
+        
+        
+        
+        if ($parent_topic) // if replying to topic
+        {
+          if ($parent_topic_object->post_id != $new_reply_to_post_id) // if not replying to OP-post
+          {
+            $new_reply_to_object = Post::findFirst
+            (
+            [
+              "post_id = :post_id:",
+              "bind" => ["post_id" => $new_reply_to_post_id]
+            ]
+            );
+            
+            if ($new_reply_to_object->parent_topic != $parent_topic_object->post_id)
+            {
+              $this->error("Пост, на который вы даете >>ссылку, должен быть в этой же теме.");
+            }
+
+            $reply_to = $new_reply_to_object->order_in_topic;
+          }
+        }
+      }
+    }
 		
 		// Reply to existing topic
     if ($parent_topic)
     {
-			if (!$parent_topic_obj)
+			if (!$parent_topic_object)
 			{
 				$this->error("Тема не найдена!");
 			}
+      
+      $last_reply = Post::findFirst
+      (
+      [
+        "ip = :ip: AND parent_topic != 0",
+        "bind" =>
+        [
+          "ip" => $ip
+        ],
+        "order" => "post_id DESC"
+      ]
+      );
 			
 			if ($last_reply)
 			{
-				$last_reply_age = $time-$last_reply->creation_time;
+				$last_reply_age = $time - $last_reply->creation_time;
 
-				//echo $last_reply_age;
 				if ($last_reply_age < $reply_delay)
 				{
 					$this->error("Вы отвечаете в темы слишком часто!");
@@ -225,34 +289,59 @@ class PostingController extends Controller
 		// New topic
     else
     {
-			/*******/
-			/*$last_topics = Post::find // different from $last_topic
-			(
-			[
-				"ip = :ip: AND parent_topic = 0 WHERE $time-creation_time < 60*60",
-
-				"bind" =>
-				[
-					"ip" => $ip
-				],
-
-				"order" => "post_id DESC"
-			]
-			);/*
-			// how long does the user have to wait?
-			/*******/
-			
+      $last_topic = Post::findFirst
+      (
+      [
+        "ip = :ip: AND parent_topic = 0",
+        "bind" =>
+        [
+          "ip" => $ip
+        ],
+        "order" => "post_id DESC"
+      ]
+      );
+      
 			if ($last_topic)
 			{
-				$last_topic_age = $time-$last_topic->creation_time;
+				$last_topic_age = $time - $last_topic->creation_time;
 				
-				//echo $last_topic_age;
 				if ($last_topic_age < $new_topic_delay)
 				{
 					$this->error("Вы создаете темы слишком часто (осталось ждать ".($new_topic_delay-$last_topic_age)." сек.)");
 				}
 			}
 		}
+    
+    /* BEGIN ANTI-WIPE */
+    function posts_by_ip_in_the_last_n_seconds ($ip, $n)
+    {
+      $posts = Post::find
+      (
+      [
+        "ip = :ip: AND (:time: - creation_time < $n)",
+        "bind" =>
+        [
+          "ip" => $ip,
+          "time" => time(),
+        ],
+        "order" => "post_id DESC"
+      ]
+      );
+      
+      return count($posts);
+    }
+    
+    $hourly_limit = 100; // max posts per hour per IP
+    
+    $a = benchmark();
+    if (posts_by_ip_in_the_last_n_seconds($ip, 60*60) > $hourly_limit)
+    {
+      $this->error("С вашего IP было опубликовано больше $hourly_limit постов за последний час. В связи с непрекращающимися вайпами нам пришлось ввести ограничение на публикацию большого числа постов. Просим извинения за доставленные неудобства и надеемся на понимание. Для снятия защиты пожалуйста обратитесь в Telegram (@zefirov) или по адресу: https://discou.rs/contact");
+    }
+    $b = benchmark();
+    
+    $this->comment .= "Posts_by_ip_in_the_last_n_seconds took " . ($b - $a) . " to execute";
+    /* END ANTI-WIPE */
 		
 		$topic_replies = Post::find
 		(
@@ -301,27 +390,14 @@ class PostingController extends Controller
 		$post->forum_id = $forum_id; // will be used in process_file()
 		$post->parent_topic = $parent_topic;
 		
-		// url:
-		/*$text_lines = explode("\n", $text);
-		$last_line = end($text_lines);
-		if (preg_match("/^url:[ ]*(.*)/i", $last_line, $matches))
-		{
-			$url = $matches[1];
-			if (filter_var($url, FILTER_VALIDATE_URL))
-			{
-				$this->error("URL: $url");
-			}
-		}*/
-		
 		// Process uploaded file
-		if (is_uploaded_file($_FILES["userfile"]["tmp_name"]))
+		if (isset($_FILES["userfile"]["tmp_name"]) and is_uploaded_file($_FILES["userfile"]["tmp_name"]))
 		{
 			if ($forum_id == 12)
 			{
 				$this->error("В этом разделе нельзя прикреплять картинки!");
 			}
 			
-			//$this->error("has file!");
 			$files = $this->request->getUploadedFiles();
 			$file = $files[0];
 			
@@ -338,15 +414,15 @@ class PostingController extends Controller
 		
 		// Save new post
 		$ord = round(microtime(true) * 1000);
-		/*if ($parent_topic == 10670) // sticky
+		/*if ($parent_topic == 10670) // make a sticky topic
 		{
-				$ord = $ord*2;
+				$ord = $ord * 2;
 		}*/
 		if ($forum_id == 11 or $forum_id == 12)
 		{
 			if ($parent_topic)
 			{
-				$ord = $parent_topic_obj->ord;
+				$ord = $parent_topic_object->ord;
 			}
 		}
 		
@@ -378,15 +454,15 @@ class PostingController extends Controller
 			if // bump if...
 			(
 					!$allow_sage // sage disallowed
-					or is_uploaded_file($_FILES["userfile"]["tmp_name"]) // or post has file
+					or (isset($_FILES["userfile"]["tmp_name"]) and is_uploaded_file($_FILES["userfile"]["tmp_name"])) // or post has file
 					or ($allow_sage and !$request->getPost("sage")) // sage is alloed AND request contains sage
 			)
 			{
 				if ($parent_topic != 18520) // topic to report posts
 				{
-					$parent_topic_obj->ord = $ord;
+					$parent_topic_object->ord = $ord;
 
-					$result = $parent_topic_obj->save();
+					$result = $parent_topic_object->save();
 					if (!$result)
 					{
 						foreach ($post->getMessages() as $message)
@@ -401,7 +477,7 @@ class PostingController extends Controller
 			
 			else // sage
 			{
-				$post->ord = $parent_topic_obj->ord;
+				$post->ord = $parent_topic_object->ord;
 				$result = $post->save();
 				
 				if (!$result) // report errors if saving went wrong
@@ -414,28 +490,115 @@ class PostingController extends Controller
 			}
 		}
 
-		if (!is_mod()) // notification
-		{
-			$notification = new Notification();
-			$post_id = $post->post_id;
-			$forum_title = anti_xss($forum_obj->title);
-			if (!$parent_topic) // new topic
-			{
-				$notification_text = "[$ip] - <b>$forum_title</b>: <span style='color:green;'>НОВАЯ ТЕМА</span> 
-				<a href='/topic/$post_id' target='_blank' style='color:blue;' onclick=\"this.style.color='violet';\">#$post_id</a>";
-			}
-			else // reply to topic
-			{
-				$notification_text = "[$ip] - <b>$forum_title</b>: ответ в тему
-				<a href='/topic/$parent_topic' target='_blank' style='color:blue;' onclick=\"this.style.color='violet';\">#$parent_topic</a>";
-			}
-			
-			$notification->notify(1, $notification_text, $post_id, $parent_topic);
-		}
+    ### Notifications ###    
+    $admin_notified = false;
+    $topic_id_for_notification = $parent_topic ? $parent_topic : $post->post_id;
+   
+    if (is_admin_fake(session_id()))
+    {
+      $admin_notified = true;
+    }
+    if ($parent_topic and is_admin_fake($parent_topic_object->session_id))
+    {
+      $admin_notified = true;
+    }
+    if ($reply_to and is_admin_fake($reply_to_object->session_id))
+    {
+      $admin_notified = true;
+    }
+    if (is_admin())
+    {
+      $admin_notified = true;
+    }
+
+    // Notify OP:
+    if ($parent_topic)
+    {
+      if(!is_same_author($parent_topic_object, $post)) // if not replying to my own topic
+      {
+        $notification = new Notification(); // notify OP
+        $notification->notify
+        (
+          $parent_topic_object->session_id,
+          $parent_topic_object->user_id,
+          "Replying to OP",
+          $post->post_id,
+          $topic_id_for_notification
+        );
+        if ($parent_topic_object->user_id == 1)
+        {
+          $admin_notified = true;
+        }
+      }
+    }
+
+    // Notify author of reply I'm replying to:
+    if ($reply_to) // if replying to reply
+    {
+      if (!is_same_author($reply_to_object, $post)) // if not replying to my own reply
+      {
+        if (!is_same_author($parent_topic_object, $reply_to_object)) // if OP hasn't already been notified
+        {
+          $notification = new Notification(); // notify author of reply I'm replying to
+          $notification->notify
+          (
+            $reply_to_object->session_id,
+            $reply_to_object->user_id,
+            "Replying to reply",
+            $post->post_id,
+            $topic_id_for_notification
+          );
+          if ($reply_to_object->user_id == 1)
+          {
+            $admin_notified = true;
+          }
+        }
+      }
+    }
+
+    // Notify admin:
+    if (!$admin_notified) // if admin not notified yet
+    {
+      $admin_notification = new Notification(); // notify admin
+      $admin_notification->notify("", 1, "Notification for admin", $post->post_id, $topic_id_for_notification);
+    }
+    
+    $related_notification_query_bind =
+    [
+      "topic_id" => $parent_topic,
+      "recipient_session_id" => session_id(),
+      "recipient_user_id" => user_id()
+    ];
+    if (!$reply_to) // if replying to OP-post
+    {
+      $related_notification_query_bind["post_id"]  = $parent_topic;
+    }
+    else // if replying to reply
+    {
+      $related_notification_query_bind["post_id"]  = $reply_to_object->post_id;
+    }
+    $related_notification = Notification::findFirst
+    (
+      [
+        "topic_id = :topic_id: AND post_id = :post_id: AND
+        (
+          recipient_session_id = :recipient_session_id: OR
+          recipient_user_id = :recipient_user_id:
+        )
+        ",
+        "bind" => $related_notification_query_bind
+      ]
+    );
+    if ($related_notification)
+    {
+      $related_notification->is_read = 1;
+      $related_notification->save();
+    }
+    ### / Notifications ###
 		
-		if ($forum_id == 11 and $parent_topic == 0) // if posting to changelog
+		if ($forum_id == 11 and $parent_topic == 0) // if posting to Changelog
 		{
-			send_message_to_telegram_channel("@DiscoursChangelog", $text . "\nОбсудить: https://".MAIN_HOST."/topic/".$post->post_id, TELEGRAM_TOKEN);
+			send_message_to_telegram_channel("@DiscoursChangelog", $post->get_plain_text()."\nОбсудить: https://".MAIN_HOST."/topic/".$post->post_id, TELEGRAM_TOKEN);
 		}
 		
 		/*elseif ($parent_topic == 0) // posting to Discours Topics
@@ -454,6 +617,10 @@ class PostingController extends Controller
 			$output["success"] = true;
 			$output["post_id"] = $post->post_id;
 			$output["benchmark"] = benchmark();
+      if (isset($this->comment) and $this->comment != "")
+      {
+        $output["comment"] = $this->comment; 
+      }
 			echo json_encode($output);
 		}
 
@@ -475,19 +642,25 @@ class PostingController extends Controller
 		else
 		{
 			$filtered_text = anti_xss($request->getPost("text"));
-				
-			$html = "<content>";
-			$html .= "<h2>Ошибка!</h2>";
-			$html .= "<b>$error</b>";
-			$html .= "<br><br>";
-			$html .= "Для вашего удобства ваш пост находится в текстовом поле:";
-			$html .= "<textarea style='width:100%;height:100px;'>$filtered_text</textarea>";
-			$html .= "</content>";
+
+      $html =
+      "
+      <content>
+        <div style='font-size:200%;text-align:center;'>Ошибка</div>
+        <h2 style='font-size:inherit;text-align:center;'>$error</h2>
+        Для вашего удобства пост находится в текстовом поле:
+        <textarea style='width:100%;height:100px;'>$filtered_text</textarea>
+      </content>
+      ";
 				
 			$twig_data = array
 			(
 				"html" => $html
 			);
+      if ($request->getPost("field3")) // wakaba
+      {
+        
+      }
 			echo render($twig_data);
 		}
 			
@@ -597,5 +770,12 @@ class PostingController extends Controller
 		$post->thumb_w = $thumb_w;
 		$post->thumb_h = $thumb_h;
 	}
+  
+  private $comment; // used to include any data into JSON output
+  
+  public function initialize()
+  {
+  	$this->comment = ""; // defined to use concatenation without issuing a warning
+  }
 
 }

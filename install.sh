@@ -1,0 +1,1 @@
+# Use this script to install all the required dependencies

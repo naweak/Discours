@@ -181,16 +181,20 @@ text
 	/*max-height: 300px;*/
 }
 
+html
+{
+  background: orange;
+}
+
 html, body
 {
+  min-height: 100vh;
 	text-align: center;
 	font-family: Arial, Helvetica, sans-serif; /* works great on mobile devices */
 	font-size: 15px;
 	background: #efefef;
 	color: #555;
 }
-
-
 
 .header
 {
@@ -440,15 +444,9 @@ img.topic_thumb, img.reply_thumb
 	margin-top: 5px;
 }
 
-img.topic_thumb
+img.topic_thumb, img.reply_thumb
 {
   max-width: calc(45%); 
-  height: auto !important;
-}
-
-img.reply_thumb
-{
-  max-width: calc(45%);
   height: auto !important;
 }
 
@@ -690,6 +688,52 @@ post_info
 	color: #c6c6c6 !important;
 }
 
+.night .button
+{
+	background: none;
+	
+	color: #575757;
+	border-color: #575757;
+}
+
+.night button, .night .button
+{
+  background: none;
+  border-color: #575757;
+  color: #c6c6c6 !important;
+}
+
+.night .message
+{
+  background: transparent !important;
+}
+
+.night .message-body
+{
+  color: white !important;
+  border: 1px solid #575757;
+}
+
+.night #mobile_menu
+{
+  background: inherit !important;
+}
+
+.night .navbar-dropdown
+{
+  background: #2f2f2f !important;
+}
+
+.night .navbar-item
+{
+	color: white !important;
+}
+
+.night .navbar-item:hover
+{
+  background: #2a2a2a !important;
+}
+
 .night .navbar-link::after
 {
 	border: 1px solid #c6c6c6;
@@ -708,22 +752,9 @@ post_info
 	color: #ddd;
 }
 
-.night .navbar-item
-{
-	color: black;
-}
-
-.night .button
-{
-	background: none;
-	
-	color: #575757;
-	border-color: #575757;
-}
-
 .night .hr
 {
-	border-top: 1px solid #1c1c1a;
+	border-top: 1px solid #575757;
 }
 
 .night post_with_replies
@@ -746,6 +777,58 @@ post_info
 	background: transparent;
 	border-top: 1px solid #575757;
 	border-bottom: 1px solid #575757;
+}
+
+.night reply.highlighted
+{
+  background: #454545 !important;
+}
+
+.night .link_preview
+{
+  background: #2f2f2f;
+  border: 1px solid #575757;
+  box-shadow: none;
+}
+
+.night .is-loading
+{
+  color: transparent !important;
+}
+
+.night .brand_centered
+{
+  filter: invert(100%);
+}
+
+.night #up:hover, .night #down:hover
+{
+  background: transparent;
+}
+
+.night #triangle-up
+{
+  border-bottom: 20px solid white;
+}
+
+.night #triangle-down
+{
+  border-top: 20px solid white;
+}
+
+.night .dots, .night .dots:before, .night .dots:after
+{
+  background: white;
+}
+
+.night .report_post
+{
+  color: black !important;
+}
+
+.night .spoiler
+{
+  text-shadow: 0 0 5px rgba(255,255,255,0.4);
 }
 
 /* / night theme */

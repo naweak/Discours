@@ -35,7 +35,7 @@ function setCookie(name, value, options)
   
 function set_theme (theme)
 {
-  setCookie("night", theme);
+  setCookie("night", theme, {expires: 365*24*3600});
 }
 </script>
 
@@ -53,7 +53,13 @@ ob_end_clean();
 $twig_data = array
 (
   "html" => $html,
-  "title" => "Настройки"
+  "final_title" => "Настройки"
 );
-echo render($twig_data);
+$twig_template = "default";
+if (isset(domain_array()["template"]))
+{
+  $twig_template = domain_array()["template"];
+}
+$twig_filesystem = TWIG_TEMPLATES_DIR."/$twig_template";
+echo render($twig_data, $twig_filesystem, $twig_template);
 exit();

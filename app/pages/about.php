@@ -1,4 +1,6 @@
 <?php
+echo "<!-- SCRIPT START ".benchmark()." -->";
+
 $pdo = pdo();
 
 /*echo "  <!-- START ".$topic->post_id." ".benchmark()." -->\n";

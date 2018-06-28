@@ -82,7 +82,7 @@ if (isset($_POST["submit"]))
 			update_topic_ord($row['parent_topic']);
 		}
 		
-		$pdo->query("DELETE FROM notifications WHERE post_id = '$post_id'");
+		$pdo->query("DELETE FROM notifications WHERE topic_id = '$post_id' OR post_id = '$post_id'");
     
     $ban_id = 0;
     
@@ -147,11 +147,10 @@ if (isset($_POST["submit"]))
           
 					$post_object->delete_files();
 					
-					//$query = $pdo->prepare("DELETE FROM posts WHERE post_id = :post_id");
           $query = $pdo->prepare("UPDATE posts SET deleted_by = '$mod_id' WHERE post_id = :post_id");
 					$query->execute(["post_id" => $row['post_id']]);
-					
-					$pdo->query("DELETE FROM notifications WHERE post_id = '{$row['post_id']}'");
+
+          $pdo->query("DELETE FROM notifications WHERE topic_id = '{$row['post_id']}' OR post_id = '{$row['post_id']}'");
 					
 					if ($row['parent_topic'] != 0) // reply to topic
 					{
@@ -192,9 +191,24 @@ if (isset($_POST["submit"]))
 
 ob_start();
 ?>
-<h1>Удалить пост</h1>
+
+<script>
+$(document).on("change", "#checkbox2", function()
+{
+  if(this.checked)
+  {
+    $("#checkbox1").prop("checked", true);
+    $("#reason").val("вайп");
+  }
+});
+</script>
+
+<h2>Удалить пост</h2>
 
 <content>
+  <post_with_replies>
+  <post>
+  
   <div>
     <?php if (isset($message)) {echo str_replace("\n", "<br>", $message);} ?>
   </div>
@@ -209,17 +223,48 @@ ob_start();
       <input type="checkbox" name="ban_user" id="checkbox1"> <label for="checkbox1">Ban user?</label>
       <br>
 		<input type="checkbox" name="delete_all_by_user" id="checkbox2"> <label for="checkbox2">Delete all recent posts by this user (anti-WIPE only) <b>+Permaban</b></label>
-      <br> Причина бана:
-      <!--<input type="text" name="reason" placeholder="Reason" value="вайп">-->
-      <select name="reason">
-				<option value="" selected="selected">- укажите причину -</option>
-        <option value="вайп">вайп</option>
-        <option value="спам">спам</option>
-        <option value="порно">порно</option>
-        <option value="флуд">флуд</option>
-      </select>
-      <br> Номер поста:  <input type="text" name="post_id" value="<?php if(isset($_POST["n"])) {echo intval($_POST["n"]);} ?>"> <input type="submit" name="submit" value="Отправить">
-  </form>
+      <br>
+
+      <table>
+        <tr>
+          <td style="padding-right:5px;">
+            Причина бана:
+          </td>
+          
+          <td>
+            <select name="reason" id="reason">
+              <option value="" selected="selected">- укажите причину -</option>
+              <option value="вайп">вайп</option>
+              <option value="спам">спам</option>
+              <option value="порно">порно</option>
+              <option value="флуд">флуд</option>
+            </select>
+          </td>
+        </tr>
+        
+        <tr>
+          <td>
+            Номер поста:
+          </td>
+          
+          <td>
+            <input type="text" name="post_id" value="<?php if(isset($_POST["n"])) {echo intval($_POST["n"]);} ?>" style="width:100%;">
+          </td>
+        </tr>
+        
+        <tr>
+          <td colspan="2">
+            <div align="center">
+              <input type="submit" name="submit" value="Отправить">
+            </div>
+          </td>
+        </tr>
+      </table>
+    
+    </form>
+    
+    </post>
+    </post_with_replies>
 </content>
 <?php
 $html = ob_get_contents();

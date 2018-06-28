@@ -6,6 +6,10 @@ if (!is_mod())
 
 $pdo = pdo();
 
+echo "Cloudflare country: ";
+echo cloudflare_country_code();
+echo "<br>";
+
 //$pdo->query("INSERT INTO forums (forum_id, title) VALUES ('', 'Советы и вопросы')");
 //$pdo->query("UPDATE forums SET title = 'Старый дизайн' WHERE forum_id = 14");
 ?>
@@ -42,7 +46,7 @@ while ($i < 24)
 	echo ": ";
 	
 	// count number of posts here
-	$posts = Post::find("$begin < creation_time AND creation_time < $end");
+	$posts = Post::find("$begin < creation_time AND creation_time < $end AND deleted_by = 0");
 	
 	echo count($posts);
 	

@@ -5,18 +5,30 @@ function microtime_from_start ()
 	echo microtime(true)-$start_microtime;
 }
 
+$default_cache_time = 24*60*60;
 $memcached = new Memcached();
 $memcached->addServer("localhost", 11211);
 
-function cache_set ($name, $data, $time = 24*60*60) // time in seconds
+function cache_set ($name, $data, $time = DEFAULT_CACHE_TIME) // time in seconds
 {
  global $memcached;
  return $memcached->set($name, $data, $time);
 }
 
-function cache_get ($name)
+function cache_get ($name, $func = null, $time = DEFAULT_CACHE_TIME)
 {
  global $memcached;
+ if ($func != null) // if func is defined
+ {
+   if (!is_callable($func)) // check it's really a function
+   {
+     trigger_error("\$func must be callable!", E_USER_ERROR);
+   }
+   if ($memcached->get($name) === false) // if there is no data in cache
+   {
+    cache_set($name, $func(), $time); // call the function and write the new data
+   }
+ } 
  return $memcached->get($name);
 }
 
@@ -69,11 +81,44 @@ function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM, $twig_t
 
 	$twig_data["js_file"]  = last_file(ROOT_DIR."/public/assets/".$twig_template."_*.js");
 	$twig_data["css_file"] = last_file(ROOT_DIR."/public/assets/".$twig_template."_*.css");
+  $twig_data["domain"] = $GLOBALS["domain"];
+  
+  if (isset(domain_array()["template"])) // only show pages which are optimized for this domain
+  {
+    if ($twig_template != domain_array()["template"])
+    {
+      header("HTTP/1.0 404 Not Found");
+	    die("404 Not Found");
+    }
+  }
+  
+  require_session();
+  $twig_data["is_mod"] = is_mod();
+  if (is_admin_fake(session_id()))
+  {
+    $twig_data["is_mod"] = true;
+  }
+  
+  $notifications = Notification::find
+  (
+    [
+      "is_read = 0 AND
+      (
+        recipient_session_id = :recipient_session_id: OR 
+        recipient_user_id = :recipient_user_id:
+      )",
+      "bind" =>
+      [
+        "recipient_session_id" => session_id(),
+        "recipient_user_id" => user_id()
+      ]
+    ]
+  );
+  $twig_data["notifications_unread"] = count($notifications);
 
 	require_once ROOT_DIR."/vendor/autoload.php";
 	$loader = new Twig_Loader_Filesystem($twig_filesystem);
 	$twig = new Twig_Environment($loader);
-	//return $twig->render("$twig_template.html", $twig_data);
 	return $twig->render(TWIG_HTML_FILENAME, $twig_data);
 }
 
@@ -113,7 +158,7 @@ function markup ($text, $data = null)
 		{
 			if ($forum_template == "default") // normal link
 			{
-				$text = preg_replace("/(^|\n)&gt;&gt;([0-9]+)/i",
+				$text = preg_replace("/(.?)&gt;&gt;([0-9]+)/i",
 														 //"$1<a onclick='link_click(".$data["parent_topic"].",$2);'>Ответ на пост #$2</a>",
 														 //"$1<a onclick='link_click(".$data["parent_topic"].",$2);' class='preview'>Ответ на пост #$2</a>",
 														 
@@ -149,6 +194,7 @@ function markup ($text, $data = null)
 	
 		$text = preg_replace("/&lt;s&gt;([^\n]*?)&lt;\/s&gt;/iu", "<strike>$1</strike>", $text); // strike
 		$text = preg_replace("/\[s\]([^\n]*?)\[\/s\]/iu", "<strike>$1</strike>", $text);
+    $text = preg_replace("/\^([^\n]*?)\^/iu", "<strike>$1</strike>", $text);
 	
 		$text = preg_replace("/%%([^\n]*?)%%/iu", "<span class='spoiler'>$1</span>", $text); // spoiler
 		$text = preg_replace("/\[spoiler\]([^\n]*?)\[\/spoiler\]/iu", "<span class='spoiler'>$1</span>", $text);
@@ -191,13 +237,24 @@ function user_id ()
 	}
 }
 
-function is_mod ()
+function is_mod () // should be replaced by is_admin() globally
 {
 	if (user_id() == 1)
 	{
 			return true;
 	}
+	else
+	{
+			return false;
+	}
+}
 
+function is_admin ()
+{
+  if (user_id() == 1)
+	{
+			return true;
+	}
 	else
 	{
 			return false;
@@ -284,61 +341,6 @@ function how_long_ago ($age)
     return "более часа назад";
 }
 
-function time_format ($timestamp) // NOT currently in use
-{	
-	$postDate = date( "d.m.Y", $timestamp );
-	$postMinute = date( "H:i", $timestamp );
-
-	if ($postDate == date('d.m.Y')) {
-		// Если сегодня
-		$datetime = 'Cегодня в ';
-	} else if ($postDate == date('d.m.Y', strtotime('-1 day'))) {
-		// Если вчера
-		$datetime = 'Вчера в ';
-	} else {
-		// Иначе
-		$fulldate = date( "j # Y в ", $timestamp );
-		$mon = date("m", $timestamp );
-		switch( $mon ) {
-			case  1: { $mon='Января'; } break;
-			case  2: { $mon='Февраля'; } break;
-			case  3: { $mon='Марта'; } break;
-			case  4: { $mon='Апреля'; } break;
-			case  5: { $mon='Мая'; } break;
-			case  6: { $mon='Июня'; } break;
-			case  7: { $mon='Июля'; } break;
-			case  8: { $mon='Августа'; } break;
-			case  9: { $mon='Сентября'; } break;
-			case 10: { $mon='Октября'; } break;
-			case 11: { $mon='Ноября'; } break;
-			case 12: { $mon='Декабря'; } break;
-		}
-		$datetime = str_replace( '#', $mon, $fulldate );
-	}
-	return $datetime.$postMinute;
-}
-
-/*function ru_month ($timestamp)
-{
-  $month = date("m", $timestamp );
-  switch( $month )
-  {
-    case  1: { $month='Января'; } break;
-    case  2: { $month='Февраля'; } break;
-    case  3: { $month='Марта'; } break;
-    case  4: { $month='Апреля'; } break;
-    case  5: { $month='Мая'; } break;
-    case  6: { $month='Июня'; } break;
-    case  7: { $month='Июля'; } break;
-    case  8: { $month='Августа'; } break;
-    case  9: { $month='Сентября'; } break;
-    case 10: { $month='Октября'; } break;
-    case 11: { $month='Ноября'; } break;
-    case 12: { $month='Декабря'; } break;
-  }
-  return $month;
-}*/
-
 function ru_M ($timestamp)
 {
   $month = date("m", $timestamp );
@@ -349,7 +351,7 @@ function ru_M ($timestamp)
     case  3: { $month='мар'; } break;
     case  4: { $month='апр'; } break;
     case  5: { $month='мая'; } break;
-    case  6: { $month='иню'; } break;
+    case  6: { $month='июн'; } break;
     case  7: { $month='июл'; } break;
     case  8: { $month='авг'; } break;
     case  9: { $month='сен'; } break;
@@ -381,5 +383,95 @@ function smart_time_format ($timestamp) // currently in use
   }
   $t = date("H:i", $timestamp);
 	return $dm.$y." в ".$t;
+}
+
+function is_using_cloudflare ()
+{
+  if (isset($GLOBALS["cloudflare"]))
+  {
+    return true;
+  }
+  
+  else
+  {
+    return false;
+  }
+}
+
+function cloudflare_country_code ()
+{
+  if (!is_using_cloudflare())
+  {
+    return false;
+  }
+  
+  if (isset($_SERVER["HTTP_CF_IPCOUNTRY"]))
+  {
+    return $_SERVER["HTTP_CF_IPCOUNTRY"];
+  }
+}
+
+function is_same_author ($post_x, $post_y)
+{
+  if
+  (
+    (
+      $post_x->session_id == $post_y->session_id and
+      $post_x->session_id != "none" and
+      $post_x->session_id != ""
+    )
+    or
+    (
+      $post_x->user_id == $post_y->user_id and
+      $post_x->user_id != -1 and
+      $post_x->user_id != 0
+    )
+  )
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+function is_admin_fake ($session_id)
+{
+  $session_id_md5 = md5($session_id);
+  if (in_array($session_id_md5, ADMIN_FAKES_MD5))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+function require_if_exists ($path)
+{
+  if (file_exists($path))
+  {
+    require($path);
+  }
+}
+
+function domain_array()
+{
+  return $GLOBALS["domains"][$GLOBALS["domain"]];
+}
+
+function full_forum_href ($forum_slug, $forum_id)
+{
+  if (isset($forum_slug) and $forum_slug != "" and $forum_slug != false)
+  {
+    $url = "/$forum_slug/";
+  }
+  else
+  {
+    $url = "/forum/".$forum_id;
+  }
+  return $url;
 }
 ?>

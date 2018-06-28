@@ -4,18 +4,23 @@ node_modules/
 public/phpmyadmin/
 public/test.php
 public/phpinfo.php
+public/alt-logo-1.png
+public/favicon
+public/logos
 
 /websocket
 /webpack
 
-app/controllers/NotificationController.php
 app/controllers/DummyController.php
 app/views
 app/pages/notifications*
+app/library/ip_check.php
+app/templates/witcher3
 
 # Contains passwords:
+app/config/passwords/
 app/config/config.php
-app/config/txt.php
+app/config/domains.php
 
 # Contains sensitive data:
 sessions/

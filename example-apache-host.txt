@@ -17,7 +17,7 @@
 	SSLCertificateChainFile /var/ssl/discou.rs/ca_bundle.crt
 </VirtualHost>
 
-<VirtualHost *:80> # HTTP
+<VirtualHost _default_:80> # HTTP
 	Protocols h2 http/1.1
 	ServerName discou.rs
 	ServerAlias www.discou.rs

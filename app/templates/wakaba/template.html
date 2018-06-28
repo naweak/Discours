@@ -91,7 +91,12 @@ Reply:
           {% endif %}
           
           <blockquote>
-            <p>{{ reply.text_formatted|raw }}</p>
+            <p>
+            {% if reply.reply_to %}
+            <a href=''>&gt;&gt;{{ reply.reply_to_post_id }}</a><br>
+            {% endif %}
+            {{ reply.text_formatted|raw }}
+            </p>
           </blockquote>
         </td>
       </tr>
@@ -254,7 +259,15 @@ Main page block:
     -->
     [<a href="/" target="_top">Главная</a>] - [<a href="/old/">old</a>] - [<a href="/vg/">vg</a> / <a href="/po/">po</a> / <a href="/a/">a</a> / <a href="/hw/">hw</a> / <a href="/ph/">ph</a> / <a href="/d/">d</a>]
   </div>
-		<a href="/old/" style="text-decoration:none;"><div class="logo">{{ forum_title }}</div></a>
+    
+  <div class="notifications" style="float:right;">
+    {% if notifications_unread > 0 %}
+      <a href="/notifications">{{ notifications_unread }}&nbsp;уведомлений</a>
+    {% endif %}
+  </div>
+    
+  <div class="logo"><a href="/old/" style="text-decoration:none;">{{ forum_title }}</a></div>
+    
   <hr />
 
   {% if posting_error %}

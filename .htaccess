@@ -3,65 +3,80 @@ RewriteEngine on
 # Prohibit directory listing (/public/files and others):
 Options -Indexes
 
-RewriteRule ^$ /forum/?forum=1&%{QUERY_STRING}
+RewriteRule ^$ /forum/&%{QUERY_STRING}
 
 RewriteRule ^test/res/([a-z0-9._-]+).html$ /forum/?topic=$1&%{QUERY_STRING} [L]
 RewriteRule ^old/res/([a-z0-9._-]+).html$ /forum/?topic=$1&%{QUERY_STRING} [L]
 
+RewriteRule ^topic/([a-z0-9._-]+)/$ https://discou.rs/topic/$1 [R,L]
 RewriteRule ^topic/([a-z0-9._-]+)$ /forum/?topic=$1&%{QUERY_STRING}
+
+RewriteRule ^forum/([a-z0-9._-]+)/$ https://discou.rs/forum/$1 [R,L]
 RewriteRule ^forum/([a-z0-9._-]+)$ /forum/?forum=$1&%{QUERY_STRING}
 
+RewriteRule ^(chat)/$ https://discou.rs/$1 [R,L]
+RewriteRule ^chat$ /forum/?topic=44203&%{QUERY_STRING}
+
 ################################################
-RewriteRule ^(b)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(b)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(b)/$ /page?page=$1
 ################################################
-RewriteRule ^(ph)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(ph)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(ph)/$ /forum/?forum=2&%{QUERY_STRING}
 
-RewriteRule ^(test)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(test)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(test)/$ /forum/?forum=3&%{QUERY_STRING}
 
-RewriteRule ^(po)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(po)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(po)/$ /forum/?forum=4&%{QUERY_STRING}
 
-RewriteRule ^(vg)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(vg)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(vg)/$ /forum/?forum=5&%{QUERY_STRING}
 
-RewriteRule ^(trash)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(trash)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(trash)/$ /forum/?forum=6&%{QUERY_STRING}
 
-RewriteRule ^(hw)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(hw)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(hw)/$ /forum/?forum=7&%{QUERY_STRING}
 
-RewriteRule ^(a|anime)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(a|anime)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(a|anime)/$ /forum/?forum=8&%{QUERY_STRING}
 
-RewriteRule ^(blog)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(blog)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(blog)/$ /forum/?forum=9&%{QUERY_STRING}
 
-RewriteRule ^(d)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(d)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(d)/$ /forum/?forum=10&%{QUERY_STRING}
 
-RewriteRule ^(changelog)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(changelog)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(changelog)/$ /forum/?forum=11&%{QUERY_STRING}
 
-RewriteRule ^(1chan)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(1chan)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(1chan)/$ /forum/?forum=12&%{QUERY_STRING}
 
-RewriteRule ^(news)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(news)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(news)/$ /forum/?forum=13&%{QUERY_STRING}
 
-RewriteRule ^(old)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(old)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(old)/$ /forum/?forum=14&%{QUERY_STRING}
 
-RewriteRule ^(advice)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(advice)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(advice)/$ /forum/?forum=15&%{QUERY_STRING}
 
-RewriteRule ^(art)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(art)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(art)/$ /forum/?forum=16&%{QUERY_STRING}
 
-RewriteRule ^(hobby)$ https://disku.rs/$1/ [R,L]
+RewriteRule ^(hobby)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(hobby)/$ /forum/?forum=17&%{QUERY_STRING}
+
+RewriteRule ^(tech)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(tech)/$ /forum/?forum=18&%{QUERY_STRING}
+
+RewriteRule ^(msk)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(msk)/$ /forum/?slug=$1&%{QUERY_STRING}
+
+RewriteRule ^(spb)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(spb)/$ /forum/?slug=$1&%{QUERY_STRING}
 ################################################
 RewriteRule ^(login)$ /page?page=$1
 RewriteRule ^(delete)$ /page?page=$1
@@ -77,7 +92,11 @@ RewriteRule ^(modlog)$ /page?page=$1&%{QUERY_STRING}
 RewriteRule ^(faq)$ /page?page=$1
 RewriteRule ^(contact)$ /page?page=$1
 RewriteRule ^(developers)$ /page?page=$1
+RewriteRule ^(markup)$ /page?page=$1
 RewriteRule ^(why-us)$ /page?page=$1
+RewriteRule ^(why-no-porn)$ /page?page=$1
+RewriteRule ^(search)$ /page?page=$1
+
 RewriteRule ^(settings)$ /page?page=$1
 RewriteRule ^(stat)$ /page?page=$1
 RewriteRule ^(report)$ /page?page=$1
@@ -86,7 +105,7 @@ RewriteRule ^(my-topics)$ /page?page=$1
 RewriteRule ^(notifications1)$ /page?page=$1
 RewriteRule ^(notifications2)$ /page?page=$1
 RewriteRule ^(notifications3)$ /page?page=$1
-RewriteRule ^(notifications)$ /page?page=notifications3
+RewriteRule ^(notifications)$ /page?page=notifications-public
 
 RewriteRule ^(convert)$ /page?page=$1
 ########################

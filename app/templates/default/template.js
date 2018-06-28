@@ -25,26 +25,30 @@ $(document).ready(function ()
     {
       setInterval(function ()
       {
-        load_new_replies(topic_id, function (args)
+        // if not submitting any form (checking this to avoid highlighting my own replies)
+        if (!$("*").hasClass("is-loading"))
         {
-          console.log("Loaded new replies");
-          if (args.appended_replies > 0)
+          load_new_replies(topic_id, function (args) // load new replies
           {
-            if (document.hidden)
+            console.log("Loaded new replies");
+            if (args.appended_replies > 0)
             {
-              console.log("Window has no focus");
-              pageTitleNotification.on("Новый пост");
-            }
-            else
-            {
-              console.log("Window has focus");
-              setTimeout(function()
+              if (document.hidden)
               {
-                remove_highlight_from_new_replies();
-              }, 5000);
+                console.log("Window has no focus");
+                pageTitleNotification.on("Новый пост");
+              }
+              else
+              {
+                console.log("Window has focus");
+                setTimeout(function()
+                {
+                  remove_highlight_from_new_replies();
+                }, 5000);
+              }
             }
-          }
-        }, true);
+          }, true);
+        }
       }, 5000);
     }
 
@@ -90,44 +94,6 @@ $(document).ready(function ()
 		{
         var win = window.open(this.src, "_blank");
     });
-	
-		/*var inputs = document.querySelectorAll( '.inputfile' );
-		Array.prototype.forEach.call( inputs, function( input )
-		{
-			var label	 = input.nextElementSibling,
-				labelVal = label.innerHTML;
-
-			input.addEventListener( 'change', function( e )
-			{
-				var fileName = '';
-				if( this.files && this.files.length > 1 )
-					fileName = ( this.getAttribute( 'data-multiple-caption' ) || '' ).replace( '{count}', this.files.length );
-				else
-					fileName = e.target.value.split( '\\' ).pop();
-
-				if(fileName)
-				{
-					// label.innerHTML = fileName;
-					if (fileName.indexOf(".") > -1)
-					{
-						label.innerHTML = "<i class='fa fa-picture-o' aria-hidden='true'></i>" +
-							"&nbsp;" +
-							fileName.split('.').pop().toUpperCase() +
-							"-файл";
-					}
-					else
-					{
-						label.innerHTML = fileName;
-					}
-					label.style.fontWeight = "bold";
-				}
-				else
-				{
-					label.innerHTML = labelVal;
-					label.style.fontWeight = "normal";
-				}
-			});
-		});*/
   
     var input_file_label_html = $(".inputfile").next().html();
   
@@ -173,8 +139,6 @@ $(document).ready(function ()
         $("html, body").animate({scrollTop : $(document).height()}, scroll_speed);
     });
 	
-		bind_event_handlers();
-	
 		window.onscroll = function()
 		{
 			if (!topic_id)
@@ -186,7 +150,46 @@ $(document).ready(function ()
 				}
 			}
 		}
+    
+    if($("content.news").length)
+    {
+      hashCode = function(s)
+      {
+        return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);              
+      }
+      var news_id = hashCode($("content.news .message .message-body").html());
+      console.log("News_id: "+news_id);
+      if ($.cookie("news_"+news_id) != "read")
+      {
+        $("content.news").css("display", "block");
+      }
+      $("content.news .message .message-header .delete").on("click tap", function()
+      {
+        if (is_admin)
+        {
+          alert("Admins cannot hide news.");
+          return 0;
+        }
+        $(this).parent().parent().hide();
+        $.cookie("news_"+news_id, "read");
+      });
+    }
+    
+    bind_event_handlers();
 });
+
+// BUG: document.ready is only invoked after all images are loaded
+
+/*$(window).on("load", function() // called after all the content is loaded?
+{
+  console.log("Content loaded");
+  
+  var hash = get_hash();
+	if (hash && $(window).width() < 700) // if adaptive
+	{
+		scroll_to_reply(hash); // scroll to highlight_reply after all the content is loaded
+	}
+});*/
 
 window.reply_form_selector     = "textarea.reply";
 window.new_topic_form_selector = "textarea.new_post";
@@ -846,10 +849,14 @@ function hamburger_click ()
 
 function scroll_to_reply (order_in_topic)
 {
-	$('html, body').animate
-	({
-		scrollTop: $("reply[order_in_topic='"+order_in_topic+"']").offset().top - $(".navbar").height() - 10
-	}, 1);
+  var reply = $("reply[order_in_topic='"+order_in_topic+"']");
+  if (reply.length)
+  {
+    $('html, body').animate
+    ({
+      scrollTop: reply.offset().top - $(".navbar").height() - 10
+    }, 1);
+  }
 }
 
 function highlight_reply (order_in_topic)
@@ -1381,3 +1388,6 @@ $.scrollLock = (function scrollLockClosure()
   })();
 
 }(window, document));
+
+/*! jquery.cookie v1.4.1 | MIT */
+!function(a){"function"==typeof define&&define.amd?define(["jquery"],a):"object"==typeof exports?a(require("jquery")):a(jQuery)}(function(a){function b(a){return h.raw?a:encodeURIComponent(a)}function c(a){return h.raw?a:decodeURIComponent(a)}function d(a){return b(h.json?JSON.stringify(a):String(a))}function e(a){0===a.indexOf('"')&&(a=a.slice(1,-1).replace(/\\"/g,'"').replace(/\\\\/g,"\\"));try{return a=decodeURIComponent(a.replace(g," ")),h.json?JSON.parse(a):a}catch(b){}}function f(b,c){var d=h.raw?b:e(b);return a.isFunction(c)?c(d):d}var g=/\+/g,h=a.cookie=function(e,g,i){if(void 0!==g&&!a.isFunction(g)){if(i=a.extend({},h.defaults,i),"number"==typeof i.expires){var j=i.expires,k=i.expires=new Date;k.setTime(+k+864e5*j)}return document.cookie=[b(e),"=",d(g),i.expires?"; expires="+i.expires.toUTCString():"",i.path?"; path="+i.path:"",i.domain?"; domain="+i.domain:"",i.secure?"; secure":""].join("")}for(var l=e?void 0:{},m=document.cookie?document.cookie.split("; "):[],n=0,o=m.length;o>n;n++){var p=m[n].split("="),q=c(p.shift()),r=p.join("=");if(e&&e===q){l=f(r,g);break}e||void 0===(r=f(r))||(l[q]=r)}return l};h.defaults={},a.removeCookie=function(b,c){return void 0===a.cookie(b)?!1:(a.cookie(b,"",a.extend({},c,{expires:-1})),!a.cookie(b))}});

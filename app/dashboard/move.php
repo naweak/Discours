@@ -47,6 +47,8 @@ if (isset($_POST["submit"]))
   
   if (!$error)
   {
+    cache_delete("forum_".$post_obj->forum_id); // delete page cache
+    
     $query = $pdo->prepare("UPDATE posts SET forum_id = :forum_id WHERE post_id = :post_id OR parent_topic = :post_id");
     $query->execute(["forum_id" => $new_forum_id, "post_id" => $post_id]);
     
@@ -66,7 +68,7 @@ if (isset($_POST["submit"]))
 			$modlog->save();
     }
 
-		cache_delete("forum_".$post_obj->forum_id); // delete page cache
+		cache_delete("forum_".$new_forum_id); // delete page cache
   }
 }
 

@@ -11,4 +11,5 @@ class Forum extends Model
 
 	public $forum_id;
 	public $title;
+  public $slug;
 }
