@@ -29,9 +29,10 @@ temp_file_css=$(mktemp)
 browserify app/templates/${template}/bundle.js | uglifyjs >> $temp_file_js
 uglifyjs app/templates/${template}/template.js >> $temp_file_js
 
-uglifycss app/templates/${template}/bulma.css >> $temp_file_css
-uglifycss app/templates/${template}/template.css >> $temp_file_css
-uglifycss app/templates/${template}/arimo.css >> $temp_file_css
+#uglifycss app/templates/${template}/bulma.css >> $temp_file_css
+#uglifycss app/templates/${template}/template.css >> $temp_file_css
+#uglifycss app/templates/${template}/arimo.css >> $temp_file_css
+lessc app/templates/${template}/bundle.less >> $temp_file_css
 
 cp $temp_file_js public/assets/${template}_${timestamp}.js
 cp $temp_file_css public/assets/${template}_${timestamp}.css

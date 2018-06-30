@@ -233,6 +233,12 @@ a
 	text-decoration: none;
 }
 
+a.reply_to_my_post
+{
+  /*color: #ff460f;*/
+  font-weight: bold;
+}
+
 a.description
 {
 	display: block;

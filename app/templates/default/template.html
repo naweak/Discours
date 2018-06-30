@@ -61,27 +61,11 @@ Topic with replies:
             <div class="dots"></div>
           </div>
         </div>
-        <!--<div class="dropdown-menu dots-dropdown-menu" role="menu">
-          <div class="dropdown-content">
-            <a class="dropdown-item" href="/report" target="_blank">
-              Пожаловаться
-            </a>
-            {% if is_mod %}
-              {# different code for topic and reply! #}
-              <a class="dropdown-item move_post" onclick="move_post({{ topic.post_id }});">
-                На свалку
-              </a>
-              <a class="dropdown-item" style="color:red;" onclick="delete_post({{ topic.post_id }});">
-                Удалить
-              </a>
-            {% endif %}
-          </div>
-        </div>-->
       </div>
 
       <text>
         {% if topic.file_url %}
-        <a href="{{ topic.file_url }}" target="_blank">
+        <a href="{{ topic.file_url }}" data-lity>
           {% if topic.thumb_w and topic.thumb_h %}{% set style = ' style="width:'~topic.thumb_w~'px;height:'~topic.thumb_h~'px;"' %}{% endif %}
           <img class="topic_thumb" src="{{ topic.thumb_url }}" alt="Картинка"{{ style|raw }}>
         </a>
@@ -92,12 +76,6 @@ Topic with replies:
         <br>
         {% endif %}
         
-        <!--<div style="float:right;width:20px;height:20px;background:red;"></div>-->
-        
-        <!--{% if topic.title_formatted is not empty %}
-          <b>{{ topic.title_formatted}}</b><br>
-        {% endif %}-->
-        
         {% if topic.text_preview %}
           <div class="text_formatted" style="display:none;">{{ topic.text_formatted|raw }}</div>
           <span class="text_preview">{{ topic.text_preview|raw }}</span>
@@ -106,9 +84,6 @@ Topic with replies:
           {{ topic.text_formatted|raw }}
         {% endif %}
       </text>
-      
-      <!--<div class="post_footnote" style="float:right;">
-      </div>-->
       
       <form method="post" action="/delete" id="{{ topic.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
       <form method="post" action="/move"   id="{{ topic.post_id }}_move_form"   target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
@@ -240,19 +215,15 @@ Reply:
     
     <text>
       {% if reply.file_url %}
-        <a href="{{ reply.file_url }}" target="_blank">
+        <a href="{{ reply.file_url }}" data-lity>
           {% if reply.thumb_w and reply.thumb_h %}{% set style = ' style="width:'~reply.thumb_w~'px;height:'~reply.thumb_h~'px;"' %}{% endif %}
           <img class="reply_thumb" src="{{ reply.thumb_url }}" alt="Картинка"{{ style|raw }}>
         </a>
       {% endif %}
       
       {% if reply.reply_to %}
-        <a class="preview" href="/topic/{{ reply.parent_topic }}#{{ reply.reply_to }}" topic_id="{{ reply.parent_topic }}" order_in_topic='{{ reply.reply_to }}'>
-          {% if reply.reply_to_my_post %}
-            <b>Ответ на ваш пост #{{ reply.reply_to }}</b>
-          {% else %}
-            Ответ на пост #{{ reply.reply_to }}
-          {% endif %}
+        <a class="preview {% if reply.reply_to_my_post %}reply_to_my_post{% endif %}" href="/topic/{{ reply.parent_topic }}#{{ reply.reply_to }}" topic_id="{{ reply.parent_topic }}" order_in_topic='{{ reply.reply_to }}'>
+          Ответ на пост #{{ reply.reply_to }}
         </a>
         <br>
       {% endif %}
@@ -536,6 +507,9 @@ Main page block:
                    </a>
                    <a class="navbar-item" href="/changelog/">
                    Changelog
+                   </a>
+                   <a class="navbar-item" href="/cloud" target="_blank">
+                   Google Диск
                    </a>
                    <a class="navbar-item" href="https://t.me/discoursanonymous" target="_blank">
                    Telegram

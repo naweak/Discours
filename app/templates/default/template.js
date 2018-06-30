@@ -1,8 +1,7 @@
-var topic_userfile_html = '<i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>';
-
 $(document).ready(function ()
 {
     window.percent_gradient_color = "#efefef";
+    window.topic_userfile_html = '<i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>';
   
     /*window.onerror = function (msg, url, linenumber)
     {
@@ -174,6 +173,12 @@ $(document).ready(function ()
         $.cookie("news_"+news_id, "read");
       });
     }
+  
+    /*lightbox.option
+    ({
+      'resizeDuration': 20000,
+      'wrapAround': true
+    });*/
     
     bind_event_handlers();
 });
@@ -490,7 +495,7 @@ function bind_event_handlers ()
 			{
 				// clear form
 				$(form).find("[name='userfile']").val("");
-				$(form).find(".attach_button").html(topic_userfile_html);
+				$(form).find(".attach_button").html(window.topic_userfile_html);
         $(form).find(".attach_button").css("font-weight", "normal");
 				var textarea = $(form).find("textarea");
 				//$(textarea).blur();
@@ -568,7 +573,7 @@ function clear_new_topic_form ()
 	$(".new_topic_form").find(".picrandom").val($(".new_topic_form").find(".picrandom option:first").val());
 	$(".new_topic_form").find("[name='userfile']").val("");
 	
-	$(".new_topic_form").find("[for='topic_userfile']").html(topic_userfile_html);
+	$(".new_topic_form").find("[for='topic_userfile']").html(window.topic_userfile_html);
   $(".new_topic_form").find("[for='topic_userfile']").css("font-weight", "normal");
 	
 	// resize textarea
@@ -1109,285 +1114,3 @@ $(window).resize(function ()
 {
 	on_resize();
 });
-
-/* Plugins: */
-
-$.fn.selectRange = function(start, end)
-{
-    return this.each(function() {
-        if (this.setSelectionRange) {
-            this.focus();
-            this.setSelectionRange(start, end);
-        } else if (this.createTextRange) {
-            var range = this.createTextRange();
-            range.collapse(true);
-            range.moveEnd('character', end);
-            range.moveStart('character', start);
-            range.select();
-        }
-    });
-};
-
-$.scrollLock = (function scrollLockClosure()
-{
-    'use strict';
-
-    var $html      = $( 'html' ),
-        // State: unlocked by default
-        locked     = false,
-        // State: scroll to revert to
-        prevScroll = {
-            scrollLeft : $( window ).scrollLeft(),
-            scrollTop  : $( window ).scrollTop()
-        },
-        // State: styles to revert to
-        prevStyles = {},
-        lockStyles = {
-            'overflow-y' : 'scroll',
-            'position'   : 'fixed',
-            'width'      : '100%'
-        };
-
-    // Instantiate cache in case someone tries to unlock before locking
-    saveStyles();
-
-    // Save context's inline styles in cache
-    function saveStyles() {
-        var styleAttr = $html.attr( 'style' ),
-            styleStrs = [],
-            styleHash = {};
-
-        if( !styleAttr ){
-            return;
-        }
-
-        styleStrs = styleAttr.split( /;\s/ );
-
-        $.each( styleStrs, function serializeStyleProp( styleString ){
-            if( !styleString ) {
-                return;
-            }
-
-            var keyValue = styleString.split( /\s:\s/ );
-
-            if( keyValue.length < 2 ) {
-                return;
-            }
-
-            styleHash[ keyValue[ 0 ] ] = keyValue[ 1 ];
-        } );
-
-        $.extend( prevStyles, styleHash );
-    }
-
-    function lock() {
-        var appliedLock = {};
-
-        // Duplicate execution will break DOM statefulness
-        if( locked ) {
-            return;
-        }
-
-        // Save scroll state...
-        prevScroll = {
-            scrollLeft : $( window ).scrollLeft(),
-            scrollTop  : $( window ).scrollTop()
-        };
-
-        // ...and styles
-        saveStyles();
-
-        // Compose our applied CSS
-        $.extend( appliedLock, lockStyles, {
-            // And apply scroll state as styles
-            'left' : - prevScroll.scrollLeft + 'px',
-            'top'  : - prevScroll.scrollTop  + 'px'
-        } );
-
-        // Then lock styles...
-        $html.css( appliedLock );
-
-        // ...and scroll state
-        $( window )
-            .scrollLeft( 0 )
-            .scrollTop( 0 );
-
-        locked = true;
-    }
-
-    function unlock() {
-        // Duplicate execution will break DOM statefulness
-        if( !locked ) {
-            return;
-        }
-
-        // Revert styles
-        $html.attr( 'style', $( '<x>' ).css( prevStyles ).attr( 'style' ) || '' );
-
-        // Revert scroll values
-        $( window )
-            .scrollLeft( prevScroll.scrollLeft )
-            .scrollTop(  prevScroll.scrollTop );
-
-        locked = false;
-    }
-
-    return function scrollLock( on ) {
-        // If an argument is passed, lock or unlock depending on truthiness
-        if( arguments.length ) {
-            if( on ) {
-                lock();
-            }
-            else {
-                unlock();
-            }
-        }
-        // Otherwise, toggle
-        else {
-            if( locked ){
-                unlock();
-            }
-            else {
-                lock();
-            }
-        }
-    };
-}());
-
-(function($, specialEventName) {
-  'use strict';
-
-  /**
-   * Native event names for creating custom one.
-   *
-   * @type {Object}
-   */
-  var nativeEvent = Object.create(null);
-  /**
-   * Get current time.
-   *
-   * @return {Number}
-   */
-  var getTime = function() {
-    return new Date().getTime();
-  };
-
-  nativeEvent.original = 'click';
-
-  if ('ontouchstart' in document) {
-    nativeEvent.start = 'touchstart';
-    nativeEvent.end = 'touchend';
-  } else {
-    nativeEvent.start = 'mousedown';
-    nativeEvent.end = 'mouseup';
-  }
-
-  $.event.special[specialEventName] = {
-    setup: function(data, namespaces, eventHandle) {
-      var $element = $(this);
-      var eventData = {};
-
-      $element
-        // Remove all handlers that were set for an original event.
-        .off(nativeEvent.original)
-        // Prevent default actions.
-        .on(nativeEvent.original, false)
-        // Split original event by two different and collect an information
-        // on every phase.
-        .on(nativeEvent.start + ' ' + nativeEvent.end, function(event) {
-          // Handle the event system of touchscreen devices.
-          eventData.event = event.originalEvent.changedTouches ? event.originalEvent.changedTouches[0] : event;
-        })
-        .on(nativeEvent.start, function(event) {
-          // Stop execution if an event is simulated.
-          if (event.which && event.which !== 1) {
-            return;
-          }
-
-          eventData.target = event.target;
-          eventData.pageX = eventData.event.pageX;
-          eventData.pageY = eventData.event.pageY;
-          eventData.time = getTime();
-        })
-        .on(nativeEvent.end, function(event) {
-          // Compare properties from two phases.
-          if (
-            // The target should be the same.
-            eventData.target === event.target &&
-            // Time between first and last phases should be less than 750 ms.
-            getTime() - eventData.time < 750 &&
-            // Coordinates, when event ends, should be the same as they were
-            // on start.
-            (
-              eventData.pageX === eventData.event.pageX &&
-              eventData.pageY === eventData.event.pageY
-            )
-          ) {
-            event.type = specialEventName;
-            event.pageX = eventData.event.pageX;
-            event.pageY = eventData.event.pageY;
-
-            eventHandle.call(this, event);
-
-            // If an event wasn't prevented then execute original actions.
-            if (!event.isDefaultPrevented()) {
-              $element
-                // Remove prevention of default actions.
-                .off(nativeEvent.original)
-                // Bring the action.
-                .trigger(nativeEvent.original);
-            }
-          }
-        });
-    },
-
-    remove: function() {
-      $(this).off(nativeEvent.start + ' ' + nativeEvent.end);
-    }
-  };
-
-  $.fn[specialEventName] = function(fn) {
-    return this[fn ? 'on' : 'trigger'](specialEventName, fn);
-  };
-})(jQuery, 'tap');
-
-(function(window, document){
-
-  window.pageTitleNotification = (function () {
-
-      var config = {
-          currentTitle: null,
-          interval: null
-      };
-
-      var on = function (notificationText, intervalSpeed) {
-          if (!config.interval) {
-              config.currentTitle = document.title;
-              config.interval = window.setInterval(function() {
-                  document.title = (config.currentTitle === document.title)
-                      ? notificationText
-                      : config.currentTitle;
-              }, (intervalSpeed) ? intervalSpeed : 1000);
-          }
-      };
-
-      var off = function () {
-          window.clearInterval(config.interval);
-          config.interval = null;
-          if (config.currentTitle !== null)
-          {
-            document.title = config.currentTitle;
-          }
-      };
-
-      return {
-          on: on,
-          off: off
-      };
-
-  })();
-
-}(window, document));
-
-/*! jquery.cookie v1.4.1 | MIT */
-!function(a){"function"==typeof define&&define.amd?define(["jquery"],a):"object"==typeof exports?a(require("jquery")):a(jQuery)}(function(a){function b(a){return h.raw?a:encodeURIComponent(a)}function c(a){return h.raw?a:decodeURIComponent(a)}function d(a){return b(h.json?JSON.stringify(a):String(a))}function e(a){0===a.indexOf('"')&&(a=a.slice(1,-1).replace(/\\"/g,'"').replace(/\\\\/g,"\\"));try{return a=decodeURIComponent(a.replace(g," ")),h.json?JSON.parse(a):a}catch(b){}}function f(b,c){var d=h.raw?b:e(b);return a.isFunction(c)?c(d):d}var g=/\+/g,h=a.cookie=function(e,g,i){if(void 0!==g&&!a.isFunction(g)){if(i=a.extend({},h.defaults,i),"number"==typeof i.expires){var j=i.expires,k=i.expires=new Date;k.setTime(+k+864e5*j)}return document.cookie=[b(e),"=",d(g),i.expires?"; expires="+i.expires.toUTCString():"",i.path?"; path="+i.path:"",i.domain?"; domain="+i.domain:"",i.secure?"; secure":""].join("")}for(var l=e?void 0:{},m=document.cookie?document.cookie.split("; "):[],n=0,o=m.length;o>n;n++){var p=m[n].split("="),q=c(p.shift()),r=p.join("=");if(e&&e===q){l=f(r,g);break}e||void 0===(r=f(r))||(l[q]=r)}return l};h.defaults={},a.removeCookie=function(b,c){return void 0===a.cookie(b)?!1:(a.cookie(b,"",a.extend({},c,{expires:-1})),!a.cookie(b))}});

@@ -102,15 +102,13 @@ RewriteRule ^(stat)$ /page?page=$1
 RewriteRule ^(report)$ /page?page=$1
 RewriteRule ^(my-topics)$ /page?page=$1
 
-RewriteRule ^(notifications1)$ /page?page=$1
-RewriteRule ^(notifications2)$ /page?page=$1
-RewriteRule ^(notifications3)$ /page?page=$1
-RewriteRule ^(notifications)$ /page?page=notifications-public
+RewriteRule ^(notifications)$ /page?page=$1
 
 RewriteRule ^(convert)$ /page?page=$1
 ########################
 
 Redirect /github https://github.com/DiscoursProject/Discours
+Redirect /cloud https://drive.google.com/drive/folders/1m1vAvOcXDJc_yvNaMqjZ122M7c0qa4AM
 
 <IfModule mod_rewrite.c>
     RewriteEngine on

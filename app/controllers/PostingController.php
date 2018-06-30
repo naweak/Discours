@@ -221,17 +221,6 @@ class PostingController extends Controller
       if ($GLOBALS["new_reply_to_post_id"])
       {
         $new_reply_to_post_id = $GLOBALS["new_reply_to_post_id"]; // "global" command does not work by some reason
-        
-        
-        
-        
-        
-        
-        //$this->error("xxx: $new_reply_to_post_id");
-        
-        
-        
-        
         if ($parent_topic) // if replying to topic
         {
           if ($parent_topic_object->post_id != $new_reply_to_post_id) // if not replying to OP-post
@@ -263,7 +252,7 @@ class PostingController extends Controller
 				$this->error("Тема не найдена!");
 			}
       
-      $last_reply = Post::findFirst
+      $last_reply_object = Post::findFirst
       (
       [
         "ip = :ip: AND parent_topic != 0",
@@ -275,14 +264,19 @@ class PostingController extends Controller
       ]
       );
 			
-			if ($last_reply)
+			if ($last_reply_object)
 			{
-				$last_reply_age = $time - $last_reply->creation_time;
+				$last_reply_age = $time - $last_reply_object->creation_time;
 
 				if ($last_reply_age < $reply_delay)
 				{
-					$this->error("Вы отвечаете в темы слишком часто!");
+					$this->error("Вы отвечаете в темы слишком часто.");
 				}
+        
+        if ($last_reply_object->text == $text and $last_reply_age < 60)
+        {
+          $this->error("Вы уже публиковали это сообщение.");
+        }
 			}
 		}
 		
@@ -318,11 +312,11 @@ class PostingController extends Controller
       $posts = Post::find
       (
       [
-        "ip = :ip: AND (:time: - creation_time < $n)",
+        //"ip = :ip: AND (:time: - creation_time < $n)",
+        "ip = :ip: AND creation_time > ".(time() - $n),
         "bind" =>
         [
           "ip" => $ip,
-          "time" => time(),
         ],
         "order" => "post_id DESC"
       ]
@@ -333,14 +327,12 @@ class PostingController extends Controller
     
     $hourly_limit = 100; // max posts per hour per IP
     
-    $a = benchmark();
     if (posts_by_ip_in_the_last_n_seconds($ip, 60*60) > $hourly_limit)
     {
       $this->error("С вашего IP было опубликовано больше $hourly_limit постов за последний час. В связи с непрекращающимися вайпами нам пришлось ввести ограничение на публикацию большого числа постов. Просим извинения за доставленные неудобства и надеемся на понимание. Для снятия защиты пожалуйста обратитесь в Telegram (@zefirov) или по адресу: https://discou.rs/contact");
     }
-    $b = benchmark();
     
-    $this->comment .= "Posts_by_ip_in_the_last_n_seconds took " . ($b - $a) . " to execute";
+    //$this->comment .= "Posts_by_ip_in_the_last_n_seconds took " . ($b - $a) . " to execute";
     /* END ANTI-WIPE */
 		
 		$topic_replies = Post::find

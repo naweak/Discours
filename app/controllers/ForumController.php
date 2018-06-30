@@ -150,39 +150,7 @@ class ForumController extends Controller
     
     function assign_post_properties (&$post) // highlight my own posts, replies to my posts, etc.
     {
-      // This is also an option, but takes too much time (usually 0.01-0.03 seconds)
-      /*$post_id = $post["post_id"];
-      
-      echo "<!-- X: ".benchmark()."-->\n";
-      $post_session_id = cache_get("post_{$post_id}_session_id",
-      function () use ($post_id)
-      {
-        $post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $post_id]]);
-        return $post_object->session_id;
-      });
-      echo "<!-- Y: ".benchmark()."-->\n";
-      
-      $post_user_id = cache_get("post_{$post_id}_user_id",
-      function () use ($post_id)
-      {
-        $post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $post_id]]);
-        return $post_object->user_id;
-      });
-      
-      if (user_id())
-      {
-        if (user_id() == $post_user_id)
-        {
-          $post["my_post"] = true;
-        }
-      }
-      
-      if ($post_session_id == session_id())
-      {
-        $post["my_post"] = true;
-      }*/
-      
-      if ($post["session_id"] == session_id())
+      /*if ($post["session_id"] == session_id())
       {
         $post["my_post"] = true;
       }
@@ -193,7 +161,7 @@ class ForumController extends Controller
         {
           $post["my_post"] = true;
         }
-      }
+      }*/
       
       if ($post["reply_to_session_id"] == session_id())
       {

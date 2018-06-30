@@ -116,6 +116,32 @@ class Post extends Model
     $parent_topic = $this->parent_topic;
     $reply_to = $this->reply_to;
     
+    // Reply_to post_id:
+    $reply_to_post_id = cache_get("reply_to_post_id_".$this->parent_topic."_".$this->reply_to,
+    function () use ($parent_topic, $reply_to)
+    {
+      $reply_to_object = Post::findFirst
+      (
+      [
+        "parent_topic = :parent_topic: AND order_in_topic = :order_in_topic:",
+        "bind" =>
+        [
+          "parent_topic" => $parent_topic,
+          "order_in_topic" => $reply_to
+        ]
+      ]
+      );
+      if ($reply_to_object)
+      {
+        return $reply_to_object->post_id;
+      }
+      else
+      {
+        return false;
+      }
+    });
+    
+    // Reply_to session_id:
     $reply_to_session_id = cache_get("post_{$post_id}_reply_to_session_id",
     function () use ($parent_topic, $reply_to)
     {
@@ -134,6 +160,7 @@ class Post extends Model
      }
     });
     
+    // Reply_to user_id:
     $reply_to_user_id = cache_get("xpxpost_{$post_id}_reply_to_user_id",
     function () use ($parent_topic, $reply_to)
     {
@@ -159,11 +186,12 @@ class Post extends Model
 			"forum_id" => $this->forum_id,
 			"order_in_topic" => $this->order_in_topic,
       "reply_to" => $this->reply_to,
+      "reply_to_post_id" => $reply_to_post_id,
 			"time_formatted" => smart_time_format($this->creation_time),
 			"name_formatted" => anti_xss($this->name),
 			"text_formatted" => $text_formatted,
       
-      "author_formatted" => anti_xss("Аноним"), // Анонимно
+      "author_formatted" => anti_xss("Анонимно"), // Анонимно
       //"author_href" => "https://ru.wikipedia.org/wiki/Rozen_Maiden",
       //"author_icon_href" => "/LJuser.svg",
       
@@ -178,30 +206,6 @@ class Post extends Model
 			"thumb_w" => $this->thumb_w,
 			"thumb_h" => $this->thumb_h,
 		);
-    
-    $reply_to_post_id = cache_get("reply_to_post_id_".$this->parent_topic."_".$this->reply_to, function ()
-    {
-      $reply_to_object = Post::findFirst
-      (
-      [
-        "parent_topic = :parent_topic: AND order_in_topic = :order_in_topic:",
-        "bind" =>
-        [
-          "parent_topic" => $this->parent_topic,
-          "order_in_topic" => $this->reply_to
-        ]
-      ]
-      );
-      if ($reply_to_object)
-      {
-        return $reply_to_object->post_id;
-      }
-      else
-      {
-        return false;
-      }
-    });
-    $output["reply_to_post_id"] = $reply_to_post_id;
 		
 		if (isset($forum_title))
 		{
