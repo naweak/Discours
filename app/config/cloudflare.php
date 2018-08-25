@@ -60,7 +60,14 @@ function ip_in_range($ip, $range) {
     } 
 }
 
-if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) // CloudFlare
+$mod_cloudflare_enabled = in_array("mod_cloudflare", apache_get_modules());
+
+if // CloudFlare
+(
+  isset($_SERVER["HTTP_CF_CONNECTING_IP"])
+  and
+  !$mod_cloudflare_enabled
+)
 {
   // Verify whether it's really CloudFlare
   

@@ -3,6 +3,18 @@
 # View error log:
 # sudo tail /var/log/apache2/error.log
 
+# View access log:
+# sudo tail /var/log/apache2/access.log
+
+# Enable redirect logging in .htaccess:
+# LogLevel alert rewrite:trace3
+
+# Flush MemCached:
+# echo "flush_all" | nc -q 2 localhost 11211
+
+# Restart MemCached:
+# /etc/init.d/memcached restart
+
 # Commit to GitHub:
 # git status
 # git add .

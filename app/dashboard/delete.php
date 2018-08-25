@@ -18,18 +18,19 @@ if (isset($_POST["submit"]))
   
   $post_id = intval($_POST["post_id"]);
   $ban_user = isset($_POST["ban_user"]);
+  $reason = $_POST["reason"];
         
   if ($post_id == 0)
   {
     $error = "Post_id cannot be empty!"; // if empty, all topics are deleted
   }
   
-  if ($_POST["reason"] == "")
+  if ($reason == "")
   {
     $error = "Reason cannot be empty!";
   }
 	
-	if (mb_strlen($_POST["reason"]) > 256)
+	if (mb_strlen($reason) > 256)
 	{
 		$error = "Reason too long!";
 	}
@@ -56,12 +57,12 @@ if (isset($_POST["submit"]))
   {
     $mod_id = $_SESSION["user_id"];
     $timestamp = time();
+    $message = "";
     
 		$row = $pdo->query("SELECT * FROM posts WHERE post_id = '$post_id'")->fetch();
 		
 		$text_sample = $row["text"];
     $ip = $row["ip"];
-    $reason = $_POST["reason"];
 		
 		$post_object = Post::findFirst(["post_id = :post_id:", "bind" => ["post_id" => $post_id]]);
 		if (!$post_object)
@@ -69,13 +70,15 @@ if (isset($_POST["submit"]))
 			die("Post not found!");
 		}
     
+    $message .= "Post user_id: ".$post_object->user_id."<br>";
+    
 		$post_object->delete_files();
   
 		//$query = $pdo->prepare("DELETE FROM posts WHERE post_id = '$post_id' OR parent_topic = '$post_id'");
     $query = $pdo->prepare("UPDATE posts SET deleted_by = '$mod_id' WHERE post_id = '$post_id' OR parent_topic = '$post_id'");
 		$query->execute();
 		$affected_rows = $query->rowCount();
-    $message = "Post deleted rows: $affected_rows<br>";
+    $message .= "Post deleted rows: $affected_rows<br>";
 		
 		if ($row['parent_topic'] != 0) // deleted a reply to a topic
 		{
@@ -101,6 +104,7 @@ if (isset($_POST["submit"]))
 				$ban_id = $pdo->lastInsertId();
         
         $message .= "USER BANNED until ".date(DATE_ATOM, $expires)."!\n";
+        write_log("$ip BANNED until ".date(DATE_ATOM, $expires));
 				
 				if ($_SESSION["user_id"] == 1)
 				{
@@ -120,6 +124,7 @@ if (isset($_POST["submit"]))
 			$modlog->save();
 			
 			cache_delete("forum_".$post_object->forum_id); // delete page cache
+      cache_delete("forum_1"); // delete main page cache
     }
     
     // Delete all by this user
@@ -179,6 +184,7 @@ if (isset($_POST["submit"]))
 					$modlog->save();
 					
 					cache_delete("forum_".$row['forum_id']); // delete page cache
+          cache_delete("forum_1"); // delete main page cache
           
           $wipe_deleted_rows++;
         }
@@ -193,13 +199,16 @@ ob_start();
 ?>
 
 <script>
-$(document).on("change", "#checkbox2", function()
+document.addEventListener('DOMContentLoaded', function()
 {
-  if(this.checked)
+  $(document).on("change", "#checkbox2", function()
   {
-    $("#checkbox1").prop("checked", true);
-    $("#reason").val("вайп");
-  }
+    if(this.checked)
+    {
+      $("#checkbox1").prop("checked", true);
+      $("#reason").val("вайп");
+    }
+  });
 });
 </script>
 
@@ -237,6 +246,7 @@ $(document).on("change", "#checkbox2", function()
               <option value="вайп">вайп</option>
               <option value="спам">спам</option>
               <option value="порно">порно</option>
+              <option value="шок-контент">шок-контент</option>
               <option value="флуд">флуд</option>
             </select>
           </td>

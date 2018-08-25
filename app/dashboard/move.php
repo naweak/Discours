@@ -1,12 +1,12 @@
 <?php
 require_bundle();
 
-$pdo = pdo();
-
-if (!is_mod())
+if (!is_admin())
 {
   die("Restricted");
 }
+
+$pdo = pdo();
 
 if (isset($_POST["submit"]))
 {

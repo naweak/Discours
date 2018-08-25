@@ -5,6 +5,9 @@ ob_start();
 
 <content>
   
+    <h2>Четкие изображения</h2>
+    Уменьшенные копии картинок на Дискурсе почти не сжимаются, благодаря чему выглядят замечательно!
+  
     <h2>Открытость</h2>
     Исходный код полностью открыт и находится в свободном доступе на <a href="https://github.com/DiscoursProject/Discours" target="_blank">гитхабе</a>.
 
@@ -28,7 +31,7 @@ ob_end_clean();
 $twig_data = array
 (
   "html" => $html,
-  "title" => "Почему мы?"
+  "final_title" => "Почему мы?"
 );
 
 echo render($twig_data);

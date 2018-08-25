@@ -55,7 +55,8 @@ $di['db'] = function() {
         "password" => MYSQL_PASSWORD,
         "dbname"   => MYSQL_DATABASE,
         "options" => array(
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
+            //PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES ".MYSQL_ENCODING
         )
     ));
 };

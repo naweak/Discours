@@ -12,7 +12,7 @@ class Post extends Model
 	
 	public function beforeValidation()
   {
-		foreach (["deleted_by", "user_id", "session_id", "title", "name", "file_url", "thumb_url", "thumb_w", "thumb_h", "reply_to"] as $element)
+		foreach (["deleted_by", "user_id", "session_id", "display_username", "title", "name", "flag", "file_url", "thumb_url", "thumb_w", "thumb_h", "reply_to"] as $element)
 		{
 			if ($this->$element == NULL)
 			{
@@ -189,6 +189,7 @@ class Post extends Model
       "reply_to_post_id" => $reply_to_post_id,
 			"time_formatted" => smart_time_format($this->creation_time),
 			"name_formatted" => anti_xss($this->name),
+      "flag" => anti_xss($this->flag),
 			"text_formatted" => $text_formatted,
       
       "author_formatted" => anti_xss("Анонимно"), // Анонимно
@@ -196,16 +197,51 @@ class Post extends Model
       //"author_icon_href" => "/LJuser.svg",
       
       "session_id" => $this->session_id, // will be hidden in assign_post_properties() function
-      "user_id" => $this->user_id,
-      "reply_to_session_id" => $reply_to_session_id,
-      "reply_to_user_id" => $reply_to_user_id,
+      "user_id" => $this->user_id, //  this also is hidden in assign_post_properties()
+      "reply_to_session_id" => $reply_to_session_id, // and this
+      "reply_to_user_id" => $reply_to_user_id, // and also this
 			
 			"file_url"  => $this->file_url,
 			"thumb_url" => $this->thumb_url,
+      "file_name" => basename($this->file_url),
 			
 			"thumb_w" => $this->thumb_w,
 			"thumb_h" => $this->thumb_h,
 		);
+    
+    if ($this->display_username)
+    {
+      $author_user_id = $this->user_id;
+      $author_username = cache_get("user_id_".$this->user_id."_username",
+      function () use ($author_user_id)
+      {
+        $author_object = User::findFirst
+        (
+          [
+          "user_id = :user_id:",
+          "bind" => ["user_id" => $author_user_id]
+          ]
+        );
+        if ($author_object)
+        {
+          return $author_object->username;
+        }
+        else
+        {
+          return "user_not_found";
+        }
+      }
+      );
+      
+      $output["author_formatted"] = $author_username;
+      //$output["author_icon_href"] = "/lj-user.svg";
+      $output["is_anonymous"] = false;
+    }
+    
+    else
+    {
+      $output["is_anonymous"] = true;
+    }
 		
 		if (isset($forum_title))
 		{
@@ -284,12 +320,14 @@ class Post extends Model
   public $ip;
 	public $user_id;
 	public $session_id;
+  public $display_username;
   public $ord;
 	public $order_in_topic;
   public $reply_to;
   public $text;
   public $title;
   public $name;
+  public $flag;
 	public $file_url;
 	public $thumb_url;
 	public $thumb_w;

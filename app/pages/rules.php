@@ -31,9 +31,10 @@ p
 
   <p>
   <ol style="margin:none;font-weight:bold;list-style-position:inside;">
-    <li>Порно, гуро и прочий explicit content</li>
+    <li>Порно</li>
+    <li>Шок-контент</li>
     <li>Спам</li>
-    <li>Вайпы</li>
+    <li>Вайп</li>
     <li>Флуд</li>
   </ol>
   </p>
@@ -55,7 +56,7 @@ ob_end_clean();
 $twig_data = array
 (
   "html" => $html,
-  "title" => "Правила"
+  "final_title" => "Правила"
 );
 
 echo render($twig_data);

@@ -26,7 +26,9 @@ function cache_get ($name, $func = null, $time = DEFAULT_CACHE_TIME)
    }
    if ($memcached->get($name) === false) // if there is no data in cache
    {
-    cache_set($name, $func(), $time); // call the function and write the new data
+    $result = $func();
+    cache_set($name, $result, $time); // call the function and write the new data
+    return $result;
    }
  } 
  return $memcached->get($name);
@@ -56,7 +58,7 @@ function page_cache_delete ($name)
 	return @unlink(ROOT_DIR."/cache/".$name);
 }
 
-function pdo ($encoding = "utf8")
+function pdo ($encoding = MYSQL_ENCODING)
 {
 	try
 	{
@@ -93,29 +95,52 @@ function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM, $twig_t
   }
   
   require_session();
-  $twig_data["is_mod"] = is_mod();
+  $twig_data["is_admin"] = is_admin();
   if (is_admin_fake(session_id()))
   {
-    $twig_data["is_mod"] = true;
+    $twig_data["is_admin"] = true;
+  }
+  $twig_data["is_mod"] = $twig_data["is_admin"];
+  
+  if (user_id())
+  {
+    $twig_data["user_id"] = user_id();
+    $twig_data["username"] = username_from_session();
   }
   
-  $notifications = Notification::find
-  (
-    [
-      "is_read = 0 AND
-      (
-        recipient_session_id = :recipient_session_id: OR 
-        recipient_user_id = :recipient_user_id:
-      )",
-      "bind" =>
+  if (class_exists("Notification")) // sometimes error pages are rendered earlier than the Notification class is loaded
+  {
+    $notifications = Notification::find
+    (
       [
-        "recipient_session_id" => session_id(),
-        "recipient_user_id" => user_id()
+        "is_read = 0 AND
+        (
+          recipient_session_id = :recipient_session_id: OR 
+          recipient_user_id = :recipient_user_id:
+        )",
+        "bind" =>
+        [
+          "recipient_session_id" => session_id(),
+          "recipient_user_id" => user_id()
+        ]
       ]
-    ]
-  );
-  $twig_data["notifications_unread"] = count($notifications);
-
+    );
+    $twig_data["notifications_unread"] = count($notifications);
+  }
+  
+  if (function_exists("get_identity"))
+  {
+    $twig_data["identity"]    = get_identity();
+    $twig_data["identity_js"] = get_identity_js();
+  }
+  
+  if (is_json() and is_admin())
+  {
+    $twig_data["benchmark"] = benchmark();
+    header("Content-Type: application/json");
+    return json_encode($twig_data);
+  }
+    
 	require_once ROOT_DIR."/vendor/autoload.php";
 	$loader = new Twig_Loader_Filesystem($twig_filesystem);
 	$twig = new Twig_Environment($loader);
@@ -234,6 +259,21 @@ function user_id ()
 	else
 	{
 			return 0;
+	}
+}
+
+function username_from_session ()
+{
+  require_session();
+
+	if (isset($_SESSION["username"]))
+	{
+			return $_SESSION["username"];
+	}
+
+	else
+	{
+			return false;
 	}
 }
 
@@ -387,11 +427,20 @@ function smart_time_format ($timestamp) // currently in use
 
 function is_using_cloudflare ()
 {
-  if (isset($GLOBALS["cloudflare"]))
+  /*if (isset($GLOBALS["cloudflare"]))
   {
     return true;
   }
   
+  else
+  {
+    return false;
+  }*/
+  $mod_cloudflare_enabled = in_array("mod_cloudflare", apache_get_modules());
+  if ($mod_cloudflare_enabled)
+  {
+    return true;
+  }
   else
   {
     return false;
@@ -457,7 +506,7 @@ function require_if_exists ($path)
   }
 }
 
-function domain_array()
+function domain_array ()
 {
   return $GLOBALS["domains"][$GLOBALS["domain"]];
 }
@@ -473,5 +522,79 @@ function full_forum_href ($forum_slug, $forum_id)
     $url = "/forum/".$forum_id;
   }
   return $url;
+}
+
+function recaptcha ()
+{
+  echo "<div class='g-recaptcha' data-sitekey='".RECAPTCHA_PUBLIC_KEY."'></div>";
+}
+
+function check_recaptcha ($response = null, $secret = null)
+{
+  if ($response == null)
+  {
+    $response = $_POST["g-recaptcha-response"];
+  }
+  
+  if ($secret == null)
+  {
+    $secret = RECAPTCHA_PRIVATE_KEY;
+  }
+  
+  $url = 'https://www.google.com/recaptcha/api/siteverify';
+  $data = array
+  (
+    'secret' => $secret,
+    'response' => $_POST["g-recaptcha-response"]
+  );
+  $options = array
+  (
+    'http' => array
+    (
+      'method' => 'POST',
+      'content' => http_build_query($data)
+    )
+  );
+  $context = stream_context_create($options);
+  $verify = @file_get_contents($url, false, $context);
+  $captcha_result = json_decode($verify);
+
+  if (isset($captcha_result->success) and $captcha_result->success == true)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+function is_ip_verified ()
+{
+  return cache_get($GLOBALS["client_ip"]."_verified");
+}
+
+function get_client_ip ()
+{
+  return $GLOBALS["client_ip"];
+}
+
+function write_log ($params)
+{
+  $log_path = ROOT_DIR."/logs/log.txt";
+  @file_put_contents($log_path, "Y: ".date("d.m. H:i:s")." $params\n", FILE_APPEND | LOCK_EX);
+}
+
+function is_json ()
+{
+  if (isset($_GET["json"]))
+  {
+    return true;
+  }
+  
+  else
+  {
+    return false;
+  }
 }
 ?>

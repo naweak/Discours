@@ -3,10 +3,49 @@ require_bundle();
 
 $pdo = pdo();
 
-if (!is_mod())
+if (!is_admin())
 {
   die("Restricted");
 }
+
+function delete_wipe ()
+{
+  $pdo = pdo();
+  
+  $posts = Post::find
+  (
+    [
+      "order" => "creation_time DESC",
+      "limit" => 1000
+    ]
+  );
+  
+  foreach ($posts as $post)
+  {
+    echo $post->post_id . "<br>";
+    $text = $post->text;
+    $search = "FortSAGE";
+
+    //if (mb_strpos($text, $search))
+    if ($post->thumb_w == 111 and $post->thumb_h == 150)
+    {
+      echo "<span style='color:red;font-weight:bold;'>WIPE!</span><br>";
+      $post->delete_files();
+      $post->deleted_by = user_id();
+      $post->save();
+      
+      $pdo->query("DELETE FROM notifications WHERE topic_id = '".$post->post_id."' OR post_id = '".$post->post_id."'");
+      
+      $expires = strtotime("+10 years");
+			$query = $pdo->prepare("INSERT INTO bans (ip, expires) VALUES (:ip, :expires)");
+			$query->execute(["ip" => $post->ip, "expires" => $expires]);
+      
+      cache_delete("forum_".$post->forum_id); // delete page cache
+    }
+  }
+}
+
+//delete_wipe();
 
 /*$topic = Post::findFirst
 (

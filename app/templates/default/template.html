@@ -5,13 +5,15 @@ NoScript:
 #}
 {% block noscript %}
 {% if root is defined %}
-<noscript>
+<!--<noscript>
   <content>
-    <post_with_replies style="text-align:center; font-weight:bold;">
-      Ваш браузер не поддерживает JavaScript!
+    <post_with_replies>
+      <post style="text-align:center; font-weight:bold;">
+        Ваш браузер не поддерживает JavaScript
+      </post>
     </post_with_replies>
   </content>
-</noscript>
+</noscript>-->
 {% endif %}
 {% endblock %}
 {#
@@ -24,7 +26,7 @@ Topic with replies:
   <post_with_replies class="{{ topic.post_id }}" topic_id="{{ topic.post_id }}">
     <post style="position:relative;">
 
-      <div style="float:left;padding:0px;margin-top:-3px;margin-bottom:2px;font-size:0.85em;">
+      <div class="forum_title">
         <a href="{{ topic.forum_href }}">{{ topic.forum_title }}</a>
       </div>
 
@@ -89,17 +91,20 @@ Topic with replies:
       <form method="post" action="/move"   id="{{ topic.post_id }}_move_form"   target="_blank"><input type="hidden" name="n" value="{{ topic.post_id }}"></form>
       
       <div class="post_footnote topic_footnote">
+        {% if (invite_only and user_id) or (not invite_only) %}
         <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }});" class="answer_link">Ответить</a>
         <span style="color:#aaaaaa;">&#8729;</span>
+        {% endif %}
+        
         <span style="color:#aaaaaa;">
+          {% if topic.flag %}
+            {{ topic.flag }} <img class="flag" src="{% if file_host %}//{{ file_host }}{% endif %}/flags/{{ topic.flag|lower }}.png" title="Country: {{ topic.flag }}">
+          {% endif %}
           {% if topic.author_href %}<a href="{{ topic.author_href }}" target="_blank" style="opacity:1;">{% endif %}
             {% if topic.author_icon_href %}
               <img src="{{ topic.author_icon_href }}" width="10px" height="10px">
             {% endif %}
             {{ topic.author_formatted }}
-            {% if topic.my_post %}
-            (это вы)
-            {% endif %}
           {% if topic.author_href %}</a>{% endif %}
         </span>
         <span style="color:#aaaaaa;">&#8729;</span>
@@ -117,21 +122,24 @@ Topic with replies:
         </a>
       {% else %}
         {% if topic.replies|length %}
-        <div class="hr"></div>
+        <!--<div class="hr"></div>-->
+        <hr>
         {% endif %}
       {% endif %}
 
       {% for reply in topic.replies %}
         {{ block("reply") }}
         {% if loop.last == false %}
-        <div class="hr"></div>
+        <!--<div class="hr"></div>-->
+        <hr>
         {% endif %}
       {% endfor %}
     </replies>
     
-    <div class="hr"></div>
-    
-    <form class="reply_form" method="post" action="/posting/post">
+    {% if (invite_only and user_id) or (not invite_only) %}
+    <!--<div class="hr"></div>-->
+    <hr>
+    <form class="reply_form" method="post" action="/posting/post" enctype="multipart/form-data">
       <input type="hidden" name="forum_id" value="{{ topic.forum_id }}">
       
       <input type="hidden" name="parent_topic" value="{{ topic.post_id }}">
@@ -141,11 +149,21 @@ Topic with replies:
       <textarea_container>
         <input type="hidden" name="reply_to" value="">
         
+        <div class="error"></div>
+        
         <div class="reply_to_topic" style="display:none;">
-          <a href="javascript:;" onclick="change_reply_to({{ topic.post_id }}, 0);$('#text_{{ topic.post_id }}').focus();">Ответ на пост #<span class="reply_to"></span></a>
+          <a href="javascript:;" onclick="change_reply_to({{ topic.post_id }}, 0);$('#text_{{ topic.post_id }}').focus();">Ответ на пост <span class="reply_to"></span></a>
         </div>
 
+        <!--
         <textarea style="padding-top: 2px; font-size: 15px; line-height: 15px; height:20px; margin-bottom:0px;" class="reply" name="text" id="text_{{ topic.post_id }}" spellcheck="false" placeholder="Написать ответ..."></textarea>
+        -->
+
+        <noscript>
+          <textarea name="text" class="noscript_textarea" rows="1" placeholder="Написать ответ..."></textarea>
+        </noscript>
+        
+        <div class="contenteditable_textarea" contenteditable="true" id="text_{{ topic.post_id }}" spellcheck="false" placeholder="Написать ответ..."></div>
 
         <div class="controls" style="margin-top: 7px;">
           <div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
@@ -154,11 +172,17 @@ Topic with replies:
           </div>
             
           <div style="text-align:right;">
-            <input id="reply_submit_{{ topic.post_id }}" type="submit" class="inputfile">
+            <input id="reply_submit_{{ topic.post_id }}" type="submit" style="display:none;">
+            
+            {% if user_id %}
+            <div style="display:inline;margin-right:5px;">
+              <label style="cursor:pointer;"><input name="sign" type="checkbox" style="display:none;"> <abbr class="sign" title="Подписать пост своим логином">подпись</abbr></label>
+            </div>
+            {% endif %}
             
             {% if forum_id != 12 %}
             <div style="display:inline;margin-right:5px;">
-              <label style="cursor:pointer;"><input name="sage" type="checkbox" style="display:none;"> <abbr title="Не поднимать тему" style="text-decoration:none; -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;">sage</abbr></label>
+              <label style="cursor:pointer;"><input name="sage" type="checkbox" style="display:none;"> <abbr class="sage" title="Не поднимать тему">sage</abbr></label>
             </div>
             {% endif %}
             
@@ -167,6 +191,13 @@ Topic with replies:
         </div>
       </textarea_container>
     </form>
+    {% elseif topic_id %}
+    <!--<div class="hr"></div>-->
+    <hr>
+    <textarea_container>
+      Пожалуйста, <a href="/login">войдите</a> или <a href="/contact">запросите инвайт</a>, чтобы оставить комментарий.
+    </textarea_container>
+    {% endif %}
     
   </post_with_replies>
 {% endif %}
@@ -178,7 +209,7 @@ Reply:
 #}
 {% block reply %}
 {% if root is defined %}
-  <reply id="reply_{{ reply.post_id }}" order_in_topic="{{ reply.order_in_topic }}">
+  <reply id="reply_{{ reply.post_id }}" order_in_topic="{{ reply.order_in_topic }}" class="{% if reply.reply_to_my_post %}reply_to_my_post{% endif %} {% if reply.my_post %}my_post{% endif %}">
     
     <div class="modal">
       <div class="modal-background" onclick="$(this).parent().removeClass('is-active');$.scrollLock(false);"></div>
@@ -191,9 +222,6 @@ Reply:
             </a>
             {% if is_mod %}
               {# different code for topic and reply! #}
-              <a class="move_post" onclick="move_post({{ reply.post_id }});">
-                На свалку
-              </a>
               <a class="delete_post" onclick="delete_post({{ reply.post_id }});">
                 Удалить
               </a>
@@ -223,7 +251,7 @@ Reply:
       
       {% if reply.reply_to %}
         <a class="preview {% if reply.reply_to_my_post %}reply_to_my_post{% endif %}" href="/topic/{{ reply.parent_topic }}#{{ reply.reply_to }}" topic_id="{{ reply.parent_topic }}" order_in_topic='{{ reply.reply_to }}'>
-          Ответ на пост #{{ reply.reply_to }}
+          Ответ на пост {{ reply.reply_to }}
         </a>
         <br>
       {% endif %}
@@ -243,17 +271,20 @@ Reply:
     <div style="overflow:hidden;margin:0px;padding:0px;">
       
       <div class="post_footnote left" style="float:left;">
+        {% if (invite_only and user_id) or (not invite_only) %}
         <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ reply.order_in_topic }});" class="answer_link">Ответить</a>
         <span style="color:#aaaaaa;">&#8729;</span>
+        {% endif %}
+        
         <span style="color:#aaaaaa;">
+          {% if reply.flag %}
+            {{ reply.flag }} <img class="flag" src="{% if file_host %}//{{ file_host }}{% endif %}/flags/{{ reply.flag|lower }}.png" title="Country: {{ reply.flag }}">
+          {% endif %}
           {% if reply.author_href %}<a href="{{ reply.author_href }}" target="_blank" style="opacity:1;">{% endif %}
             {% if reply.author_icon_href %}
               <img src="{{ reply.author_icon_href }}" width="10px" height="10px">
             {% endif %}
             {{ reply.author_formatted }}
-            {% if reply.my_post %}
-              (это вы)
-            {% endif %}
           {% if reply.author_href %}</a>{% endif %}
         </span>
         <span style="color:#aaaaaa;">&#8729;</span>
@@ -261,7 +292,7 @@ Reply:
       </div>
       
       <div class="post_footnote right" style="float:right;">
-        <a href="/topic/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" class="order_in_topic_link">#{{ reply.order_in_topic }}</a>
+        <a href="/topic/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" class="order_in_topic_link">{{ reply.order_in_topic }}</a>
       </div>
       
     </div>
@@ -276,10 +307,11 @@ New topic form:
 {% block new_topic_form %}
 {% if (root is defined) %}
 {% if is_mod or (forum_id != 9 and forum_id != 11) %}
+  {% if (invite_only and user_id) or (not invite_only) %}
       <content class="new_topic_form_container">
       <div id="new_topic_form_error_message" style="margin-top:13px;"></div>
-      <post_with_replies style="padding:10px 10px 12px 10px; margin-top:15px;">
-        <form class="new_topic_form" method="post" action="/posting/post">
+      <post_with_replies class="new_topic_form">
+        <form class="new_topic_form" method="post" action="/posting/post" enctype="multipart/form-data">
           <input type="hidden" name="forum_id" value="{{ forum_id }}">
           
           <input type="hidden" name="parent_topic" value="">
@@ -297,13 +329,28 @@ New topic form:
             <label for="topic_userfile" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>
           </div>
           
-          <div style="text-align:right;">   
+          <div style="text-align:right;">
+            {% if user_id %}
+            <div style="display:inline;margin-right:5px;">
+              <label style="cursor:pointer;"><input name="sign" type="checkbox" style="display:none;"> <abbr class="sign" title="Подписать пост своим логином">подпись</abbr></label>
+            </div>
+            {% endif %}
+            
             <input id="topic_submit" type="submit" class="inputfile">
             <label for="topic_submit" class="inputfile_label button is-small">Новая тема</label>
           </div>
         </form>
       </post_with_replies>
       </content>
+  {% else %}
+    <content>
+      <post_with_replies>
+        <post style="text-align:center;">
+           Только зарегистрированные пользователи могут создавать темы из вашей страны.<br>Пожалуйста, <a href="/login">войдите</a> или <a href="/contact">запросите инвайт</a>.
+        </post>
+      </post_with_replies>
+    </content>
+  {% endif %}
 {% endif %}
 {% endif %}
 {% endblock %}
@@ -345,13 +392,30 @@ Main page block:
     
     <link rel="icon" type="image/png" sizes="96x96" href="//static.disku.rs/favicon/favicon-32x32-new.png">
     
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+    
+    {% if not is_admin %}
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-111575996-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-111575996-1');
+    </script>
+    {% endif %}
+    
     <script>
       var topic_id = {% if topic_id %}{{ topic_id }}{% else %}0{% endif %};
       var is_admin = {% if is_mod %}true{% else %}false{% endif %};
+                                                        
+      var identity = parseInt("{{ identity }}");
+      {{ identity_js|raw }}
     </script>
   </head>
 
-  <body>
+  <body class="{% if topic_id %}is_topic{% else %}is_forum{% endif %}">
     <script>
     function getCookie(name)
     {
@@ -365,9 +429,38 @@ Main page block:
       console.log("Night theme");
       document.body.className += ' ' + 'night';
     }
+      
+    function addStyleString (str)
+    {
+      var node = document.createElement("style");
+      node.innerHTML = str;
+      document.body.appendChild(node);
+    }
     </script>
     
-    {{ block("noscript") }}
+    <noscript>
+      <style>
+      .contenteditable_textarea
+      {
+        display: none;
+      }
+        
+      #up, #down
+      {
+        display: none;
+      }
+        
+      .dots
+      {
+        display: none;
+      }
+        
+      .controls
+      {
+        display: block;
+      }
+      </style>
+    </noscript>
     
     <div id="up">
       <div id="triangle-up"></div>
@@ -379,7 +472,9 @@ Main page block:
     <div id="mobile_menu" style="display:none;">
       <ol style="max-height:95%;overflow:auto;">
         <li style="font-weight:bold;"><a href="/">Главная</a></li>
-        <li style="font-weight:bold;"><a href="/chat">Чатик</a></li>
+        <li style="font-weight:bold;"><a href="/int/">International</a></li>
+        <li><a href="/chat#bottom">Ламповый чатик</a></li>
+        
         <li><a href="/vg/">Видеоигры</a></li>
         <li><a href="/po/">Политика</a></li>
         <li><a href="/a/">Аниме</a></li>
@@ -393,25 +488,27 @@ Main page block:
         <li><a href="/old/">Старый дизайн</a></li>
         <li><a href="/1chan/">1chan</a></li>
         
-        <li style="font-weight:bold; margin-top:1em;"><a href="/my-topics">Мои темы</a></li>
+        <li style="font-weight:bold; margin-top:1em;"><a href="/login">{% if not user_id %}Вход{% else %}Выход{% endif %}</a></li>
+        <li style="font-weight:bold;"><a href="/my-topics">Мои темы</a></li>
         <li style="font-weight:bold;"><a href="/settings">Настройки</a></li>
       </ol>
     </div>
     
     <nav class="navbar is-transparent">
        <div class="mobile_navbar_buttons">
-        {% if notifications_unread > 0 %}
+        <!--{% if notifications_unread > 0 %}
           <button class="button is-small is-outlined" style="font-weight:bold;" onclick="document.location='/notifications';">{{ notifications_unread }} увед.</button>
-        {% endif %}
+        {% endif %}-->
+         
+         <a class="navbar-item bell {% if notifications_unread == 0 %}no-notifications{% endif %}" href="/notifications" title="Уведомления">
+           <i class="fa fa-bell-o bell-icon {% if notifications_unread == 0 %}no-notifications{% endif %}"></i>
+           {% if notifications_unread > 0 %}
+           <span class="badge badge-danger">{{ notifications_unread }}</span>
+           {% endif %}
+         </a>
        </div>
       
-       <a class="brand_centered" href="/" style="
-       height: 22px;
-       width: calc((216 / 65) * 22px);
-
-       background-image: url('/cursive-logo-small.png');
-       background-size: 100% 100%;
-       "></a>
+       <a class="brand-centered" href="/">Дискурс</a>
       
        <div class="navbar-brand">
           <span id="nav-toggle" class="nav-toggle" onclick="hamburger_click();">
@@ -419,7 +516,7 @@ Main page block:
             <span></span>
             <span></span>
           </span>
-          <a class="navbar-item" href="/">
+          <a class="navbar-item navbar-item-brand" href="/">
             <div class="brand">Дискурс</div>
           </a>
        </div>
@@ -435,8 +532,8 @@ Main page block:
                    <a class="navbar-item" href="/">
                    <b>Главная</b>
                    </a>
-                   <a class="navbar-item" href="/chat">
-                   <b>Чатик</b>
+                   <a class="navbar-item" href="/int/">
+                   <b>International</b>
                    </a>
                    <a class="navbar-item" href="/vg/">
                    Видеоигры
@@ -447,41 +544,49 @@ Main page block:
                    <a class="navbar-item" href="/anime/">
                    Аниме
                    </a>
-                   <a class="navbar-item" href="/hw/">
+                  
+                   <a class="navbar-item" onclick="more_click(this);">
+                   ещё...
+                   </a>
+                   
+                   <a class="navbar-item hidden" href="/hw/">
                    Компьютерное железо
                    </a>
-                   <a class="navbar-item" href="/ph/">
+                   <a class="navbar-item hidden" href="/ph/">
                    Философия
                    </a>
-                   <a class="navbar-item" href="/d/">
+                   <a class="navbar-item hidden" href="/d/">
                    Отзывы и предложения
                    </a>
-                   <a class="navbar-item" href="/news/">
+                   <a class="navbar-item hidden" href="/news/">
                    Новости
                    </a>
-                   <a class="navbar-item" href="/advice/">
+                   <a class="navbar-item hidden" href="/advice/">
                    Советы и вопросы
                    </a>
-                   <a class="navbar-item" href="/art/">
+                   <a class="navbar-item hidden" href="/art/">
                    Искусство и медиа
                    </a>
-                   <a class="navbar-item" href="/hobby/">
+                   <a class="navbar-item hidden" href="/hobby/">
                    Хобби и увлечения
                    </a>
-                   <a class="navbar-item" href="/tech/">
+                   <a class="navbar-item hidden" href="/tech/">
                    Технологии
                    </a>
                   
                    <!-- -->
 
-                   <a class="navbar-item" href="/old/">
+                   <a class="navbar-item hidden" href="/old/">
                    Старый дизайн
                    </a>
-                   <a class="navbar-item" href="/1chan/">
+                   <a class="navbar-item hidden" href="/1chan/">
                    1chan
                    </a>
-                   <a class="navbar-item" href="/trash/">
+                   <a class="navbar-item hidden" href="/trash/">
                    Свалка
+                   </a>
+                   <a class="navbar-item hidden" href="/chat#bottom">
+                   Ламповый чатик
                    </a>
                 </div>
              </div>
@@ -521,25 +626,46 @@ Main page block:
              </div>
              <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link is-active">
-                Аккаунт
+                Профиль
                 </a>
                 <div class="navbar-dropdown is-boxed">
+                   <a class="navbar-item" href="/login">
+                   {% if not user_id %}Вход{% else %}Выход{% endif %}
+                   </a>
                    <a class="navbar-item" href="/my-topics">
                    Мои темы
                    </a>
                    <a class="navbar-item" href="/settings">
                    Настройки
                    </a>
+                   <a class="navbar-item" onclick="quick_load();">
+                   Уведомления
+                   </a>
                 </div>
              </div>
           </div>
          
           <div class="navbar-end">
-            {% if notifications_unread > 0 %}
+            <!--{% if notifications_unread > 0 %}
             <a class="navbar-item" href="/notifications">
               <b>{{ notifications_unread }} новых уведомлений</b>
             </a>
-            {% endif %}
+            {% endif %}-->
+            
+            <a class="navbar-item username">
+              {% if username %}
+                {{ username }}
+              {% else%}
+                аноним
+              {% endif %}
+            </a>
+            
+            <a class="navbar-item bell {% if notifications_unread == 0 %}no-notifications{% endif %}" href="/notifications" title="Уведомления">
+              <i class="fa fa-bell-o bell-icon {% if notifications_unread == 0 %}no-notifications{% endif %}"></i>
+              {% if notifications_unread > 0 %}
+              <span class="badge badge-danger">{{ notifications_unread }}</span>
+              {% endif %}
+            </a>
           </div>
        </div>
     </nav>
@@ -548,8 +674,8 @@ Main page block:
         <h2><a href="{{ forum_href }}" style="color:inherit;text-decoration:none;">{{ forum_title }}</a></h2>
       {% endif %}
     
-      {% if forum_id %}
-      <!--<content class="news" style="display:none;">
+      {% if forum_id and false %}
+      <content class="news" style="display:none;">
         <article class="message is-info" style="overflow: hidden;">
           <div class="message-header">
             <p>
@@ -561,10 +687,12 @@ Main page block:
             Наконец-то <a href="/topic/42909" target="_blank" style="font-weight:bold;text-decoration:none;">доделаны</a> уведомления.
           </div>
         </article>
-      </content>-->
+      </content>
       {% endif %}
+    
+      {{ block("noscript") }}
         
-      {% if not topic_id and not display_new_topic_form and not html %}
+      {% if not topic_id and not html %}
     
         {% if forum_id == 6 %}
         <content>
@@ -589,22 +717,7 @@ Main page block:
     
       {{ html|raw }}
     
-      {% if posting_error %}
-        <content>
-          <post_with_replies>
-            <post>
-              <div style="text-align:center;color:red;">{{ posting_error }}</div>
-
-              {% if declined_text %}
-                Ваш пост:<br>
-                {{ declined_text|raw }}
-              {% endif %}
-            </post>
-          </post_with_replies>
-        </content>
-      {% endif %}
-    
-      {% if display_new_topic_form or (html == false and topic_id == false) %}
+      {% if html == false and topic_id == false %}
         {{ block("new_topic_form") }}
       {% endif %}
     
@@ -612,16 +725,11 @@ Main page block:
         <content id="topics">
         {% for topic in topics %}
           {{ block("topic_with_replies") }}
+          {% if false %}
+          <hr class="mobile" style="display:none;">
+          {% endif %}
         {% endfor %}
         </content>
-    
-        {% if topic_id %}
-        <!-- in topic -->
-        <!--<input type="button" id="load_new_replies" value="Загрузить новые посты" onclick="load_new_replies_click(this);">-->
-        <!--
-        <label id="load_new_replies" class="inputfile_label submit_button button is-small is-outlined" onclick="load_new_replies_click(this);">Загрузить новые посты</label>
-        -->
-        {% endif %}
     
         {% if topics|length == default_limit and not topic_id %}
         <!-- on forum page -->
@@ -635,9 +743,11 @@ Main page block:
         {% endif %}
       {% endif %}
     
+      <a name="bottom" id="bottom"></a>
+    
       <footer>
         <div>Произведено командой Дискурса. Будем рады <a href="https://discou.rs/d/" target="_blank">отзывам</a>.</div>
-        From discou.rs with love!
+        <!--From discou.rs with love!-->
       </footer>
     
       <script>

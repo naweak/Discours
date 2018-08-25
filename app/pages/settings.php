@@ -50,16 +50,19 @@ function set_theme (theme)
 <?php
 $html = ob_get_contents();
 ob_end_clean();
+
 $twig_data = array
 (
   "html" => $html,
   "final_title" => "Настройки"
 );
+
 $twig_template = "default";
 if (isset(domain_array()["template"]))
 {
   $twig_template = domain_array()["template"];
 }
+
 $twig_filesystem = TWIG_TEMPLATES_DIR."/$twig_template";
 echo render($twig_data, $twig_filesystem, $twig_template);
-exit();
+?>

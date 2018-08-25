@@ -7,22 +7,30 @@ public/test.php
 public/phpinfo.php
 public/favicon
 public/logos
+/app/dashboard/crawler.php
 
 /websocket
 /webpack
 
 app/controllers/DummyController.php
 app/views
-app/library/ip_check.php
-app/templates/witcher3
+app/config/check_ip.php
+app/config/challenge.php
+app/config/invite_only.php
+app/templates/test
 
 # Contains passwords:
 app/config/passwords/
 app/config/config.php
 app/config/domains.php
+app/config/tor.txt
+app/config/proxy.txt
 
 # Contains sensitive data:
 sessions/
+
+# Logs
+logs/
 
 # Compiled assets:
 public/assets/

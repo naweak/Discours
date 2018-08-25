@@ -5,8 +5,8 @@ Options -Indexes
 
 RewriteRule ^$ /forum/&%{QUERY_STRING}
 
-RewriteRule ^test/res/([a-z0-9._-]+).html$ /forum/?topic=$1&%{QUERY_STRING} [L]
-RewriteRule ^old/res/([a-z0-9._-]+).html$ /forum/?topic=$1&%{QUERY_STRING} [L]
+# RewriteRule ^test/res/([a-z0-9._-]+).html$ /forum/?topic=$1&%{QUERY_STRING} [L]
+# RewriteRule ^old/res/([a-z0-9._-]+).html$ /forum/?topic=$1&%{QUERY_STRING} [L]
 
 RewriteRule ^topic/([a-z0-9._-]+)/$ https://discou.rs/topic/$1 [R,L]
 RewriteRule ^topic/([a-z0-9._-]+)$ /forum/?topic=$1&%{QUERY_STRING}
@@ -15,75 +15,107 @@ RewriteRule ^forum/([a-z0-9._-]+)/$ https://discou.rs/forum/$1 [R,L]
 RewriteRule ^forum/([a-z0-9._-]+)$ /forum/?forum=$1&%{QUERY_STRING}
 
 RewriteRule ^(chat)/$ https://discou.rs/$1 [R,L]
-RewriteRule ^chat$ /forum/?topic=44203&%{QUERY_STRING}
+RewriteRule ^chat$ /forum/?topic=53117&%{QUERY_STRING}
 
 ################################################
-RewriteRule ^(b)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(b)/$ /page?page=$1
+
+# Wakaba-style:
+
+RewriteCond %{HTTP_HOST} ^test.discou.rs$
+RewriteRule ^(b)$ https://test.discou.rs/$1/ [R,L]
+RewriteCond %{HTTP_HOST} ^test.discou.rs$
+RewriteRule ^(b)/$ /forum/?slug=$1&%{QUERY_STRING}
+
+RewriteCond %{HTTP_HOST} ^test.discou.rs$
+RewriteRule ^(all)$ https://test.discou.rs/$1/ [R,L]
+RewriteCond %{HTTP_HOST} ^test.discou.rs$
+RewriteRule ^(all)/$ /forum/?slug=b&%{QUERY_STRING}
+
+RewriteCond %{HTTP_HOST} ^test.discou.rs$
+RewriteRule ^([a-z0-9._-]+)/res/([a-z0-9._-]+).html$ /forum/?topic=$2&%{QUERY_STRING} [L]
+
+RewriteCond %{HTTP_HOST} ^test.discou.rs$
+RewriteRule ^res/([a-z0-9._-]+).html$ /b/res/$1.html [R,L]
+
 ################################################
+
+RewriteRule ^(b)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(b)/$ / [R,L]
+
+################################################
+
 RewriteRule ^(ph)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(ph)/$ /forum/?forum=2&%{QUERY_STRING}
+RewriteRule ^(ph)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(test)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(test)/$ /forum/?forum=3&%{QUERY_STRING}
+RewriteRule ^(test)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(po)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(po)/$ /forum/?forum=4&%{QUERY_STRING}
+RewriteRule ^(po)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(vg)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(vg)/$ /forum/?forum=5&%{QUERY_STRING}
+RewriteRule ^(vg)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(trash)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(trash)/$ /forum/?forum=6&%{QUERY_STRING}
+RewriteRule ^(trash)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(hw)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(hw)/$ /forum/?forum=7&%{QUERY_STRING}
+RewriteRule ^(hw)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(a|anime)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(a|anime)/$ /forum/?forum=8&%{QUERY_STRING}
+RewriteRule ^(a|anime)/$ /forum/?slug=a&%{QUERY_STRING}
 
 RewriteRule ^(blog)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(blog)/$ /forum/?forum=9&%{QUERY_STRING}
+RewriteRule ^(blog)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(d)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(d)/$ /forum/?forum=10&%{QUERY_STRING}
+RewriteRule ^(d)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(changelog)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(changelog)/$ /forum/?forum=11&%{QUERY_STRING}
+RewriteRule ^(changelog)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(1chan)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(1chan)/$ /forum/?forum=12&%{QUERY_STRING}
+RewriteRule ^(1chan)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(news)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(news)/$ /forum/?forum=13&%{QUERY_STRING}
+RewriteRule ^(news)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(old)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(old)/$ /forum/?forum=14&%{QUERY_STRING}
+RewriteRule ^(old)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(advice)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(advice)/$ /forum/?forum=15&%{QUERY_STRING}
+RewriteRule ^(advice)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(art)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(art)/$ /forum/?forum=16&%{QUERY_STRING}
+RewriteRule ^(art)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(hobby)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(hobby)/$ /forum/?forum=17&%{QUERY_STRING}
+RewriteRule ^(hobby)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(tech)$ https://discou.rs/$1/ [R,L]
-RewriteRule ^(tech)/$ /forum/?forum=18&%{QUERY_STRING}
+RewriteRule ^(tech)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(msk)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(msk)/$ /forum/?slug=$1&%{QUERY_STRING}
 
 RewriteRule ^(spb)$ https://discou.rs/$1/ [R,L]
 RewriteRule ^(spb)/$ /forum/?slug=$1&%{QUERY_STRING}
+
+RewriteRule ^(int)$ https://discou.rs/$1/ [R,L]
+RewriteRule ^(int)/$ /forum/?slug=$1&%{QUERY_STRING}
 ################################################
 RewriteRule ^(login)$ /page?page=$1
+RewriteRule ^(register)$ /page?page=$1&%{QUERY_STRING}
 RewriteRule ^(delete)$ /page?page=$1
 RewriteRule ^(backup)$ /page?page=$1
 RewriteRule ^(backu)$ /page?page=backup
 RewriteRule ^(move)$ /page?page=$1
 RewriteRule ^(tidyup)$ /page?page=$1
+RewriteRule ^(get-invite)$ /page?page=$1
+RewriteRule ^(crawler)$ /page?page=$1
+RewriteRule ^(verify)$ /page?page=$1
+RewriteRule ^(verify2)$ /page?page=$1
+RewriteRule ^(captcha)$ /page?page=$1
 
 RewriteRule ^(about)$ /page?page=$1
 RewriteRule ^(rules)$ /page?page=$1

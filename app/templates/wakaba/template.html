@@ -19,7 +19,7 @@ Topic with replies:
 {% if root is defined %}
   <!-- topic -->
   {% if topic.file_url %}
-  <span class="filesize">Файл: <a target="_blank" href="{{ topic.file_url }}">15174078934820.png</a><!-- -(<em>7726 B, 100x100</em>)--></span>
+  <span class="filesize">Файл: <a target="_blank" href="{{ topic.file_url }}">{{ topic.file_name }}</a><!-- -(<em>7726 B, 100x100</em>)--></span>
   <span class="thumbnailmsg">Показана уменьшенная копия, оригинал по клику.</span><br /> 
   <a target="_blank" href="{{ topic.file_url }}"> 
   <img src="{{ topic.thumb_url }}" width="{{ topic.thumb_w }}" height="{{ topic.thumb_h }}" alt="" class="thumb" /></a>    
@@ -29,16 +29,21 @@ Topic with replies:
   {% if topic.title_formatted and topic.title_formatted != "Тема без заголовка" %}
   <span class="filetitle">{{ topic.title_formatted|raw }}</span>
   {% endif %}
-  <span class="postername">Анонимно</span> {{ topic.time_formatted }}</label>
+  {% if topic.flag %}
+    {{ topic.flag }} <img class="flag" src="{% if file_host %}//{{ file_host }}{% endif %}/flags/{{ topic.flag|lower }}.png" title="Country: {{ topic.flag }}">
+  {% endif %}
+  <span class="postername">
+    {{ topic.author_formatted }}
+  </span> {{ topic.time_formatted }}</label>
   <span class="reflink">
   {% if not topic_id %}
-  <a href="/res/{{ reply.post_id }}.html#i{{ topic.post_id }}">No.{{ topic.post_id }}</a>
+  <a href="{{ topic.forum_href }}res/{{ topic.post_id }}.html#i{{ topic.post_id }}">No.{{ topic.post_id }}</a>
   {% else %}
   <a href="javascript:insert('>>{{ topic.post_id }}')">No.{{ topic.post_id }}</a>
   {% endif %}
   </span>&nbsp;
   {% if not topic_id %}
-  [<a href="res/{{ topic.post_id }}.html">Ответить</a>]
+    [<a href="{{ topic.forum_href }}res/{{ topic.post_id }}.html">Ответить</a>]
   {% endif %}
   <blockquote>
     <p>{{ topic.text_formatted|raw }}</p>
@@ -71,13 +76,19 @@ Reply:
         <td class="reply" id="reply{{ reply.post_id }}">
           <a name="{{ reply.post_id }}"></a> <label><input type="checkbox" name="delete" value="{{ reply.post_id }}" />
           <!--<span class="replytitle">TITLE</span>-->
-          <span class="commentpostername">Анонимно</span>
+          {% if reply.flag %}
+            {{ reply.flag }} <img class="flag" src="{% if file_host %}//{{ file_host }}{% endif %}/flags/{{ reply.flag|lower }}.png" title="Country: {{ reply.flag }}">
+          {% endif %}
+          <span class="commentpostername">
+            {{ reply.author_formatted }}
+          </span>
           {{ reply.time_formatted }}
           </label>
           
           <span class="reflink"> 
           {% if not topic_id %}
-          <a href="/res/{{ reply.post_id }}.html#i{{ reply.post_id }}">No.{{ reply.post_id }}</a>
+          {# topic.forum_href is used because forum_slug is not cached in reply objects to increase performance #}
+          <a href="{{ topic.forum_href }}res/{{ reply.post_id }}.html#i{{ reply.post_id }}">No.{{ reply.post_id }}</a>
           {% else %}
           <a href="javascript:insert('>>{{ reply.post_id }}')">No.{{ reply.post_id }}</a>
           {% endif %}
@@ -85,7 +96,7 @@ Reply:
 
           {% if reply.file_url %}
           </span>&nbsp; <br />
-          <span class="filesize">Файл: <a target="_blank" href="{{ reply.file_url }}">15174078934820.png</a><!-- -(<em>29727 B, 576x432</em>)--></span>
+          <span class="filesize">Файл: <a target="_blank" href="{{ reply.file_url }}">{{ reply.file_name }}</a><!-- -(<em>29727 B, 576x432</em>)--></span>
           <span class="thumbnailmsg">Показана уменьшенная копия, оригинал по клику.</span><br/>
           <a target="_blank" href="{{ reply.file_url }}"> <img src="{{ reply.thumb_url }}" width="{{ reply.thumb_w }}" height="{{ reply.thumb_h }}" class="thumb" /></a>
           {% endif %}
@@ -237,6 +248,30 @@ Main page block:
 			.replypage .replylink {
 			display: none
 			}
+      
+      content.posting_error
+      {
+        display: block;
+        width: 70%;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+      }
+      
+      content.posting_error textarea
+      {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+      }
+      
+      img.flag
+      {
+        width: 18px;
+        height: 12px;
+        margin-top: -3px;
+        vertical-align: middle;
+      }
 		</style>
     <link rel="stylesheet" type="text/css" href="/futaba.css" title="Futaba" />
 		<!--<link rel="alternate stylesheet" type="text/css" href="/css/burichan.css" title="Burichan" />
@@ -257,38 +292,30 @@ Main page block:
     [<a href="javascript:set_stylesheet('Burichan')">Burichan</a>] [<a href="javascript:set_stylesheet('Futaba')">Futaba</a>] [<a href="javascript:set_stylesheet('Gurochan')">Gurochan</a>] [<a href="javascript:set_stylesheet('Photon')">Photon</a>] [<a href="javascript:set_stylesheet('Style')">Style</a>]
     [<a href="javascript:set_stylesheet('Tabs')">Tabs</a>] [<a href="javascript:set_stylesheet('Winxp.blue')">Winxp.blue</a>] - [<a href="/../" target="_top">Home</a>] [<a href="/wakaba.pl?task=admin">Manage</a>]
     -->
-    [<a href="/" target="_top">Главная</a>] - [<a href="/old/">old</a>] - [<a href="/vg/">vg</a> / <a href="/po/">po</a> / <a href="/a/">a</a> / <a href="/hw/">hw</a> / <a href="/ph/">ph</a> / <a href="/d/">d</a>]
+    [<a href="/" target="_top">Главная</a>] - [<a href="/vg/">vg</a> / <a href="/po/">po</a> / <a href="/a/">a</a> / <a href="/hw/">hw</a> / <a href="/ph/">ph</a> / <a href="/d/">d</a>]
   </div>
     
-  <div class="notifications" style="float:right;">
+  <div class="notifications_bar" style="float:right;">
+    {% if username %}
+      {{ username }}
+    {% endif %}
     {% if notifications_unread > 0 %}
       <a href="/notifications">{{ notifications_unread }}&nbsp;уведомлений</a>
     {% endif %}
   </div>
     
-  <div class="logo"><a href="/old/" style="text-decoration:none;">{{ forum_title }}</a></div>
-    
-  <hr />
-
-  {% if posting_error %}
-    <div>
-      <div style="text-align:center;color:red;">{{ posting_error }}</div>
-
-      {% if declined_text %}
-        Ваш пост:<br>
-        {{ declined_text|raw }}
-      {% endif %}
-    </div>
-  {% endif %}
-    
-  {% if topic_id %}
-  [<a href="../">Назад</a>] <div class="theader">Ответ в тему</div>
-  {% endif %}
-
-  {{ block("new_topic_form") }}
+  <div class="logo"><a href="{{ forum_href }}" style="text-decoration:none;">{{ forum_title }}</a></div>
     
   <hr />
     
+  {{ html|raw }}
+
+  {% if html == false %}
+    {{ block("new_topic_form") }}
+    <hr />
+  {% endif %}
+    
+  {% if html == false %}
   <form id="delform" action="/wakaba.pl" method="post">
   {% if topics %}
     {% for topic in topics %}
@@ -296,12 +323,13 @@ Main page block:
     {% endfor %}
   {% endif %}
   </form>
+  {% endif %}
   
   <!--
 	<p class="footer"> - <a href="http://wakaba.c3.cx/">wakaba 3.0.7</a> + <a href="http://www.2chan.net/">futaba</a> + <a href="http://www.1chan.net/futallaby/">futallaby</a> -</p>
-  -->   
+  -->
 
-    <script async type="text/javascript" src="/dollchan.js"></script>
+  <script async type="text/javascript" src="/dollchan.js"></script>
     
 	</body>
 </html>

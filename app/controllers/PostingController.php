@@ -29,6 +29,8 @@ class PostingController extends Controller
     $title        = $request->getPost("title");
 		$name         = $request->getPost("name");
 		$text         = $request->getPost("text");
+    $flag         = "";
+    $display_username = false;
     
     $is_wakaba = $request->getPost("task");
     
@@ -51,11 +53,6 @@ class PostingController extends Controller
       $reply_to = 0; // cannot be replying to a post
     }
 		
-		if ($forum_id == 12) // /1chan/
-		{
-			$new_topic_delay = 3*60;
-		}
-		
 		$ip = $GLOBALS["client_ip"];
 		$time = time();
 		
@@ -70,11 +67,6 @@ class PostingController extends Controller
     {
     	$this->error("Некорректный HTTP-referer!");
     }
-		
-		if(!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
-		{    
-  		$this->error("Пожалуйста, используйте IPv4.");
-		}
 		
 		if
 		(
@@ -126,51 +118,128 @@ class PostingController extends Controller
     	$this->error("Имя слишком длинное (>$max_name_length )!");
     }
     
-    // Blacklist check:
-    require_if_exists(LIB_DIR."/check_ip.php");
-    if (function_exists("check_ip"))
+    // Check if user exists
+    if (user_id())
     {
-      $check_ip_result = check_ip($ip, ["forum_id" => $forum_id]);
-      if
-      (
-        (isset($check_ip_result["blocked"]) and $check_ip_result["blocked"] == true)
-        or
-        isset($check_ip_result["reason"])
-      )
+      $user_object = User::findFirst
+      ([
+        "user_id = :user_id:",
+        "bind" => ["user_id" => user_id()]
+      ]);
+      
+      if (!$user_object)
       {
-        $this->error("Ваш IP находится в черном списке.".($check_ip_result["reason"] ? " Причина: {$check_ip_result["reason"]}." : "")."\n\nДля разблокировки обратитесь в телеграм-конференцию.");
+        session_destroy();
+        $this->error("Пользователь удален.");
       }
+    }
+    
+    // All verifications for admin
+    $check_challenge = (user_id() and !is_admin()) ? false : true;
+    $check_banlist = (user_id() and !is_admin()) ? false : true;
+    $check_blacklist = (user_id() and !is_admin()) ? false : true;
+    $check_ip_verification = (user_id() and !is_admin()) ? false : true;
+    $check_ipv4 = (user_id() and !is_admin()) ? false : true;
+    
+    if (!function_exists("get_challenge_answer"))
+    {
+      $check_challenge = false;
+    }
+    
+    // Challenge check:
+    if ($check_challenge)
+    {
+      if (function_exists("get_identity"))
+      {
+        $challenge_answer = $request->getPost("challenge_answer");
+        $real_answer = get_challenge_answer (get_identity());
+
+        if ($challenge_answer != $real_answer)
+        {
+          $this->error("Не пройдена проверка против вайпа. Пожалуйста, ПЕРЕЗАГРУЗИТЕ СТРАНИЦУ, включите JavaScript или обратитесь за помощью: https://".MAIN_HOST."/contact");
+        }
+      }
+    }
+    
+    // Check IP verification:
+    if ($check_ip_verification)
+    {
+      if (!is_ip_verified()) // If IP is not verified
+      {
+        $last_post_object = Post::findFirst
+        (
+        [
+          "ip = :ip:",
+          "bind" =>
+          [
+            "ip" => $ip
+          ],
+          "order" => "post_id DESC"
+        ]
+        );
+        if (!$last_post_object) // If user hasn't made any posts
+        {
+          $this->error("Пожалуйста, <a href='//".MAIN_HOST."/verify' target='_blank'>подтвердите</a> ваш IP-адрес. Это займет не более минуты.");
+        }
+      }
+    }
+
+    // All sorts of IP checks:
+    if ($check_blacklist)
+    {  
+      // Blacklist check:
+      require_if_exists(CONFIG_DIR."/check_ip.php");
+      if (function_exists("check_ip"))
+      {
+        $check_ip_result = check_ip($ip, ["forum_id" => $forum_id]);
+        if
+        (
+          (isset($check_ip_result["blocked"]) and $check_ip_result["blocked"] == true)
+          or
+          isset($check_ip_result["reason"])
+        )
+        {
+          $this->error("Ваш IP находится в черном списке.".(isset($check_ip_result["reason"]) ? " Причина: {$check_ip_result["reason"]}." : "")."\n\nДля разблокировки рекомендуем <a href='//".MAIN_HOST."/login' target='_blank'>войти</a> или <a href='//".MAIN_HOST."/register' target='_blank'>зарегистрироваться</a> совершенно бесплатно.");
+        }
+      }
+    }
+    
+    // Invite-only check:
+    if (!user_id() and INVITE_ONLY) // If anonymous and invite-only mode is on
+    {
+      $this->error("Для защиты от вайпов у нас теперь вход только по инвайтам из некоторых стран. Рекомендуем <a href='/register' target='_blank'>зарегистрироваться</a> совершенно бесплатно.");
     }
 		
     // Banlist check:
-		$active_ban = Ban::findFirst
-		(
-    [
-			"ip = :ip: AND expires > $time",
-			
-			"bind" =>
-			[
-				"ip" => $ip
-			]
-    ]
-		);
+    if ($check_banlist)
+    {
+      $active_ban = Ban::findFirst
+      (
+      [
+        "ip = :ip: AND expires > $time",
+
+        "bind" =>
+        [
+          "ip" => $ip
+        ]
+      ]
+      );
+      if ($active_ban)
+      {
+        $ban_id = $active_ban->ban_id;
+        $this->error("Ваш IP находится в бан-листе (бан #$ban_id).\n\nРазблокировка: https://".MAIN_HOST."/contact. <a href='/register' target='_blank'>Регистрация</a> позволяет писать с заблокированных IP.");
+      }
+    }
+    
+    if ($check_ipv4)
+    {
+      if(!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
+      {    
+        $this->error("Пожалуйста, используйте IPv4.");
+      }
+    }
 		
-		if ($active_ban)
-		{
-			$ban_id = $active_ban->ban_id;
-			$this->error("Ваш IP находится в бан-листе (бан #$ban_id).\n\nДля разбана обратитесь в телеграм-конференцию.");
-		}
-		
-		$tor_file_path = ROOT_DIR."/app/config/tor.txt";
-		if (file_exists($tor_file_path))
-		{
-			$tor_nodes = file($tor_file_path, FILE_IGNORE_NEW_LINES);
-			if (in_array($ip, $tor_nodes))
-			{
-				$this->error("В связи с постоянными вайпами постинг с Tor закрыт. Благодаря этому на Дискурсе нет обязательной капчи. Пожалуйста, отнеситесь с пониманием.");
-			}
-		}
-		
+    // Get forum object:
 		$forum_obj = Forum::findFirst
 		(
     [
@@ -197,6 +266,20 @@ class PostingController extends Controller
 			"post_id = '$parent_topic' AND parent_topic = 0"
 		]
 		);
+    
+    if ($forum_obj->slug == "int")
+    {
+      $cf_country_code = cloudflare_country_code();
+      if ($cf_country_code)
+      {
+        $flag = $cf_country_code;
+      }
+    }
+    
+    if (user_id() and $request->getPost("sign"))
+    {
+      $display_username = true;
+    }
     
     // Proccess Wakaba links
     if ($is_wakaba)
@@ -273,7 +356,9 @@ class PostingController extends Controller
 					$this->error("Вы отвечаете в темы слишком часто.");
 				}
         
-        if ($last_reply_object->text == $text and $last_reply_age < 60)
+        if ($last_reply_object->text == $text and
+            $text != "" and // lets posts several images in a row
+            $last_reply_age < 60)
         {
           $this->error("Вы уже публиковали это сообщение.");
         }
@@ -283,7 +368,12 @@ class PostingController extends Controller
 		// New topic
     else
     {
-      $last_topic = Post::findFirst
+      if ($forum_obj->slug == "1chan")
+      {
+        $new_topic_delay = 3*60;
+      }
+      
+      $last_topic_object = Post::findFirst
       (
       [
         "ip = :ip: AND parent_topic = 0",
@@ -295,17 +385,20 @@ class PostingController extends Controller
       ]
       );
       
-			if ($last_topic)
+			if ($last_topic_object)
 			{
-				$last_topic_age = $time - $last_topic->creation_time;
+				$last_topic_age = $time - $last_topic_object->creation_time;
 				
 				if ($last_topic_age < $new_topic_delay)
 				{
-					$this->error("Вы создаете темы слишком часто (осталось ждать ".($new_topic_delay-$last_topic_age)." сек.)");
+          if (!is_admin())
+          {
+					  $this->error("Вы создаете темы слишком часто (осталось ждать ".($new_topic_delay-$last_topic_age)." сек.)");
+          }
 				}
 			}
 		}
-    
+
     /* BEGIN ANTI-WIPE */
     function posts_by_ip_in_the_last_n_seconds ($ip, $n)
     {
@@ -329,7 +422,7 @@ class PostingController extends Controller
     
     if (posts_by_ip_in_the_last_n_seconds($ip, 60*60) > $hourly_limit)
     {
-      $this->error("С вашего IP было опубликовано больше $hourly_limit постов за последний час. В связи с непрекращающимися вайпами нам пришлось ввести ограничение на публикацию большого числа постов. Просим извинения за доставленные неудобства и надеемся на понимание. Для снятия защиты пожалуйста обратитесь в Telegram (@zefirov) или по адресу: https://discou.rs/contact");
+      $this->error("С вашего IP было опубликовано больше $hourly_limit постов за последний час. В связи с непрекращающимися вайпами нам пришлось ввести ограничение на публикацию большого числа постов. Просим извинения за доставленные неудобства и надеемся на понимание. Для снятия защиты пожалуйста обратитесь в Telegram (@zefirov) или по адресу: https://".MAIN_HOST."/contact");
     }
     
     //$this->comment .= "Posts_by_ip_in_the_last_n_seconds took " . ($b - $a) . " to execute";
@@ -410,13 +503,13 @@ class PostingController extends Controller
 		{
 				$ord = $ord * 2;
 		}*/
-		if ($forum_id == 11 or $forum_id == 12)
+		/*if ($forum_obj->slug == "1chan")
 		{
 			if ($parent_topic)
 			{
 				$ord = $parent_topic_object->ord;
 			}
-		}
+		}*/
 		
 		$post->creation_time = $time;
 		$post->ip = $ip;
@@ -430,6 +523,8 @@ class PostingController extends Controller
 		$post->text = $text;
 		$post->title = $title;
 		$post->name = $name;
+    $post->flag = $flag;
+    $post->display_username = $display_username;
 		
 		$result = $post->save();
 		
@@ -593,11 +688,6 @@ class PostingController extends Controller
 			send_message_to_telegram_channel("@DiscoursChangelog", $post->get_plain_text()."\nОбсудить: https://".MAIN_HOST."/topic/".$post->post_id, TELEGRAM_TOKEN);
 		}
 		
-		/*elseif ($parent_topic == 0) // posting to Discours Topics
-		{
-			send_message_to_telegram_channel("@DiscoursTopics", "https://discou.rs/topic/".$post->post_id, TELEGRAM_TOKEN);
-		}*/
-		
 		//page_cache_delete("forum_".$forum_obj->forum_id); // delete page cache
 		cache_delete("forum_".$forum_obj->forum_id); // delete page cache
 		cache_delete("forum_1"); // delete main page cache
@@ -608,7 +698,8 @@ class PostingController extends Controller
 			$output = array();
 			$output["success"] = true;
 			$output["post_id"] = $post->post_id;
-			$output["benchmark"] = benchmark();
+			//$output["benchmark"] = benchmark();
+      header("Benchmark: ".benchmark());
       if (isset($this->comment) and $this->comment != "")
       {
         $output["comment"] = $this->comment; 
@@ -618,7 +709,24 @@ class PostingController extends Controller
 
 		else
 		{
-			return $this->response->redirect($_SERVER['HTTP_REFERER']);
+      $redirect_url = $_SERVER["HTTP_REFERER"];
+      
+      if ($is_wakaba)
+      {
+        if ($forum_id == 1)
+        {
+          if (!$parent_topic) // new topic
+          {
+            $redirect_url = "/b/";
+          }
+          else // replying to topic
+          {
+            $redirect_url = "/b/res/$parent_topic.html";
+          }
+        }
+      }
+      
+			return $this->response->redirect($redirect_url);
 		}
   }
 	
@@ -637,10 +745,10 @@ class PostingController extends Controller
 
       $html =
       "
-      <content>
+      <content class='posting_error'>
         <div style='font-size:200%;text-align:center;'>Ошибка</div>
         <h2 style='font-size:inherit;text-align:center;'>$error</h2>
-        Для вашего удобства пост находится в текстовом поле:
+        <p>Для вашего удобства пост находится в текстовом поле:</p>
         <textarea style='width:100%;height:100px;'>$filtered_text</textarea>
       </content>
       ";
@@ -649,11 +757,15 @@ class PostingController extends Controller
 			(
 				"html" => $html
 			);
-      if ($request->getPost("field3")) // wakaba
+      
+      $twig_template = "default";
+      if (isset(domain_array()["template"]))
       {
-        
+        $twig_template = domain_array()["template"];
       }
-			echo render($twig_data);
+
+      $twig_filesystem = TWIG_TEMPLATES_DIR."/$twig_template";
+      echo render($twig_data, $twig_filesystem, $twig_template);
 		}
 			
 		exit();
@@ -732,7 +844,8 @@ class PostingController extends Controller
     $thumb_w = intval($thumb_w / 2);
 		$thumb_h = intval($thumb_h / 2);
 		
-		function random_str ($length, $keyspace = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+		//function random_str ($length, $keyspace = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    function random_str ($length, $keyspace = "0123456789abcdefghijklmnopqrstuvwxyz")
 		{
 				$str = "";
 				$max = mb_strlen($keyspace, "8bit") - 1;
@@ -743,7 +856,7 @@ class PostingController extends Controller
 		}
 		$time = time();
 		$rand = random_int(1000, 9999);
-		$rand_str = random_str(8);
+		$rand_str = random_str(12);
 		
 		//$new_file_name  = "{$time}_{$rand}.".$file_extension;
 		//$new_thumb_name = "{$time}_{$rand}_thumb.".$file_extension;

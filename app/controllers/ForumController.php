@@ -10,7 +10,7 @@ class ForumController extends Controller
 		//ignore_user_abort(true); // used for cURL
 		
 		$pdo = pdo();
-	
+
 		$default_limit = 20;
 		$replies_to_show = 3;
 		$limit = $default_limit;
@@ -18,7 +18,10 @@ class ForumController extends Controller
 		$pageviews_from_cache_name = "pageviews_".date("d-m");  
     $pageviews_from_cache = cache_get($pageviews_from_cache_name, function () {return 0;});
     cache_set($pageviews_from_cache_name, intval($pageviews_from_cache)+1);
-		echo "<!-- P/V: $pageviews_from_cache -->\n";
+    if (!is_json())
+    {
+		  echo "<!-- P/V: $pageviews_from_cache -->\n";
+    }
 		
 		$use_page_cache = true;
 		if (isset($_GET["fresh"]) or isset($_GET["page"]) or isset($_GET["order"]))
@@ -93,7 +96,7 @@ class ForumController extends Controller
     
     if (!$forum_obj) // forum or topic not found (404)
 		{
-			if ($topic_id == 1)
+			if (isset($topic_id) and $topic_id == 1)
 			{
 				first_topic_error_page();
 				exit();
@@ -150,7 +153,7 @@ class ForumController extends Controller
     
     function assign_post_properties (&$post) // highlight my own posts, replies to my posts, etc.
     {
-      /*if ($post["session_id"] == session_id())
+      if ($post["session_id"] == session_id())
       {
         $post["my_post"] = true;
       }
@@ -161,7 +164,7 @@ class ForumController extends Controller
         {
           $post["my_post"] = true;
         }
-      }*/
+      }
       
       if ($post["reply_to_session_id"] == session_id())
       {
@@ -202,10 +205,17 @@ class ForumController extends Controller
 				if ($twig_data !== false)
 				{
           assign_post_properties_to_twig_data($twig_data);
-					echo "<!-- GOT DATA FROM CACHE ".benchmark()." -->\n";
-					echo "<!-- RENDERING STARTED ".benchmark()." -->\n";
+          $twig_data["invite_only"] = INVITE_ONLY;
+          if (!is_json())
+          {
+					  echo "<!-- GOT DATA FROM CACHE ".benchmark()." -->\n";
+					  echo "<!-- RENDERING STARTED ".benchmark()." -->\n";
+          }
 					$rendered = render($twig_data, ROOT_DIR."/app/templates/$twig_template", $twig_template);
-					echo "<!-- RENDERING FINISHED ".benchmark()." -->\n";
+					if (!is_json())
+          {
+            echo "<!-- RENDERING FINISHED ".benchmark()." -->\n";
+          }
 					echo $rendered;
 					exit();
 				}
@@ -216,7 +226,7 @@ class ForumController extends Controller
 			
 			if ($forum_id == 1) // Главная
 			{
-				$query_annex = "AND forum_id NOT IN (3, 6, 12, 14, 19, 20)";
+				$query_annex = "AND forum_id NOT IN (3, 6, 12, 14, 19)";
 				unset($query_bind["forum_id"]);
 			}
 				
@@ -234,6 +244,12 @@ class ForumController extends Controller
     }
 		
 		$topics_order = "ord DESC";
+    
+    //if ($forum_obj->slug == "changelog")
+    if (in_array($forum_obj->slug, ["changelog", "1chan"]))
+    {
+      $topics_order = "creation_time DESC";
+    }
 		
 		if (isset($_GET["order"]) and $_GET["order"] == "new")
 		{
@@ -270,12 +286,15 @@ class ForumController extends Controller
 			
 			"forum_id" => $forum_obj->forum_id,
 			"forum_title" => $forum_obj->title,
-			"final_title" => (isset($topic_id) and $topic_id != 0 and $topic->title) ? anti_xss($topic->title) : $forum_obj->title,
+			//"final_title" => (isset($topic_id) and $topic_id != 0 and $topic->title) ? anti_xss($topic->title) : anti_xss($forum_obj->title),
+      "final_title" => anti_xss($forum_obj->title),
+      "forum_href" => full_forum_href($forum_obj->slug, $forum_obj->forum_id),
 			
-			"meta" => array(),
+			"meta" => [],
 			"file_host" => FILE_HOST,
 			
-			"is_mod" => is_mod()
+			"is_mod" => is_mod(),
+      "invite_only" => INVITE_ONLY
 		);
 		
 		if (isset($posting_error))
@@ -287,8 +306,6 @@ class ForumController extends Controller
 		{
 			$twig_data["declined_text"] = anti_xss($declined_text);
 		}
-    
-    $twig_data["forum_href"] = full_forum_href(@$slug, $forum_obj->forum_id);
 		
 		if (isset($topic_id)) // show topic
 		{
@@ -310,6 +327,8 @@ class ForumController extends Controller
 			{
 				$twig_data["meta"]["image"] = $topic->file_url;
 			}
+      
+      $twig_data["final_title"] = $twig_data["meta"]["description"];
 		}
 
 		foreach ($topics as $topic)
