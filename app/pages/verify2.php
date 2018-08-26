@@ -77,7 +77,7 @@ ob_start();
     <br>
     <input type="text" class="captcha" name="captcha_code" value="" placeholder="Введите цифры с картинки">
     <br>
-    <input type="submit" name="submit" value="Отправить">
+    <input type="submit" class="button is-small" style="margin-top:5px;" name="submit" value="Отправить">
     <div style="margin-top:1em;">
       Надоело? Получи <a href="/register" target="_blank">беслпатный инвайт</a>.
     </div>

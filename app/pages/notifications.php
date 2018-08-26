@@ -144,7 +144,7 @@ h2
       {
         ?>
         <form method="post" action="" style="text-align:center;margin-top:1em;">
-          <input type="submit" name="read_all" value="Отметить все как прочитанные">
+          <input type="submit" name="read_all" class="button is-small" value="Отметить все как прочитанные">
         </form>
         <?php
       }

@@ -9,6 +9,12 @@ $invite_object = Invite::findFirst
   "bind" => ["invite_code" => $invite_code]
 ]);
 
+$cache_name = get_client_ip()."_used_invite";
+if (cache_get($cache_name))
+{
+  die("Вы уже использовали один инвайт.");
+}
+
 if (isset($_POST["submit"]))
 {
   $username  = $_POST["username"];
@@ -72,8 +78,10 @@ if (isset($_POST["submit"]))
     
     $invite_object->delete();
     
+    cache_set($cache_name, true, 24*60*60);
+    
     $_SESSION["user_id"] = $user_object->user_id;
-    $success_message = "Ты зарегистрирован! Переходи на <a href='/'>главную</a> и пости.";
+    $success_message = "Ты зарегистрирован! Переходи на <a href='/' style='text-decoration:none;'>главную</a> и пости.";
   }
   
   catch (Exception $e)

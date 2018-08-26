@@ -199,7 +199,7 @@ ob_start();
 ?>
 
 <script>
-document.addEventListener('DOMContentLoaded', function()
+/*document.addEventListener('DOMContentLoaded', function()
 {
   $(document).on("change", "#checkbox2", function()
   {
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function()
       $("#reason").val("вайп");
     }
   });
-});
+});*/
 </script>
 
 <h2>Удалить пост</h2>
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function()
   <form action="" method="post">
       <input type="checkbox" name="ban_user" id="checkbox1"> <label for="checkbox1">Ban user?</label>
       <br>
-		<input type="checkbox" name="delete_all_by_user" id="checkbox2"> <label for="checkbox2">Delete all recent posts by this user (anti-WIPE only) <b>+Permaban</b></label>
+		<input type="checkbox" name="delete_all_by_user" id="checkbox2" onchange="if(this.checked){$('#checkbox1').prop('checked', true);$('#reason').val('вайп');}"> <label for="checkbox2">Delete all recent posts by this user (anti-WIPE only) <b>+Permaban</b></label>
       <br>
 
       <table>

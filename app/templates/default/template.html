@@ -104,7 +104,7 @@ Topic with replies:
             {% if topic.author_icon_href %}
               <img src="{{ topic.author_icon_href }}" width="10px" height="10px">
             {% endif %}
-            {{ topic.author_formatted }}
+            {{ topic.author_formatted|raw }}
           {% if topic.author_href %}</a>{% endif %}
         </span>
         <span style="color:#aaaaaa;">&#8729;</span>
@@ -284,7 +284,7 @@ Reply:
             {% if reply.author_icon_href %}
               <img src="{{ reply.author_icon_href }}" width="10px" height="10px">
             {% endif %}
-            {{ reply.author_formatted }}
+            {{ reply.author_formatted|raw }}
           {% if reply.author_href %}</a>{% endif %}
         </span>
         <span style="color:#aaaaaa;">&#8729;</span>

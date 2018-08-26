@@ -78,14 +78,6 @@ class PostingController extends Controller
 			$this->error("Только администраторы могут создавать темы на этом форуме.");
 		}
 		
-		if ($forum_id == 3) // /test/
-		{ 
-      if (!is_admin())
-      {
-			  $this->error("Этот форум закрыт для постинга.");
-      }
-		}
-		
 		// Text
     /* Somehow accepts one-letter strings like "a" */
     if (mb_strlen($text) < $min_text_length)
@@ -257,6 +249,16 @@ class PostingController extends Controller
 		{
 			$this->error("Форум не найден.");
 		}
+    
+    if ($forum_obj->slug == "test" and !is_admin())
+		{ 
+      $this->error("Этот форум закрыт для постинга.");
+		}
+    
+    if ($forum_obj->slug == "pr" and !in_array(user_id(), [1]))
+    {
+      $this->error("Этот форум закрыт для постинга.");
+    }
 		
 		if ($parent_topic) {$title = "";}
 		

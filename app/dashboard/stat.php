@@ -30,10 +30,14 @@ $beginning_of_this_day = strtotime("midnight", time());
 $sql = $pdo->query("SELECT COUNT(DISTINCT ip) FROM posts WHERE creation_time >= $beginning_of_this_day");
 $row = $sql->fetch();
 
-echo "Unique IPs today: ".$row[0];
+echo "Unique IPs today: {$row[0]}<br>";
+
+$query = $pdo->query("SELECT COUNT(user_id) FROM users");
+$row = $query->fetch();
+
+echo "Total users: {$row[0]}<br>";
 ?>
 
-<hr>
 <?php
 /*$i = 0;
 $date = date('Y-m-d H:i:s', strtotime("-$i hour"));

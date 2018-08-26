@@ -106,11 +106,17 @@ class ForumController extends Controller
 			exit();
 		}
     
-    if ($forum_obj->forum_id == 3 and !is_mod()) # /test/
+    if ($forum_obj->slug == "test" and !is_admin())
 		{
 			header("HTTP/1.0 403 Forbidden");
 			die("403 Forbidden");
 		}
+    
+    if ($forum_obj->slug == "pr" and !in_array(user_id(), [1]))
+    {
+      header("HTTP/1.0 403 Forbidden");
+			die("403 Forbidden");
+    }
     
     if (isset(domain_array()["forum_ids"])) // check whether forum is allowed for this domain
     {
@@ -226,7 +232,7 @@ class ForumController extends Controller
 			
 			if ($forum_id == 1) // Главная
 			{
-				$query_annex = "AND forum_id NOT IN (3, 6, 12, 14, 19)";
+				$query_annex = "AND forum_id NOT IN (3, 6, 12, 14, 19, 24)";
 				unset($query_bind["forum_id"]);
 			}
 				

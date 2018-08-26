@@ -33,7 +33,7 @@ Topic with replies:
     {{ topic.flag }} <img class="flag" src="{% if file_host %}//{{ file_host }}{% endif %}/flags/{{ topic.flag|lower }}.png" title="Country: {{ topic.flag }}">
   {% endif %}
   <span class="postername">
-    {{ topic.author_formatted }}
+    {{ topic.author_formatted|raw }}
   </span> {{ topic.time_formatted }}</label>
   <span class="reflink">
   {% if not topic_id %}
@@ -80,7 +80,7 @@ Reply:
             {{ reply.flag }} <img class="flag" src="{% if file_host %}//{{ file_host }}{% endif %}/flags/{{ reply.flag|lower }}.png" title="Country: {{ reply.flag }}">
           {% endif %}
           <span class="commentpostername">
-            {{ reply.author_formatted }}
+            {{ reply.author_formatted|raw }}
           </span>
           {{ reply.time_formatted }}
           </label>

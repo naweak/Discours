@@ -234,8 +234,12 @@ class Post extends Model
       );
       
       $output["author_formatted"] = $author_username;
-      //$output["author_icon_href"] = "/lj-user.svg";
       $output["is_anonymous"] = false;
+      
+      if ($author_username == "zefirov")
+      {
+        $output["author_formatted"] = "<span style='color:red;'>" . $author_username . "</span>";
+      }
     }
     
     else
