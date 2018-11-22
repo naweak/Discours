@@ -11,6 +11,11 @@ class PageController extends Controller
 		$request = new Request();
 		
 		$page = $request->get("page");
+    
+    if ($this->dispatcher->getParam("page"))
+    {
+      $page = $this->dispatcher->getParam("page");
+    }
 		
 		if (!preg_match('/[A-Za-z0-9]+/', $page))
 		{

@@ -903,7 +903,8 @@ class Securimage
      *
      * @var string|bool Captcha challenge value
      */
-    protected $code;
+    //protected $code;
+    public $code;
     public function get_code ()
     {
       return $this->code;
@@ -943,7 +944,7 @@ class Securimage
      *
      * @var string
      */
-    protected $captcha_code;
+    //protected $captcha_code;
 
     /**
      * Time (in seconds) that the captcha was solved in (correctly or incorrectly).
@@ -1991,7 +1992,7 @@ class Securimage
      */
     public function createCode()
     {
-        $this->code = false;
+        //$this->code = false;
 
         switch($this->captcha_type) {
             case self::SI_CAPTCHA_MATHEMATIC:

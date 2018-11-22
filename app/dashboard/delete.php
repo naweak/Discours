@@ -244,10 +244,10 @@ ob_start();
             <select name="reason" id="reason">
               <option value="" selected="selected">- укажите причину -</option>
               <option value="вайп">вайп</option>
-              <option value="спам">спам</option>
+              <!--<option value="спам">спам</option>
               <option value="порно">порно</option>
               <option value="шок-контент">шок-контент</option>
-              <option value="флуд">флуд</option>
+              <option value="флуд">флуд</option>-->
             </select>
           </td>
         </tr>

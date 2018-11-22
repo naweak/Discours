@@ -15,10 +15,10 @@ class PostingController extends Controller
 		
 		$reply_delay     = 5;
 		$new_topic_delay = 10*60;
-		$min_title_length = 3;
+		$min_title_length = 2;
 		$max_title_length = 255;
 		$max_name_length = 25;
-		$min_text_length = 3;
+		$min_text_length = 2; // for words like "no"
 		$max_text_length = 15000;
 		$max_replies_in_topic = 500;
 		$allow_sage = true;
@@ -126,17 +126,41 @@ class PostingController extends Controller
       }
     }
     
-    // All verifications for admin
-    $check_challenge = (user_id() and !is_admin()) ? false : true;
+    // More verifications for admin
+    /*$check_challenge = (user_id() and !is_admin()) ? false : true;
     $check_banlist = (user_id() and !is_admin()) ? false : true;
-    $check_blacklist = (user_id() and !is_admin()) ? false : true;
-    $check_ip_verification = (user_id() and !is_admin()) ? false : true;
-    $check_ipv4 = (user_id() and !is_admin()) ? false : true;
+    $check_blacklist = user_id() ? false : true;
+    //$check_ip_verification = (user_id() and !is_admin()) ? false : true;
+    $check_ip_verification = false;
+    $check_ipv4 = (user_id() and !is_admin()) ? false : true;*/
+    
+    $check_challenge = false;
+    $check_banlist = false;
+    $check_blacklist = false;
+    $check_ip_verification = false;
+    $check_ipv4 = false;
     
     if (!function_exists("get_challenge_answer"))
     {
       $check_challenge = false;
     }
+    
+    // Check Tor:
+    function is_tor ($ip)
+    {
+      $tor_file_path = ROOT_DIR."/app/config/tor.txt";
+      if (file_exists($tor_file_path))
+      {
+        $tor_nodes = file($tor_file_path, FILE_IGNORE_NEW_LINES);
+        if (in_array($ip, $tor_nodes))
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+    
+    $is_tor = is_tor($ip);
     
     // Challenge check:
     if ($check_challenge)
@@ -171,7 +195,7 @@ class PostingController extends Controller
         );
         if (!$last_post_object) // If user hasn't made any posts
         {
-          $this->error("Пожалуйста, <a href='//".MAIN_HOST."/verify' target='_blank'>подтвердите</a> ваш IP-адрес. Это займет не более минуты.");
+          $this->error("Пожалуйста, введите <a href='//".MAIN_HOST."/verify' target='_blank'>капчу</a>.");
         }
       }
     }
@@ -191,7 +215,7 @@ class PostingController extends Controller
           isset($check_ip_result["reason"])
         )
         {
-          $this->error("Ваш IP находится в черном списке.".(isset($check_ip_result["reason"]) ? " Причина: {$check_ip_result["reason"]}." : "")."\n\nДля разблокировки рекомендуем <a href='//".MAIN_HOST."/login' target='_blank'>войти</a> или <a href='//".MAIN_HOST."/register' target='_blank'>зарегистрироваться</a> совершенно бесплатно.");
+          $this->error("Ваш IP находится в черном списке.".(isset($check_ip_result["reason"]) ? " Причина: {$check_ip_result["reason"]}." : "")."\n\nДля разблокировки рекомендуем <a href='//".MAIN_HOST."/login' target='_blank'>войти</a> или <a href='//".MAIN_HOST."/register' target='_blank'>зарегистрироваться</a>.");
         }
       }
     }
@@ -199,7 +223,7 @@ class PostingController extends Controller
     // Invite-only check:
     if (!user_id() and INVITE_ONLY) // If anonymous and invite-only mode is on
     {
-      $this->error("Для защиты от вайпов у нас теперь вход только по инвайтам из некоторых стран. Рекомендуем <a href='/register' target='_blank'>зарегистрироваться</a> совершенно бесплатно.");
+      $this->error("Для защиты от вайпов у нас теперь вход только по инвайтам из некоторых стран. Рекомендуем <a href='//".MAIN_HOST."/login' target='_blank'>войти</a> или <a href='//".MAIN_HOST."/register' target='_blank'>зарегистрироваться</a>.");
     }
 		
     // Banlist check:
@@ -219,7 +243,7 @@ class PostingController extends Controller
       if ($active_ban)
       {
         $ban_id = $active_ban->ban_id;
-        $this->error("Ваш IP находится в бан-листе (бан #$ban_id).\n\nРазблокировка: https://".MAIN_HOST."/contact. <a href='/register' target='_blank'>Регистрация</a> позволяет писать с заблокированных IP.");
+        $this->error("Ваш IP находится в бан-листе (бан #$ban_id). <a href='//".MAIN_HOST."/register' target='_blank'>Регистрация</a> позволяет писать с заблокированных IP.");
       }
     }
     
@@ -227,7 +251,7 @@ class PostingController extends Controller
     {
       if(!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
       {    
-        $this->error("Пожалуйста, используйте IPv4.");
+        $this->error("Пожалуйста, используйте IPv4. <a href='//".MAIN_HOST."/register' target='_blank'>Регистрация</a> позволяет писать с IPv6.");
       }
     }
 		
@@ -249,6 +273,37 @@ class PostingController extends Controller
 		{
 			$this->error("Форум не найден.");
 		}
+    
+    // Captcha check:
+    $check_captcha = true;
+    
+    if ($check_captcha)
+    {
+      $captcha_tag  = $request->getPost("captcha_tag");
+      $captcha_text = $request->getPost("captcha_text");
+      
+      if (!validate_captcha_tag($captcha_tag))
+      {
+        $this->error("Invalid captcha tag.");
+      }
+      
+      if (!isset($_SESSION["captcha_$captcha_tag"]))
+      {
+        $this->error("Код капчи не найден в базе.");
+      }
+      
+      if ($captcha_text == "")
+      {
+        $this->error("Пожалуйста, введите капчу.");
+      }
+      
+      if ($_SESSION["captcha_$captcha_tag"] != mb_strtolower($captcha_text))
+      {
+        $this->error("Капча введена неверно.");
+      }
+      
+      unset($_SESSION["captcha_$captcha_tag"]);
+    }
     
     if ($forum_obj->slug == "test" and !is_admin())
 		{ 
@@ -480,10 +535,15 @@ class PostingController extends Controller
 		// Process uploaded file
 		if (isset($_FILES["userfile"]["tmp_name"]) and is_uploaded_file($_FILES["userfile"]["tmp_name"]))
 		{
-			if ($forum_id == 12)
+      if ($forum_obj->slug == "1chan")
 			{
 				$this->error("В этом разделе нельзя прикреплять картинки!");
 			}
+      
+      if ($is_tor)
+      {
+        $this->error("С Tor нельзя загружать картинки.");
+      }
 			
 			$files = $this->request->getUploadedFiles();
 			$file = $files[0];
@@ -501,16 +561,10 @@ class PostingController extends Controller
 		
 		// Save new post
 		$ord = round(microtime(true) * 1000);
-		/*if ($parent_topic == 10670) // make a sticky topic
+    
+		/*if ($parent_topic == 62538) // make a sticky topic
 		{
 				$ord = $ord * 2;
-		}*/
-		/*if ($forum_obj->slug == "1chan")
-		{
-			if ($parent_topic)
-			{
-				$ord = $parent_topic_object->ord;
-			}
 		}*/
 		
 		$post->creation_time = $time;
@@ -832,17 +886,22 @@ class PostingController extends Controller
 		}
 		else // /test/
 		{
-			// 300x300
-			exec("convert -thumbnail 300x300 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
+      $browser_max_w = 150;
+      $browser_max_h = 150;
+      
+      /*if ($post->parent_topic)
+      {
+        $browser_max_w = 150;
+        $browser_max_h = 150;
+      }*/
+      
+      // image in browser will be 50% smaller because of CSS
+      $dimensions = ($browser_max_w*2)."x".($browser_max_h*2);
+			exec("convert -thumbnail $dimensions $tmp_name\[0] $thumb_path"); // [0] means 1st frame
 		}
 
 		list($thumb_w, $thumb_h) = getimagesize($thumb_path);
-		
-		/*if ($post->forum_id == 3)
-		{
-			$thumb_w = intval($thumb_w / 2);
-			$thumb_h = intval($thumb_h / 2);
-		}*/
+
     $thumb_w = intval($thumb_w / 2);
 		$thumb_h = intval($thumb_h / 2);
 		

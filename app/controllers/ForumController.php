@@ -5,6 +5,12 @@ use Phalcon\Mvc\Controller;
 class ForumController extends Controller
 {
 
+  public function sAction ()
+  {
+    echo $_SERVER["REQUEST_URI"]."<br>";
+    echo $_SERVER["REDIRECT_URL"];
+  }
+  
 	public function indexAction()
 	{
 		//ignore_user_abort(true); // used for cURL
@@ -14,17 +20,33 @@ class ForumController extends Controller
 		$default_limit = 20;
 		$replies_to_show = 3;
 		$limit = $default_limit;
+    
+    // Delete references to $_GET
+    if ($this->dispatcher->getParam("topic"))
+    {
+      $_GET["topic"] = $this->dispatcher->getParam("topic");
+    }
+    if ($this->dispatcher->getParam("slug"))
+    {
+      $_GET["slug"] = $this->dispatcher->getParam("slug");
+    }
 		
-		$pageviews_from_cache_name = "pageviews_".date("d-m");  
+		/* $pageviews_from_cache_name = "pageviews_".date("d-m");  
     $pageviews_from_cache = cache_get($pageviews_from_cache_name, function () {return 0;});
     cache_set($pageviews_from_cache_name, intval($pageviews_from_cache)+1);
     if (!is_json())
     {
 		  echo "<!-- P/V: $pageviews_from_cache -->\n";
-    }
+    } */
 		
 		$use_page_cache = true;
-		if (isset($_GET["fresh"]) or isset($_GET["page"]) or isset($_GET["order"]))
+		if
+    (
+      isset($_GET["fresh"]) or
+      isset($_GET["page"]) or
+      isset($_GET["order"]) or
+      isset($_GET["user"])
+    )
 		{
 			$use_page_cache = false;
 		}
@@ -84,7 +106,7 @@ class ForumController extends Controller
 			$forum_obj = Forum::findFirst
 			(
 			[
-				"forum_id = (SELECT Post.forum_id FROM Post WHERE post_id = :topic_id: AND deleted_by = 0 LIMIT 1)",
+				"forum_id = (SELECT Post.forum_id FROM Post WHERE post_id = :topic_id: AND parent_topic = 0 AND deleted_by = 0 LIMIT 1)",
 
 				"bind" =>
 				[
@@ -106,16 +128,24 @@ class ForumController extends Controller
 			exit();
 		}
     
+    if (isset($_GET["fresh"]))
+    {
+      cache_delete("forum_".$forum_obj->forum_id);
+    }
+    
     if ($forum_obj->slug == "test" and !is_admin())
 		{
-			header("HTTP/1.0 403 Forbidden");
+      header("HTTP/1.0 403 Forbidden");
 			die("403 Forbidden");
 		}
     
-    if ($forum_obj->slug == "pr" and !in_array(user_id(), [1]))
+    if ($forum_obj->slug == "pr" and !is_admin())
     {
-      header("HTTP/1.0 403 Forbidden");
-			die("403 Forbidden");
+      if (!isset($_GET["topic"]) or $_GET["topic"] != 38999) // allow only one topic
+      {
+        header("HTTP/1.0 403 Forbidden");
+			  die("403 Forbidden");
+      }
     }
     
     if (isset(domain_array()["forum_ids"])) // check whether forum is allowed for this domain
@@ -232,7 +262,9 @@ class ForumController extends Controller
 			
 			if ($forum_id == 1) // Главная
 			{
-				$query_annex = "AND forum_id NOT IN (3, 6, 12, 14, 19, 24)";
+        // 12 - 1chan
+        $hidden_forum_ids = [3, 6, 19, 24];
+				$query_annex = "AND forum_id NOT IN (".implode(",", $hidden_forum_ids).")";
 				unset($query_bind["forum_id"]);
 			}
 				
@@ -247,6 +279,15 @@ class ForumController extends Controller
       $topic_id = intval($_GET["topic"]);
       $query_annex = " AND post_id = :post_id:";
       $query_bind["post_id"] = $topic_id;
+    }
+    
+    $show_user = false;
+    
+    // show user profile
+    if (isset($_GET["user"]))
+    {
+      $show_user = "zefirov";
+      $query_annex = " AND post_id = 59307";
     }
 		
 		$topics_order = "ord DESC";
@@ -291,6 +332,7 @@ class ForumController extends Controller
 			"limit" => $limit,
 			
 			"forum_id" => $forum_obj->forum_id,
+      "forum_slug" => $forum_obj->slug,
 			"forum_title" => $forum_obj->title,
 			//"final_title" => (isset($topic_id) and $topic_id != 0 and $topic->title) ? anti_xss($topic->title) : anti_xss($forum_obj->title),
       "final_title" => anti_xss($forum_obj->title),
@@ -392,8 +434,11 @@ class ForumController extends Controller
 		{
 			if (!isset($topic_id)) // only cache forum page
 			{
-				$twig_data["template"] = $twig_template; // will be used later when the data is restored from cache
-				cache_set("forum_".$forum_obj->forum_id, $twig_data, 24*60*60);
+        if ($use_page_cache) // only cache if caching is enabled
+        {
+				  $twig_data["template"] = $twig_template; // will be used later when the data is restored from cache
+				  cache_set("forum_".$forum_obj->forum_id, $twig_data, 24*60*60);
+        }
 			}
 		}
     

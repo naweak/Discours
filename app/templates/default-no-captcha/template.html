@@ -21,26 +21,6 @@ NoScript:
 Topic with replies:
 
 #}
-{#
-
-Captcha:
-
-#}
-{% block captcha %}
-{% if root is defined %}
-  {% set tag = random() %}
-  <div class="captcha_div" style="margin-bottom:6px;">
-    <input type="hidden" name="captcha_tag" value="{{ tag }}">
-    <img class="captcha_image" src="/captcha?tag={{ tag }}"><br>
-    <input class="captcha_text" name="captcha_text" type="text" autocomplete="off" placeholder="Введите капчу">
-  </div>
-{% endif %}
-{% endblock %}
-{#
-
-Topic with replies:
-
-#}
 {% block topic_with_replies %}
 {% if root is defined %}
   <post_with_replies class="{{ topic.post_id }}" topic_id="{{ topic.post_id }}">
@@ -48,11 +28,11 @@ Topic with replies:
 
       <div class="forum_title">
         <a href="{{ topic.forum_href }}">{{ topic.forum_title }}</a>
-      </div>
-      
-      {% if topic.ord > 1800000000000 %}
+        
+        {% if topic.ord > 1800000000000 %}
           <span style="color:red;">пост закреплен</span>
-      {% endif %}
+        {% endif %}
+      </div>
 
       <div style="clear:both;padding:0px;"></div>
       
@@ -137,16 +117,14 @@ Topic with replies:
           {% if topic.author_href %}</a>{% endif %}
         </span>
         <span style="color:#aaaaaa;">&#8729;</span>
-        <a href="/{{ topic.post_id }}" class="time_formatted">{{ topic.time_formatted }}</a>
-        <span style="color:#aaaaaa;">&#8729;</span>
-        <span style="color:#aaaaaa;">ОП</span>
+        <a href="/topic/{{ topic.post_id }}" class="time_formatted">{{ topic.time_formatted }}</a>
       </div>
       
     </post>
     
     <replies>
       {% if topic.omitted_replies %}
-        <a href="/{{ topic.post_id }}" target="_blank">
+        <a href="/topic/{{ topic.post_id }}" target="_blank">
         <expand id="show_omitted_{{ topic.post_id }}">
           Показать все {{ topic.omitted_replies + replies_to_show }} ответов
         </expand>
@@ -195,10 +173,8 @@ Topic with replies:
         </noscript>
         
         <div class="contenteditable_textarea" contenteditable="true" id="text_{{ topic.post_id }}" spellcheck="false" placeholder="Написать ответ..."></div>
-        
+
         <div class="controls" style="margin-top: 7px;">
-          {{ block("captcha") }}
-          
           <div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
             <input id="reply_userfile_{{ topic.post_id }}" name="userfile" type="file" class="inputfile">
             <label for="reply_userfile_{{ topic.post_id }}" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>
@@ -283,7 +259,7 @@ Reply:
       {% endif %}
       
       {% if reply.reply_to %}
-        <a class="preview {% if reply.reply_to_my_post %}reply_to_my_post{% endif %}" href="/{{ reply.parent_topic }}#{{ reply.reply_to }}" topic_id="{{ reply.parent_topic }}" order_in_topic='{{ reply.reply_to }}'>
+        <a class="preview {% if reply.reply_to_my_post %}reply_to_my_post{% endif %}" href="/topic/{{ reply.parent_topic }}#{{ reply.reply_to }}" topic_id="{{ reply.parent_topic }}" order_in_topic='{{ reply.reply_to }}'>
           Ответ на пост {{ reply.reply_to }}
         </a>
         <br>
@@ -321,18 +297,12 @@ Reply:
           {% if reply.author_href %}</a>{% endif %}
         </span>
         <span style="color:#aaaaaa;">&#8729;</span>
-        <a class="time_formatted" href="/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});">{{ reply.time_formatted }}</a>
-        
-        <span style="color:#aaaaaa;">&#8729;</span>
-        <a href="/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" class="time_formatted">№{{ reply.order_in_topic }}</a>
-        
+        <a class="time_formatted" href="/topic/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});">{{ reply.time_formatted }}</a>
       </div>
       
-      <!--
       <div class="post_footnote right" style="float:right;">
-        <a href="/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" class="order_in_topic_link">{{ reply.order_in_topic }}</a>
+        <a href="/topic/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" class="order_in_topic_link">{{ reply.order_in_topic }}</a>
       </div>
-      -->
       
     </div>
   </reply>
@@ -362,8 +332,6 @@ New topic form:
           {% endif %}
           
           <textarea name="text" class="new_post" spellcheck="false" placeholder="Введите текст...">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
-          
-          {{ block("captcha") }}
           
           <div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
             <input id="topic_userfile" name="userfile" type="file" class="inputfile">
@@ -413,7 +381,7 @@ Main page block:
         {% set final_title = "Дискурс" %}
       {% endif %}
     {% endif %}
-    <title>{{ final_title }}</title>
+    <title>{{ final_title }}{% if notifications_unread > 0 and not topic_id %} ({{ notifications_unread }}){% endif %}</title>
         
     <!-- Meta -->
     <meta charset="UTF-8">
@@ -465,6 +433,11 @@ Main page block:
       ));
       return matches ? decodeURIComponent(matches[1]) : undefined;
     }
+    if (getCookie("night") == 1)
+    {
+      console.log("Night theme");
+      document.body.className += ' ' + 'night';
+    }
       
     function addStyleString (str)
     {
@@ -472,20 +445,7 @@ Main page block:
       node.innerHTML = str;
       document.body.appendChild(node);
     }
-      
-    if (getCookie("night") == 1)
-    {
-      console.log("Night theme");
-      document.body.className += ' ' + 'night';
-    }
     </script>
-    
-    <style>
-    .new_topic_form .captcha_div
-    {
-      display: none; 
-    }
-    </style>
     
     <noscript>
       <style>
@@ -508,11 +468,6 @@ Main page block:
       {
         display: block;
       }
-        
-      .new_topic_form .captcha_div
-      {
-        display: block; 
-      }
       </style>
     </noscript>
     
@@ -527,6 +482,7 @@ Main page block:
       <ol style="max-height:95%;overflow:auto;">
         <li style="font-weight:bold;"><a href="/">Главная</a></li>
         <li style="font-weight:bold;"><a href="/int/">International</a></li>
+        <li><a href="/chat#bottom">Ламповый чатик</a></li>
         
         <li><a href="/vg/">Видеоигры</a></li>
         <li><a href="/po/">Политика</a></li>
@@ -538,6 +494,7 @@ Main page block:
         <li><a href="/tech/">Технологии</a></li>
         
         <li><a href="/news/">Новости</a></li>
+        <li><a href="/old/">Старый дизайн</a></li>
         <li><a href="/1chan/">1chan</a></li>
         
         <li style="font-weight:bold; margin-top:1em;"><a href="/login">{% if not user_id %}Вход{% else %}Выход{% endif %}</a></li>
@@ -628,8 +585,17 @@ Main page block:
                   
                    <!-- -->
 
+                   <a class="navbar-item hidden" href="/old/">
+                   Старый дизайн
+                   </a>
                    <a class="navbar-item hidden" href="/1chan/">
                    1chan
+                   </a>
+                   <a class="navbar-item hidden" href="/trash/">
+                   Свалка
+                   </a>
+                   <a class="navbar-item hidden" href="/chat#bottom">
+                   Ламповый чатик
                    </a>
                 </div>
              </div>
@@ -669,20 +635,20 @@ Main page block:
              </div>
              <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link is-active">
-                Настройки
+                Профиль
                 </a>
                 <div class="navbar-dropdown is-boxed">
-                   <!--<a class="navbar-item" href="/login">
+                   <a class="navbar-item" href="/login">
                    {% if not user_id %}Вход{% else %}Выход{% endif %}
-                   </a>-->
+                   </a>
                    <a class="navbar-item" href="/my-topics">
                    Мои темы
                    </a>
-                   <a class="navbar-item" onclick="quick_load();">
-                   Уведомления
-                   </a>
                    <a class="navbar-item" href="/settings">
                    Настройки
+                   </a>
+                   <a class="navbar-item" onclick="quick_load();">
+                   Уведомления
                    </a>
                 </div>
              </div>
@@ -698,6 +664,8 @@ Main page block:
             <a class="navbar-item username">
               {% if username %}
                 {{ username }}
+              {% else%}
+                аноним
               {% endif %}
             </a>
             
@@ -725,7 +693,7 @@ Main page block:
             <button class="delete" aria-label="delete"></button>
           </div>
           <div class="message-body">
-            Наконец-то <a href="/42909" target="_blank" style="font-weight:bold;text-decoration:none;">доделаны</a> уведомления.
+            Наконец-то <a href="/topic/42909" target="_blank" style="font-weight:bold;text-decoration:none;">доделаны</a> уведомления.
           </div>
         </article>
       </content>
@@ -740,6 +708,15 @@ Main page block:
         <article class="message">
         <div class="message-body">
           <center>В этот раздел переносятся раковые темы.</center>
+        </div>
+        </article>
+        </content>
+        {% endif %}
+        {% if forum_id == 12 %}
+        <content>
+        <article class="message">
+        <div class="message-body">
+          <center>Новости можно добавлять каждые три минуты, бампов нет, можно пиарить параши.</center>
         </div>
         </article>
         </content>
@@ -776,18 +753,6 @@ Main page block:
       {% endif %}
     
       <a name="bottom" id="bottom"></a>
-    
-      <script>
-      function test_click ()
-      {
-        $(".reply_form").css("position", "fixed")
-        .css("top", "3.25rem")
-        .css("left", "0px")
-        .css("width", "100%")
-        .css("background", "yellow");
-      }
-      </script>
-      <!--<input type="button" value="test" onclick="test_click();">-->
     
       <footer>
         <div>Произведено командой Дискурса. Будем рады <a href="https://discou.rs/d/" target="_blank">отзывам</a>.</div>

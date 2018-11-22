@@ -32,10 +32,20 @@ $row = $sql->fetch();
 
 echo "Unique IPs today: {$row[0]}<br>";
 
+$sql = $pdo->query("SELECT COUNT(post_id) FROM posts WHERE creation_time >= $beginning_of_this_day");
+$row = $sql->fetch();
+
+echo "Posts today: {$row[0]}<br>";
+
+$sql = $pdo->query("SELECT COUNT(post_id) FROM posts WHERE parent_topic = 0 AND creation_time >= $beginning_of_this_day");
+$row = $sql->fetch();
+
+echo "Topics today: {$row[0]}<br>";
+
 $query = $pdo->query("SELECT COUNT(user_id) FROM users");
 $row = $query->fetch();
 
-echo "Total users: {$row[0]}<br>";
+echo "Users registered: {$row[0]}<br>";
 ?>
 
 <?php

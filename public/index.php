@@ -61,12 +61,12 @@ $di['db'] = function() {
     ));
 };
 
-if (false)
+if (USE_ROUTES)
 {
   $di->set('router', function() use ($config) {
     $router = new \Phalcon\Mvc\Router(false);
     $router->removeExtraSlashes(false);
-    include('../app/config/routes.php');
+    include(ROUTES_FILE);
     return $router;
   });
 }

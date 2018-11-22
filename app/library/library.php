@@ -597,4 +597,17 @@ function is_json ()
     return false;
   }
 }
+
+function validate_captcha_tag ($tag)
+{
+  if (ctype_alnum($tag) and mb_strlen($tag) < 50)
+  {
+    return true;
+  }
+  
+  else
+  {
+    return false;
+  }
+}
 ?>

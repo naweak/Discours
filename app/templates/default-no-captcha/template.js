@@ -1,8 +1,7 @@
-var topic_userfile_html = '<i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>';
-
 $(document).ready(function ()
 {
     window.percent_gradient_color = "#efefef";
+    window.topic_userfile_html = '<i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>';
   
     /*window.onerror = function (msg, url, linenumber)
     {
@@ -87,6 +86,7 @@ $(document).ready(function ()
     {
       append_style(".reply_to_topic {margin-left: 2px !important;}");
       append_style(".attach_button {margin-left: 3px !important;}");
+      append_style(".contenteditable_textarea {margin-left: 2px !important;}");
     }
 
     $("img.embedded").css("cursor", "pointer");
@@ -97,7 +97,7 @@ $(document).ready(function ()
   
     var input_file_label_html = $(".inputfile").next().html();
   
-    $(document).on("change", ".inputfile", function(e)
+    $(document).on("change", ".inputfile", function(e) // image attach button
     {
       var label	 = $(this).next().get(0); // returns DOM element
       var fileName = '';
@@ -128,13 +128,68 @@ $(document).ready(function ()
         label.style.fontWeight = "normal";
       }
     });
+
+    if (mobile())
+    {
+      $(document).on("focus", ".contenteditable_textarea", function(e) // content-editable div
+      {
+        $(".navbar").hide();
+        
+        var y = $(window).scrollTop(); // current position
+        var element = $(e.target).parent().parent().prev();
+        var element_y = $(element).offset().top;
+        var element_h = $(element).height();
+        var window_h = $(window).height();
+        var document_h = $(document).height();
+        
+        var scroll_to = element_y;
+        
+        if (scroll_to > document_h)
+        {
+          scroll_to = document_h;
+        }
+        
+        $(window).scrollTop(element_y);
+      });
+      
+      $(document).on("blur", ".contenteditable_textarea", function(e) // content-editable div
+      {
+        $(".navbar").show();
+      });
+    }
+
+    $(document).on("paste", ".contenteditable_textarea", function(e) // content-editable div
+    {
+      e.preventDefault();
+      var text = '';
+      if (e.clipboardData || e.originalEvent.clipboardData) {
+        text = (e.originalEvent || e).clipboardData.getData('text/plain');
+      } else if (window.clipboardData) {
+        text = window.clipboardData.getData('Text');
+      }
+      if (document.queryCommandSupported('insertText')) {
+        document.execCommand('insertText', false, text);
+      } else {
+        document.execCommand('paste', false, text);
+      }
+    });
+  
+    // Probably some hack for outdated browsers
+    /*$(".contenteditable_textarea").focusout(function()
+    {
+      var element = $(this);        
+      if (!element.text().replace(" ", "").length)
+      {
+        element.empty();
+      }
+    });*/
 	
 		var scroll_speed = 1;
-		$("#up").click(function ()
+		$("#up").click(function () // scroll up button
 		{
         $("html, body").animate({scrollTop : 0}, scroll_speed);
     });
-		$("#down").click(function ()
+		$("#down").click(function () // scroll down button
 		{
         $("html, body").animate({scrollTop : $(document).height()}, scroll_speed);
     });
@@ -174,6 +229,12 @@ $(document).ready(function ()
         $.cookie("news_"+news_id, "read");
       });
     }
+  
+    /*lightbox.option
+    ({
+      'resizeDuration': 20000,
+      'wrapAround': true
+    });*/
     
     bind_event_handlers();
 });
@@ -191,8 +252,9 @@ $(document).ready(function ()
 	}
 });*/
 
-window.reply_form_selector     = "textarea.reply";
 window.new_topic_form_selector = "textarea.new_post";
+//window.reply_form_selector     = "textarea.reply";
+window.reply_form_selector = "div.contenteditable_textarea";
 
 function get_form_data (element)
 {
@@ -231,6 +293,16 @@ function ajax_form (args)
     if (form_data.get("userfile").size === 0) // Prevent CloudFlare from returning "400 Bad Request"
     {
       form_data.delete("userfile");
+    }
+    if ($(form).find(".contenteditable_textarea").length)
+    {
+      var text = $(form).find(".contenteditable_textarea").first().getPreText();
+      form_data.append("text", text);
+    }
+    if (typeof get_challenge_answer === "function")
+    {
+      var challenge_answer = get_challenge_answer();
+      form_data.append("challenge_answer", challenge_answer);
     }
     form_data.append("ajax", true);
 		console.log("Form data for submission:");
@@ -321,12 +393,11 @@ function bind_event_handlers ()
 		if (e.ctrlKey && e.keyCode == 13) // Ctrl-Enter pressed
 		{
 			console.log("ctrl+enter");
-
 			var submit = $(e.target).parent().find(":submit");
-
 			$(submit).submit();
-
 			console.log(submit);
+      e.preventDefault();
+      e.stopPropagation();
 		}
 	});
 
@@ -487,19 +558,17 @@ function bind_event_handlers ()
 			data = $.parseJSON(data);
 			
 			function clean_and_resize ()
-			{
+			{ 
 				// clear form
 				$(form).find("[name='userfile']").val("");
-				$(form).find(".attach_button").html(topic_userfile_html);
+				$(form).find(".attach_button").html(window.topic_userfile_html);
         $(form).find(".attach_button").css("font-weight", "normal");
-				var textarea = $(form).find("textarea");
+				/*var textarea = $(form).find("textarea");
 				//$(textarea).blur();
 				textarea.val("");
 				autosize.update(textarea);
-
-				textarea.trigger("paste"); // resize textarea
-        
-        change_reply_to($(form).find("[name='parent_topic']").val(), 0);
+				textarea.trigger("paste"); // resize textarea*/
+        $(form).find(".contenteditable_textarea").first().text("");
 				
 				$(form).find("input[type='submit']").prop("disabled", false);
 				$(form).find(".submit_button").removeClass("is-loading");
@@ -507,11 +576,25 @@ function bind_event_handlers ()
 				var reply_form = $(form);
 				$(reply_form).prev().detach();
 				$(form).parent().append("<div class='hr'></div>", reply_form.detach());
+        
+        var reply_to = $(form).find("[name='reply_to']").val();
+        if (topic_id)
+        {
+          if (reply_to === 0 || reply_to == "0" || !reply_to) // if replying to OP post
+          {
+            // scroll to bottom
+            console.log("Scroll to bottom");
+            $(window).scrollTop($(document).height());
+          }
+        }
+        
+        change_reply_to($(form).find("[name='parent_topic']").val(), 0);
 			}
 			
 			//if (typeof data.reply !== "undefined")
 			if (typeof data.success !== "undefined" && data.success)
 			{
+        $(form).find(".error").html("");
 				if ($(form).hasClass("notification_form"))
 				{
 					$(form).parent().find(".notification_reply_link").first().hide();
@@ -527,7 +610,14 @@ function bind_event_handlers ()
 			{
 				$(form).find("input[type='submit']").prop("disabled", false);
 				$(form).find(".submit_button").removeClass("is-loading");
-				alert(data.error);
+				//alert(data.error);
+        
+        //var error_message_html = "<article class='message is-warning'><div class='message-header'><p>Ошибка</p><button class='delete' aria-label='delete' onclick='$(this).parent().parent().hide();'></button></div><div class='message-body'>"+data.error+"</div></article>";
+				var error_message_html = "<div style='margin-bottom:7px;'>"+data.error+"</div>";
+        $(form).find(".error").html("");
+				var new_item = $(error_message_html).hide();
+				$(form).find(".error").append(new_item);
+				new_item.slideDown(300);
 			}
 			/*$(form).find("input[type='submit']").prop("disabled", false);
 			$(form).find(".submit_button").removeClass("is-loading");*/
@@ -568,7 +658,7 @@ function clear_new_topic_form ()
 	$(".new_topic_form").find(".picrandom").val($(".new_topic_form").find(".picrandom option:first").val());
 	$(".new_topic_form").find("[name='userfile']").val("");
 	
-	$(".new_topic_form").find("[for='topic_userfile']").html(topic_userfile_html);
+	$(".new_topic_form").find("[for='topic_userfile']").html(window.topic_userfile_html);
   $(".new_topic_form").find("[for='topic_userfile']").css("font-weight", "normal");
 	
 	// resize textarea
@@ -1095,6 +1185,18 @@ jQuery.fn.remove_highlight = function()
     return this; // This is needed so others can keep chaining off of this
 };
 
+$.fn.getPreText = function ()
+{
+    var ce = $("<pre />").html(this.html());
+    if ($.browser.webkit)
+      ce.find("div").replaceWith(function() { return "\n" + this.innerHTML; });
+    if ($.browser.msie)
+      ce.find("p").replaceWith(function() { return this.innerHTML + "<br>"; });
+    if ($.browser.mozilla || $.browser.opera || $.browser.msie)
+      ce.find("br").replaceWith("\n");
+    return ce.text();
+};
+
 /* Page logic: */
 
 function on_resize ()
@@ -1110,284 +1212,24 @@ $(window).resize(function ()
 	on_resize();
 });
 
-/* Plugins: */
+/* END Page logic */
 
-$.fn.selectRange = function(start, end)
+function more_click (element)
 {
-    return this.each(function() {
-        if (this.setSelectionRange) {
-            this.focus();
-            this.setSelectionRange(start, end);
-        } else if (this.createTextRange) {
-            var range = this.createTextRange();
-            range.collapse(true);
-            range.moveEnd('character', end);
-            range.moveStart('character', start);
-            range.select();
-        }
-    });
-};
+  $(element).hide();
+  $(element).parent().find('.hidden').removeClass('hidden');
+}
 
-$.scrollLock = (function scrollLockClosure()
+function quick_load (params)
 {
-    'use strict';
-
-    var $html      = $( 'html' ),
-        // State: unlocked by default
-        locked     = false,
-        // State: scroll to revert to
-        prevScroll = {
-            scrollLeft : $( window ).scrollLeft(),
-            scrollTop  : $( window ).scrollTop()
-        },
-        // State: styles to revert to
-        prevStyles = {},
-        lockStyles = {
-            'overflow-y' : 'scroll',
-            'position'   : 'fixed',
-            'width'      : '100%'
-        };
-
-    // Instantiate cache in case someone tries to unlock before locking
-    saveStyles();
-
-    // Save context's inline styles in cache
-    function saveStyles() {
-        var styleAttr = $html.attr( 'style' ),
-            styleStrs = [],
-            styleHash = {};
-
-        if( !styleAttr ){
-            return;
-        }
-
-        styleStrs = styleAttr.split( /;\s/ );
-
-        $.each( styleStrs, function serializeStyleProp( styleString ){
-            if( !styleString ) {
-                return;
-            }
-
-            var keyValue = styleString.split( /\s:\s/ );
-
-            if( keyValue.length < 2 ) {
-                return;
-            }
-
-            styleHash[ keyValue[ 0 ] ] = keyValue[ 1 ];
-        } );
-
-        $.extend( prevStyles, styleHash );
-    }
-
-    function lock() {
-        var appliedLock = {};
-
-        // Duplicate execution will break DOM statefulness
-        if( locked ) {
-            return;
-        }
-
-        // Save scroll state...
-        prevScroll = {
-            scrollLeft : $( window ).scrollLeft(),
-            scrollTop  : $( window ).scrollTop()
-        };
-
-        // ...and styles
-        saveStyles();
-
-        // Compose our applied CSS
-        $.extend( appliedLock, lockStyles, {
-            // And apply scroll state as styles
-            'left' : - prevScroll.scrollLeft + 'px',
-            'top'  : - prevScroll.scrollTop  + 'px'
-        } );
-
-        // Then lock styles...
-        $html.css( appliedLock );
-
-        // ...and scroll state
-        $( window )
-            .scrollLeft( 0 )
-            .scrollTop( 0 );
-
-        locked = true;
-    }
-
-    function unlock() {
-        // Duplicate execution will break DOM statefulness
-        if( !locked ) {
-            return;
-        }
-
-        // Revert styles
-        $html.attr( 'style', $( '<x>' ).css( prevStyles ).attr( 'style' ) || '' );
-
-        // Revert scroll values
-        $( window )
-            .scrollLeft( prevScroll.scrollLeft )
-            .scrollTop(  prevScroll.scrollTop );
-
-        locked = false;
-    }
-
-    return function scrollLock( on ) {
-        // If an argument is passed, lock or unlock depending on truthiness
-        if( arguments.length ) {
-            if( on ) {
-                lock();
-            }
-            else {
-                unlock();
-            }
-        }
-        // Otherwise, toggle
-        else {
-            if( locked ){
-                unlock();
-            }
-            else {
-                lock();
-            }
-        }
-    };
-}());
-
-(function($, specialEventName) {
-  'use strict';
-
-  /**
-   * Native event names for creating custom one.
-   *
-   * @type {Object}
-   */
-  var nativeEvent = Object.create(null);
-  /**
-   * Get current time.
-   *
-   * @return {Number}
-   */
-  var getTime = function() {
-    return new Date().getTime();
-  };
-
-  nativeEvent.original = 'click';
-
-  if ('ontouchstart' in document) {
-    nativeEvent.start = 'touchstart';
-    nativeEvent.end = 'touchend';
-  } else {
-    nativeEvent.start = 'mousedown';
-    nativeEvent.end = 'mouseup';
+  $.ajax
+  ({
+  url: "/notifications",
+  success: function(data)
+  {
+    var newDoc = document.open("text/html", "replace");
+    newDoc.write(data);
+    newDoc.close();
   }
-
-  $.event.special[specialEventName] = {
-    setup: function(data, namespaces, eventHandle) {
-      var $element = $(this);
-      var eventData = {};
-
-      $element
-        // Remove all handlers that were set for an original event.
-        .off(nativeEvent.original)
-        // Prevent default actions.
-        .on(nativeEvent.original, false)
-        // Split original event by two different and collect an information
-        // on every phase.
-        .on(nativeEvent.start + ' ' + nativeEvent.end, function(event) {
-          // Handle the event system of touchscreen devices.
-          eventData.event = event.originalEvent.changedTouches ? event.originalEvent.changedTouches[0] : event;
-        })
-        .on(nativeEvent.start, function(event) {
-          // Stop execution if an event is simulated.
-          if (event.which && event.which !== 1) {
-            return;
-          }
-
-          eventData.target = event.target;
-          eventData.pageX = eventData.event.pageX;
-          eventData.pageY = eventData.event.pageY;
-          eventData.time = getTime();
-        })
-        .on(nativeEvent.end, function(event) {
-          // Compare properties from two phases.
-          if (
-            // The target should be the same.
-            eventData.target === event.target &&
-            // Time between first and last phases should be less than 750 ms.
-            getTime() - eventData.time < 750 &&
-            // Coordinates, when event ends, should be the same as they were
-            // on start.
-            (
-              eventData.pageX === eventData.event.pageX &&
-              eventData.pageY === eventData.event.pageY
-            )
-          ) {
-            event.type = specialEventName;
-            event.pageX = eventData.event.pageX;
-            event.pageY = eventData.event.pageY;
-
-            eventHandle.call(this, event);
-
-            // If an event wasn't prevented then execute original actions.
-            if (!event.isDefaultPrevented()) {
-              $element
-                // Remove prevention of default actions.
-                .off(nativeEvent.original)
-                // Bring the action.
-                .trigger(nativeEvent.original);
-            }
-          }
-        });
-    },
-
-    remove: function() {
-      $(this).off(nativeEvent.start + ' ' + nativeEvent.end);
-    }
-  };
-
-  $.fn[specialEventName] = function(fn) {
-    return this[fn ? 'on' : 'trigger'](specialEventName, fn);
-  };
-})(jQuery, 'tap');
-
-(function(window, document){
-
-  window.pageTitleNotification = (function () {
-
-      var config = {
-          currentTitle: null,
-          interval: null
-      };
-
-      var on = function (notificationText, intervalSpeed) {
-          if (!config.interval) {
-              config.currentTitle = document.title;
-              config.interval = window.setInterval(function() {
-                  document.title = (config.currentTitle === document.title)
-                      ? notificationText
-                      : config.currentTitle;
-              }, (intervalSpeed) ? intervalSpeed : 1000);
-          }
-      };
-
-      var off = function () {
-          window.clearInterval(config.interval);
-          config.interval = null;
-          if (config.currentTitle !== null)
-          {
-            document.title = config.currentTitle;
-          }
-      };
-
-      return {
-          on: on,
-          off: off
-      };
-
-  })();
-
-}(window, document));
-
-/*! jquery.cookie v1.4.1 | MIT */
-!function(a){"function"==typeof define&&define.amd?define(["jquery"],a):"object"==typeof exports?a(require("jquery")):a(jQuery)}(function(a){function b(a){return h.raw?a:encodeURIComponent(a)}function c(a){return h.raw?a:decodeURIComponent(a)}function d(a){return b(h.json?JSON.stringify(a):String(a))}function e(a){0===a.indexOf('"')&&(a=a.slice(1,-1).replace(/\\"/g,'"').replace(/\\\\/g,"\\"));try{return a=decodeURIComponent(a.replace(g," ")),h.json?JSON.parse(a):a}catch(b){}}function f(b,c){var d=h.raw?b:e(b);return a.isFunction(c)?c(d):d}var g=/\+/g,h=a.cookie=function(e,g,i){if(void 0!==g&&!a.isFunction(g)){if(i=a.extend({},h.defaults,i),"number"==typeof i.expires){var j=i.expires,k=i.expires=new Date;k.setTime(+k+864e5*j)}return document.cookie=[b(e),"=",d(g),i.expires?"; expires="+i.expires.toUTCString():"",i.path?"; path="+i.path:"",i.domain?"; domain="+i.domain:"",i.secure?"; secure":""].join("")}for(var l=e?void 0:{},m=document.cookie?document.cookie.split("; "):[],n=0,o=m.length;o>n;n++){var p=m[n].split("="),q=c(p.shift()),r=p.join("=");if(e&&e===q){l=f(r,g);break}e||void 0===(r=f(r))||(l[q]=r)}return l};h.defaults={},a.removeCookie=function(b,c){return void 0===a.cookie(b)?!1:(a.cookie(b,"",a.extend({},c,{expires:-1})),!a.cookie(b))}});
+  });
+}

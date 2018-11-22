@@ -1,3 +1,6 @@
+{% if forum_slug == "int" %}
+  {% set lang = "en"  %}
+{% endif %}
 {#
 
 NoScript:
@@ -19,8 +22,8 @@ Topic with replies:
 {% if root is defined %}
   <!-- topic -->
   {% if topic.file_url %}
-  <span class="filesize">Файл: <a target="_blank" href="{{ topic.file_url }}">{{ topic.file_name }}</a><!-- -(<em>7726 B, 100x100</em>)--></span>
-  <span class="thumbnailmsg">Показана уменьшенная копия, оригинал по клику.</span><br /> 
+  <span class="filesize">{% if lang == "en" %}File{% else %}Файл{% endif %}: <a target="_blank" href="{{ topic.file_url }}">{{ topic.file_name }}</a><!-- -(<em>7726 B, 100x100</em>)--></span>
+  <br /> 
   <a target="_blank" href="{{ topic.file_url }}"> 
   <img src="{{ topic.thumb_url }}" width="{{ topic.thumb_w }}" height="{{ topic.thumb_h }}" alt="" class="thumb" /></a>    
   {% endif %}  
@@ -34,7 +37,7 @@ Topic with replies:
   {% endif %}
   <span class="postername">
     {{ topic.author_formatted|raw }}
-  </span> {{ topic.time_formatted }}</label>
+  </span> {% if lang == "en" %}{{ topic.time_formatted_en }}{% else %}{{ topic.time_formatted }}{% endif %}</label>
   <span class="reflink">
   {% if not topic_id %}
   <a href="{{ topic.forum_href }}res/{{ topic.post_id }}.html#i{{ topic.post_id }}">No.{{ topic.post_id }}</a>
@@ -43,14 +46,20 @@ Topic with replies:
   {% endif %}
   </span>&nbsp;
   {% if not topic_id %}
-    [<a href="{{ topic.forum_href }}res/{{ topic.post_id }}.html">Ответить</a>]
+    [<a href="{{ topic.forum_href }}res/{{ topic.post_id }}.html">{% if lang == "en" %}Reply{% else %}Ответить{% endif %}</a>]
   {% endif %}
   <blockquote>
     <p>{{ topic.text_formatted|raw }}</p>
   </blockquote>
 
   {% if topic.omitted_replies %}
-  <span class="omittedposts">Пропущено постов: {{ topic.omitted_replies }}. Нажмите Ответить для просмотра.</span>
+  <span class="omittedposts">
+    {% if lang == "en" %}
+      {{ topic.omitted_replies }} posts omitted. Click Reply to view.
+    {% else %}
+      Пропущено постов: {{ topic.omitted_replies }}. Нажмите Ответить для просмотра.
+    {% endif %}
+  </span>
   {% endif %}
 
   {% for reply in topic.replies %}
@@ -82,7 +91,7 @@ Reply:
           <span class="commentpostername">
             {{ reply.author_formatted|raw }}
           </span>
-          {{ reply.time_formatted }}
+          {% if lang == "en" %}{{ reply.time_formatted_en }}{% else %}{{ reply.time_formatted }}{% endif %}
           </label>
           
           <span class="reflink"> 
@@ -97,8 +106,8 @@ Reply:
           {% if reply.file_url %}
           </span>&nbsp; <br />
           <span class="filesize">Файл: <a target="_blank" href="{{ reply.file_url }}">{{ reply.file_name }}</a><!-- -(<em>29727 B, 576x432</em>)--></span>
-          <span class="thumbnailmsg">Показана уменьшенная копия, оригинал по клику.</span><br/>
-          <a target="_blank" href="{{ reply.file_url }}"> <img src="{{ reply.thumb_url }}" width="{{ reply.thumb_w }}" height="{{ reply.thumb_h }}" class="thumb" /></a>
+          <br/>
+          <a target="_blank" href="{{ reply.file_url }}"> <img src="{{ reply.thumb_url }}" width="{{ reply.thumb_w }}" height="{{ reply.thumb_h }}" class="thumb replythumb" /></a>
           {% endif %}
           
           <blockquote>
@@ -142,9 +151,19 @@ New topic form:
 							<td><input type="text" name="field2" size="28" /></td>
 						</tr>-->
 						<tr>
-							<td class="postblock">Тема</td>
+							<td class="postblock">{% if lang == "en" %}Title{% else %}Тема{% endif %}</td>
 							<td><input type="text" name="field3" size="35" /> <input type="submit" value="Отправить" /></td>
 						</tr>
+            <tr>
+              <td class="postblock captcha">
+                {% set tag = random() %}
+                <input type="hidden" name="captcha_tag" value="{{ tag }}">
+                <img src="/captcha?tag={{ tag }}" class="captcha" onclick="this.src = this.src+'&'+new Date().getTime();">
+              </td>
+              <td>
+                <input type="text" name="captcha_text" placeholder="Введите капчу" width="122px" height="50px">
+              </td>
+            </tr>
 						<tr>
 							<td class="postblock">Комментарий</td>
 							<td><textarea name="text" cols="48" rows="4"></textarea></td>
@@ -219,6 +238,18 @@ Main page block:
 			float: left;
 			margin: 3px 20px 3px 0px;
 			}
+      blockquote
+      {
+        margin-left: 20px;
+      }
+      .reply
+      {
+        padding: 5px 5px;
+      }
+      .replythumb
+      {
+        margin-left: 20px;
+      }
 			.nothumb {
 			float: left;
 			background: #eee;
@@ -272,6 +303,18 @@ Main page block:
         margin-top: -3px;
         vertical-align: middle;
       }
+      
+      td.captcha
+      {
+        text-align: center;
+      }
+      
+      img.captcha
+      {
+        min-width: 100%;
+        /*width: 122px;*/
+        height: 50px;
+      }
 		</style>
     <link rel="stylesheet" type="text/css" href="/futaba.css" title="Futaba" />
 		<!--<link rel="alternate stylesheet" type="text/css" href="/css/burichan.css" title="Burichan" />
@@ -292,7 +335,7 @@ Main page block:
     [<a href="javascript:set_stylesheet('Burichan')">Burichan</a>] [<a href="javascript:set_stylesheet('Futaba')">Futaba</a>] [<a href="javascript:set_stylesheet('Gurochan')">Gurochan</a>] [<a href="javascript:set_stylesheet('Photon')">Photon</a>] [<a href="javascript:set_stylesheet('Style')">Style</a>]
     [<a href="javascript:set_stylesheet('Tabs')">Tabs</a>] [<a href="javascript:set_stylesheet('Winxp.blue')">Winxp.blue</a>] - [<a href="/../" target="_top">Home</a>] [<a href="/wakaba.pl?task=admin">Manage</a>]
     -->
-    [<a href="/" target="_top">Главная</a>] - [<a href="/vg/">vg</a> / <a href="/po/">po</a> / <a href="/a/">a</a> / <a href="/hw/">hw</a> / <a href="/ph/">ph</a> / <a href="/d/">d</a>]
+    [<a href="/" target="_top">{% if lang == "en" %}Main Page{% else %}Главная{% endif %}</a>] - [<a href="/int/">int</a> / <a href="/vg/">vg</a> / <a href="/po/">po</a> / <a href="/a/">a</a> / <a href="/hw/">hw</a> / <a href="/ph/">ph</a> / <a href="/d/">d</a>]
   </div>
     
   <div class="notifications_bar" style="float:right;">

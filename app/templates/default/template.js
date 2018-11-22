@@ -67,20 +67,140 @@ $(document).ready(function ()
     }
     , false);
   
-    /*document.onpaste = function(event){
-      var items = (event.clipboardData || event.originalEvent.clipboardData).items;
-      console.log(JSON.stringify(items)); // will give you the mime types
-      for (var index in items) {
-        var item = items[index];
-        if (item.kind === 'file') {
-          var blob = item.getAsFile();
-          var reader = new FileReader();
-          reader.onload = function(event){
-            console.log(event.target.result)}; // data url!
-          reader.readAsDataURL(blob);
+    function image_insert_notification ()
+    {
+      new Noty
+      ({
+        text: "Изображение вставлено",
+        layout: "topRight",
+        type: "success",
+        timeout: 1000,
+      }).show();
+    }
+  
+    function init_drag_and_drop ()
+    {     
+      function highlight_drag_and_drop (state)
+      {
+        var background = "#98FF98";
+        
+        if (state === false)
+        {
+          background = "";
         }
+        
+        $("textarea_container").
+          css("background", background);
+        
+        $(".new_topic_form").parent().
+          css("background", background);
+        
+        //$("body").css("background", body_background);
       }
-    }*/
+      
+      // Drag Enter:
+      $(document).on("dragenter", "body", function(e)
+      {
+        highlight_drag_and_drop(true);
+      });
+      
+      // Drag Leave:
+      $(document).on("dragleave", "body", function(e)
+      {
+        if (!e.originalEvent.clientX && !e.originalEvent.clientY)
+        {
+          // outside body / window
+          highlight_drag_and_drop(false);
+        }
+      });
+      
+      // Drag over:
+      $(document).on("dragover", "body", function(e)
+      {
+        // prevent default to allow drop
+        e.preventDefault();
+      });
+      
+      // Drop:
+      $(document).on("drop", "body", function(e)
+      {
+        // Console always show "files" as empty due to a bug:
+        // https://stackoverflow.com/questions/11573710/event-datatransfer-files-is-empty-when-ondrop-is-fired/38598624#comment50187250_11573873
+        
+        var files = e.originalEvent.dataTransfer.files;
+        var file = files[0];
+        var form;
+
+        if
+        (
+          $(e.target).closest(".new_topic_form").length ||
+          $(e.target).closest(".reply_form").length
+        )
+        {
+          if (typeof file !== "undefined")
+          {
+            if // new topic form
+            (
+              $(e.target).closest(".new_topic_form").length
+            )
+            {
+              form = $(e.target).closest(".new_topic_form");
+              $(form).find("[type='file']").get(0).files = files;
+              image_insert_notification();
+            }
+
+            if // reply form
+            (
+              $(e.target).closest(".reply_form").length
+            )
+            {
+              form = $(e.target).closest(".reply_form");
+              $(form).find(".controls").css("display", "block");
+              $(form).find("[type='file']").get(0).files = files;
+              image_insert_notification();
+            }
+          }
+          
+          else
+          {
+            alert ("Можно загружать только файлы.");
+          }
+        }
+        
+        highlight_drag_and_drop(false);
+        e.preventDefault();
+      });
+      
+      console.log("Drag-and-drop initiated");
+    }
+  
+    init_drag_and_drop();
+  
+    function init_paste ()
+    {
+      $(document).on("paste", "body", function(e)
+      {
+        if
+        (
+          typeof e.originalEvent.clipboardData.files !== "undefined" && 
+          e.originalEvent.clipboardData.files.length
+        )
+        {
+          if ($(e.target).closest("form").length)
+          {
+            var form = $(e.target).closest("form");
+            $(form).find("[type='file']").get(0).files = e.originalEvent.clipboardData.files;
+            image_insert_notification();
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }
+      });
+      
+      console.log("Paste initiated"); 
+    }
+  
+    init_paste();
   
     if(/iPhone|iPad|iPod/i.test(navigator.userAgent))
     {
@@ -166,6 +286,14 @@ $(document).ready(function ()
         text = (e.originalEvent || e).clipboardData.getData('text/plain');
       } else if (window.clipboardData) {
         text = window.clipboardData.getData('Text');
+      }
+      if
+      (
+        typeof e.originalEvent.clipboardData.files !== "undefined" && 
+        e.originalEvent.clipboardData.files.length
+      )
+      {
+        text = "";
       }
       if (document.queryCommandSupported('insertText')) {
         document.execCommand('insertText', false, text);
@@ -420,7 +548,7 @@ function bind_event_handlers ()
 		console.log("Reply form focus");
 		$(this).next().css("display", "block");
 
-		if ($(window).width() > 700)  // normal design
+		/*if ($(window).width() > 700)  // normal design
 		{
 			autosize(this);
 		}
@@ -432,7 +560,7 @@ function bind_event_handlers ()
 				autosize(this);
 				$(this).keypress(function(){});
 			});
-		}
+		}*/
 	});
   
   /*
@@ -449,17 +577,23 @@ function bind_event_handlers ()
   });*/
 
 	// if hidden, it's impossible to select a picture before writing text
-	$(document).on("blur", window.reply_form_selector, function()
-	{
+	//$(document).on("blur", window.reply_form_selector, function()
+	//{
 			/*if ($(this).val() === "")
 			{
 				$(this).next().css("display", "none");
 			}*/
-	});
+	//});
 
-	$(document).on("focus", window.new_topic_form_selector, function()
+	/*$(document).on("focus", window.new_topic_form_selector, function()
 	{
 		autosize(this);
+	});*/
+  
+  $(document).on("click tap", ".captcha_image", function()
+	{
+    d = new Date();
+    $(this).attr("src", $(this).attr("src")+"&"+d.getTime());
 	});
 	
 	$(document).on("click tap", "a.more", function()
@@ -469,6 +603,12 @@ function bind_event_handlers ()
 		$(this).prev(".text_preview").remove();
 		$(this).remove();
 	});
+  
+  $(document).on("focus", window.new_topic_form_selector, function ()
+  {
+    $(".new_topic_form .captcha_div").css("display", "block");
+    console.log("Ddd");
+  });
 
 	// New topic form
 	ajax_form
@@ -557,7 +697,7 @@ function bind_event_handlers ()
 			console.log(data);
 			data = $.parseJSON(data);
 			
-			function clean_and_resize ()
+			function clean_and_resize (params)
 			{ 
 				// clear form
 				$(form).find("[name='userfile']").val("");
@@ -572,10 +712,14 @@ function bind_event_handlers ()
 				
 				$(form).find("input[type='submit']").prop("disabled", false);
 				$(form).find(".submit_button").removeClass("is-loading");
+        
+        $(form).find(".captcha_image").trigger("tap");
+        $(form).find(".captcha_text").val("");
 	
 				var reply_form = $(form);
 				$(reply_form).prev().detach();
-				$(form).parent().append("<div class='hr'></div>", reply_form.detach());
+				//$(form).parent().append("<div class='hr'></div>", reply_form.detach());
+        $(form).parent().append("<hr>", reply_form.detach());
         
         var reply_to = $(form).find("[name='reply_to']").val();
         if (topic_id)
@@ -589,6 +733,12 @@ function bind_event_handlers ()
         }
         
         change_reply_to($(form).find("[name='parent_topic']").val(), 0);
+        
+        if (typeof params.post_id !== "undefined")
+        {
+          $("#reply_"+params.post_id).get(0).scrollIntoView();
+          window.scrollBy(0, -50);
+        }
 			}
 			
 			//if (typeof data.reply !== "undefined")
@@ -604,7 +754,22 @@ function bind_event_handlers ()
 				var parent_topic = $(form).find("[name='parent_topic']").val();
 				console.log("Parent topic: " + parent_topic);
 				
-				load_new_replies(parent_topic, clean_and_resize, false);
+        if (mobile()) // scroll to post
+        {
+          load_new_replies(parent_topic, function(){return clean_and_resize({post_id: data.post_id});}, false);
+        }
+        
+        else // don't scroll to post
+        {
+          /*new Noty
+          ({
+            text: "Ответ отправлен",
+            layout: "topRight",
+            type: "success",
+            timeout: 1000,
+          }).show();*/
+          load_new_replies(parent_topic, clean_and_resize, false);
+        }
 			}
 			else
 			{
@@ -703,19 +868,19 @@ function reply_to_topic (topic_id, reply_id, index)
 	$(reply_form).prev().detach();
 	if (typeof reply_id === "undefined") // replying to topic
 	{
-		$(topic).find("reply").last().after("<div class='hr'></div>", reply_form.detach());
+		//$(topic).find("reply").last().after("<div class='hr'></div>", reply_form.detach());
+    $(topic).find("reply").last().after("<hr>", reply_form.detach());
 	}
 	else // replying to reply
 	{
-		$("#reply_"+reply_id).after("<div class='hr'></div>", reply_form.detach());
+		//$("#reply_"+reply_id).after("<div class='hr'></div>", reply_form.detach());
+    $("#reply_"+reply_id).after("<hr>", reply_form.detach());
 	}
   
   change_reply_to (topic_id, index);
 	
   var contenteditable = $("#text_"+topic_id);
-	var textarea = document.querySelector("#text_"+topic_id);
-	var quote_text = "";
-  
+
   $(contenteditable).focus();
 }
 
@@ -790,7 +955,8 @@ function expand_previous (element)
 function show_omitted (post_id)
 {
 	$("#show_omitted_" + post_id).css("display", "none");
-	$("#show_omitted_" + post_id).after("<div class='hr'></div>");
+	//$("#show_omitted_" + post_id).after("<div class='hr'></div>");
+  $("#show_omitted_" + post_id).after("hr>");
   $("#omitted_" + post_id).css("display", "block");
 }
 
@@ -895,7 +1061,8 @@ function load_new_replies (id, on_finish, highlight)
 				if (parseInt($(this).attr("order_in_topic")) > last_reply_order_in_topic)
 				{
 					console.log("Appending reply");
-					$("post_with_replies[topic_id='"+id+"'] replies").append("<div class='hr'></div>");
+					//$("post_with_replies[topic_id='"+id+"'] replies").append("<div class='hr'></div>");
+          $("post_with_replies[topic_id='"+id+"'] replies").append("<hr>");
 					$("post_with_replies[topic_id='"+id+"'] replies").append(this);
 					if (highlight)
 					{
@@ -1043,7 +1210,7 @@ function link_preview_tree_init ()
 			!$(this).parent().parent().hasClass("link_preview")
 		)
 		{
-			console.log("Remove all previews!");
+			console.log("Remove all previews");
 			$(".link_preview").remove();
 		}
 		
@@ -1111,7 +1278,7 @@ function link_preview_tree_init ()
 			!$(target).parent().parent().hasClass("link_preview")
 		) // mouse out of previews tree
 		{
-			console.log("Remove all previews!");
+			console.log("Remove all previews");
 			$(".link_preview").remove();
     }
 		else // mouse moves inside previews tree

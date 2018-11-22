@@ -65,36 +65,37 @@ class Post extends Model
   // It's for private use only because of sensitive data that needs to be cached
 	function to_array ($external = false) // WARNING! Outputs sensitive data like user_id and session_id!
 	{
-		if ($this->parent_topic == 0) // get forum title for topic
-		{
-			$forum_title_from_cache_name = "forum_title_".$this->forum_id;
-      $forum_slug_from_cache_name = "forum_slug_".$this->forum_id;
-			$forum_title_from_cache = cache_get($forum_title_from_cache_name);
-      $forum_slug_from_cache = cache_get($forum_slug_from_cache_name);
-			if ($forum_title_from_cache === false or $forum_slug_from_cache === false)
-			{
-				$forum_obj = Forum::findFirst
-				(
-					[
-					"forum_id = :forum_id:",
+    $forum_title_from_cache_name = "forum_title_".$this->forum_id;
+    $forum_slug_from_cache_name = "forum_slug_".$this->forum_id;
+    $forum_title_from_cache = cache_get($forum_title_from_cache_name);
+    $forum_slug_from_cache = cache_get($forum_slug_from_cache_name);
+    if
+    (
+      $forum_title_from_cache === false or
+      $forum_slug_from_cache === false
+    )
+    {
+      $forum_obj = Forum::findFirst
+      (
+        [
+        "forum_id = :forum_id:",
 
-					"bind" =>
-					[
-						"forum_id" => $this->forum_id
-					]
-					]
-				);
-				$forum_title = $forum_obj->title;
-        $forum_slug  = $forum_obj->slug;
-				cache_set($forum_title_from_cache_name, $forum_title, 24*60*60); // save forum title in cache
-        cache_set($forum_slug_from_cache_name,  $forum_slug, 24*60*60); // save forum title in cache
-			}
-			else
-			{
-				$forum_title = $forum_title_from_cache;
-        $forum_slug  = $forum_slug_from_cache;
-			}
-		}
+        "bind" =>
+        [
+          "forum_id" => $this->forum_id
+        ]
+        ]
+      );
+      $forum_title = $forum_obj->title;
+      $forum_slug  = $forum_obj->slug;
+      cache_set($forum_title_from_cache_name, $forum_title, 24*60*60); // save forum title in cache
+      cache_set($forum_slug_from_cache_name,  $forum_slug, 24*60*60); // save forum title in cache
+    }
+    else
+    {
+      $forum_title = $forum_title_from_cache;
+      $forum_slug  = $forum_slug_from_cache;
+    }
 
     $text_formatted = $this->get_text_formatted();
     
@@ -179,20 +180,23 @@ class Post extends Model
      }
     });
 
-		$output = array
-		(
+		$output =
+		[
 			"post_id" => $this->post_id,
 			"parent_topic" => $this->parent_topic,
 			"forum_id" => $this->forum_id,
 			"order_in_topic" => $this->order_in_topic,
       "reply_to" => $this->reply_to,
       "reply_to_post_id" => $reply_to_post_id,
+      
 			"time_formatted" => smart_time_format($this->creation_time),
+      "time_formatted_en" => date("d.m.y H:i:s", $this->creation_time),
+      
 			"name_formatted" => anti_xss($this->name),
       "flag" => anti_xss($this->flag),
 			"text_formatted" => $text_formatted,
       
-      "author_formatted" => anti_xss("Анонимно"), // Анонимно
+      "author_formatted" => anti_xss("Анонимно"),
       //"author_href" => "https://ru.wikipedia.org/wiki/Rozen_Maiden",
       //"author_icon_href" => "/LJuser.svg",
       
@@ -207,7 +211,14 @@ class Post extends Model
 			
 			"thumb_w" => $this->thumb_w,
 			"thumb_h" => $this->thumb_h,
-		);
+      
+      "ord" => $this->ord,
+		];
+    
+    if ($forum_slug_from_cache == "int") // /int/
+    {
+      $output["author_formatted"] = "Anonymous";
+    }
     
     if ($this->display_username)
     {
