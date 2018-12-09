@@ -600,7 +600,7 @@ function is_json ()
 
 function validate_captcha_tag ($tag)
 {
-  if (ctype_alnum($tag) and mb_strlen($tag) < 50)
+  if (ctype_alnum($tag) and mb_strlen($tag) <= 10)
   {
     return true;
   }

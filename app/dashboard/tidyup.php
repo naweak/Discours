@@ -8,6 +8,44 @@ if (!is_admin())
   die("Restricted");
 }
 
+function delete_forum ($forum_id)
+{
+  $posts = Post::find
+  (
+    [
+      "forum_id = :forum_id:",
+      "bind" =>
+      [
+        "forum_id" => $forum_id
+      ],
+      "order" => "creation_time DESC",
+    ]
+  );
+  
+  foreach ($posts as $post)
+  {
+    $post->forum_id = 1;
+    $post->save();
+    echo "Post ".$post->post_id." saved<br>";
+  }
+  
+  $forum_obj = Forum::findFirst
+  (
+    [
+      "forum_id = :forum_id:",
+      "bind" =>
+      [
+        "forum_id" => $forum_id
+      ]
+    ]
+  );
+  
+  echo "Forum title: ".$forum_obj->title."<br>";
+  
+  //$forum_obj->delete();
+  //echo "Forum deleted";
+}
+
 function delete_wipe ()
 {
   $pdo = pdo();

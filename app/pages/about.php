@@ -18,13 +18,13 @@ p
 }
 </style>
 
-<content style="margin-top:2em;">
+<content class="page" style="margin-top:2em;">
   
   <h2 style="text-align:center;">Где я нахожусь?</h2>
 
-  <p>
-  Дискурс — это место, где люди могут общаться с интересными им собеседниками на любые темы.
-  </p>
+  <div align="center">
+    Дискурс — это место, где люди могут общаться с интересными им собеседниками на любые темы.
+  </div>
   
 </content>
 <?php
@@ -34,7 +34,7 @@ ob_end_clean();
 $twig_data = array
 (
   "html" => $html,
-  "title" => "О проекте"
+  "final_title" => "О проекте"
 );
 
 echo render($twig_data);

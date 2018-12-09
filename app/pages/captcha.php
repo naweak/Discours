@@ -47,6 +47,7 @@ if (!validate_captcha_tag($tag))
 {
   die("Invalid captcha tag");
 }
+
 $_SESSION["captcha_$tag"] = $captcha_code;
 
 $img->show();

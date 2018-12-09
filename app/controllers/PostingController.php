@@ -14,7 +14,7 @@ class PostingController extends Controller
 		$request = new Request();
 		
 		$reply_delay     = 5;
-		$new_topic_delay = 10*60;
+		$new_topic_delay = 1*60;
 		$min_title_length = 2;
 		$max_title_length = 255;
 		$max_name_length = 25;
@@ -333,10 +333,10 @@ class PostingController extends Controller
       }
     }
     
-    if (user_id() and $request->getPost("sign"))
+    /*if (user_id() and $request->getPost("sign"))
     {
       $display_username = true;
-    }
+    }*/
     
     // Proccess Wakaba links
     if ($is_wakaba)
@@ -425,10 +425,10 @@ class PostingController extends Controller
 		// New topic
     else
     {
-      if ($forum_obj->slug == "1chan")
+      /*if ($forum_obj->slug == "1chan")
       {
         $new_topic_delay = 3*60;
-      }
+      }*/
       
       $last_topic_object = Post::findFirst
       (

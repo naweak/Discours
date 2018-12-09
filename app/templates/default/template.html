@@ -18,20 +18,16 @@ NoScript:
 {% endblock %}
 {#
 
-Topic with replies:
-
-#}
-{#
-
 Captcha:
 
 #}
 {% block captcha %}
 {% if root is defined %}
-  {% set tag = random() %}
+  {% set tag = random(1000) %}
   <div class="captcha_div" style="margin-bottom:6px;">
     <input type="hidden" name="captcha_tag" value="{{ tag }}">
-    <img class="captcha_image" src="/captcha?tag={{ tag }}"><br>
+    <!--<img class="captcha_image" src="/captcha?tag={{ tag }}">-->
+    <div class="captcha_image" captcha_tag="{{ tag }}" style="background-image:url('/captcha?tag={{ tag }}'); background-size: 100%;"></div>
     <input class="captcha_text" name="captcha_text" type="text" autocomplete="off" placeholder="Введите капчу">
   </div>
 {% endif %}
@@ -62,18 +58,19 @@ Topic with replies:
           
           <div class="container" style="width:auto;min-width:auto;">
             <div class="notification" style="text-align:center;">
-              {% if is_mod %}
-                <a class="pr_topic" href="/pr-topic?id={{ topic.post_id }}" target="_blank">
-                  Пиарить
-                </a>
-              {% endif %}
+              <a class="open_topic" href="/{{ topic.post_id }}">
+                Открыть тему
+              </a>
               <a class="report_post" href="/report" target="_blank">
                 Пожаловаться
               </a>
               {% if is_mod %}
                 {# different code for topic and reply! #}
-                <a class="move_post" onclick="move_post({{ topic.post_id }});">
+                <!--<a class="move_post" onclick="move_post({{ topic.post_id }});">
                   На свалку
+                </a>-->
+                <a class="pr_topic" href="/pr-topic?id={{ topic.post_id }}" target="_blank">
+                  Пиарить
                 </a>
                 <a class="delete_post" onclick="delete_post({{ topic.post_id }});">
                   Удалить
@@ -125,21 +122,13 @@ Topic with replies:
         <span style="color:#aaaaaa;">&#8729;</span>
         {% endif %}
         
-        <span style="color:#aaaaaa;">
-          {% if topic.flag %}
+        {% if topic.flag %}
             {{ topic.flag }} <img class="flag" src="{% if file_host %}//{{ file_host }}{% endif %}/flags/{{ topic.flag|lower }}.png" title="Country: {{ topic.flag }}">
-          {% endif %}
-          {% if topic.author_href %}<a href="{{ topic.author_href }}" target="_blank" style="opacity:1;">{% endif %}
-            {% if topic.author_icon_href %}
-              <img src="{{ topic.author_icon_href }}" width="10px" height="10px">
-            {% endif %}
-            {{ topic.author_formatted|raw }}
-          {% if topic.author_href %}</a>{% endif %}
-        </span>
-        <span style="color:#aaaaaa;">&#8729;</span>
+        {% endif %}
+
         <a href="/{{ topic.post_id }}" class="time_formatted">{{ topic.time_formatted }}</a>
         <span style="color:#aaaaaa;">&#8729;</span>
-        <span style="color:#aaaaaa;">ОП</span>
+        <a href="/{{ topic.post_id }}" class="time_formatted">ОП</a>
       </div>
       
     </post>
@@ -153,7 +142,6 @@ Topic with replies:
         </a>
       {% else %}
         {% if topic.replies|length %}
-        <!--<div class="hr"></div>-->
         <hr>
         {% endif %}
       {% endif %}
@@ -168,7 +156,6 @@ Topic with replies:
     </replies>
     
     {% if (invite_only and user_id) or (not invite_only) %}
-    <!--<div class="hr"></div>-->
     <hr>
     <form class="reply_form" method="post" action="/posting/post" enctype="multipart/form-data">
       <input type="hidden" name="forum_id" value="{{ topic.forum_id }}">
@@ -186,10 +173,6 @@ Topic with replies:
           <a href="javascript:;" onclick="change_reply_to({{ topic.post_id }}, 0);$('#text_{{ topic.post_id }}').focus();">Ответ на пост <span class="reply_to"></span></a>
         </div>
 
-        <!--
-        <textarea style="padding-top: 2px; font-size: 15px; line-height: 15px; height:20px; margin-bottom:0px;" class="reply" name="text" id="text_{{ topic.post_id }}" spellcheck="false" placeholder="Написать ответ..."></textarea>
-        -->
-
         <noscript>
           <textarea name="text" class="noscript_textarea" rows="1" placeholder="Написать ответ..."></textarea>
         </noscript>
@@ -199,19 +182,15 @@ Topic with replies:
         <div class="controls" style="margin-top: 7px;">
           {{ block("captcha") }}
           
-          <div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
+          <div style="float:left;">
+            {% if forum_id != 12 %}
             <input id="reply_userfile_{{ topic.post_id }}" name="userfile" type="file" class="inputfile">
             <label for="reply_userfile_{{ topic.post_id }}" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>
+            {% endif %}
           </div>
             
           <div style="text-align:right;">
             <input id="reply_submit_{{ topic.post_id }}" type="submit" style="display:none;">
-            
-            {% if user_id %}
-            <div style="display:inline;margin-right:5px;">
-              <label style="cursor:pointer;"><input name="sign" type="checkbox" style="display:none;"> <abbr class="sign" title="Подписать пост своим логином">подпись</abbr></label>
-            </div>
-            {% endif %}
             
             {% if forum_id != 12 %}
             <div style="display:inline;margin-right:5px;">
@@ -301,39 +280,22 @@ Reply:
     <form method="post" action="/delete" id="{{ reply.post_id }}_delete_form" target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
     <form method="post" action="/move"   id="{{ reply.post_id }}_move_form"   target="_blank"><input type="hidden" name="n" value="{{ reply.post_id }}"></form>
     
-    <div style="overflow:hidden;margin:0px;padding:0px;">
-      
+    <div style="overflow:hidden;margin:0px;padding:0px;"> 
       <div class="post_footnote left" style="float:left;">
         {% if (invite_only and user_id) or (not invite_only) %}
         <a href="javascript:;" onclick="reply_to_topic({{ topic.post_id }}, {{ reply.post_id }}, {{ reply.order_in_topic }});" class="answer_link">Ответить</a>
         <span style="color:#aaaaaa;">&#8729;</span>
         {% endif %}
         
-        <span style="color:#aaaaaa;">
-          {% if reply.flag %}
-            {{ reply.flag }} <img class="flag" src="{% if file_host %}//{{ file_host }}{% endif %}/flags/{{ reply.flag|lower }}.png" title="Country: {{ reply.flag }}">
-          {% endif %}
-          {% if reply.author_href %}<a href="{{ reply.author_href }}" target="_blank" style="opacity:1;">{% endif %}
-            {% if reply.author_icon_href %}
-              <img src="{{ reply.author_icon_href }}" width="10px" height="10px">
-            {% endif %}
-            {{ reply.author_formatted|raw }}
-          {% if reply.author_href %}</a>{% endif %}
-        </span>
-        <span style="color:#aaaaaa;">&#8729;</span>
+        {% if reply.flag %}
+          {{ reply.flag }} <img class="flag" src="{% if file_host %}//{{ file_host }}{% endif %}/flags/{{ reply.flag|lower }}.png" title="Country: {{ reply.flag }}">
+        {% endif %}
+
         <a class="time_formatted" href="/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});">{{ reply.time_formatted }}</a>
         
         <span style="color:#aaaaaa;">&#8729;</span>
         <a href="/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" class="time_formatted">№{{ reply.order_in_topic }}</a>
-        
       </div>
-      
-      <!--
-      <div class="post_footnote right" style="float:right;">
-        <a href="/{{ topic.post_id }}#{{ reply.order_in_topic }}" onclick="time_link_click({{ reply.order_in_topic }});" class="order_in_topic_link">{{ reply.order_in_topic }}</a>
-      </div>
-      -->
-      
     </div>
   </reply>
 {% endif %}
@@ -357,26 +319,26 @@ New topic form:
           
           <input type="text" name="title" placeholder="Название темы" autocomplete="off" style="display:none; margin-bottom:3px;">
 
-          {% if forum_id != 1 and false %}
+          {% if false %}
           <input type="text" name="name" maxlength="20" placeholder="Введите имя (не обязательно)">
-          {% endif %}
-          
+          {% endif %}   
+
+          <noscript>
           <textarea name="text" class="new_post" spellcheck="false" placeholder="Введите текст...">{% if declined_text %}{{ declined_text|raw }}{% endif %}</textarea>
+          </noscript>
+        
+          <div class="contenteditable_textarea" contenteditable="true" id="text_new_topic" spellcheck="false" placeholder="Введите текст..."></div>
           
           {{ block("captcha") }}
           
-          <div style="float:left; {% if forum_id == 12 %}display:none;{% endif %}">
+          <div style="float:left;">
+            {% if forum_id != 12 %}
             <input id="topic_userfile" name="userfile" type="file" class="inputfile">
             <label for="topic_userfile" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>
+            {% endif %}
           </div>
           
-          <div style="text-align:right;">
-            {% if user_id %}
-            <div style="display:inline;margin-right:5px;">
-              <label style="cursor:pointer;"><input name="sign" type="checkbox" style="display:none;"> <abbr class="sign" title="Подписать пост своим логином">подпись</abbr></label>
-            </div>
-            {% endif %}
-            
+          <div style="text-align:right;"> 
             <input id="topic_submit" type="submit" class="inputfile">
             <label for="topic_submit" class="inputfile_label button is-small">Новая тема</label>
           </div>
@@ -437,14 +399,14 @@ Main page block:
     
     {% if not user_id %}
     <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-111575996-1"></script>
+    <!--<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111575996-1"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
       gtag('config', 'UA-111575996-1');
-    </script>
+    </script>-->
     {% endif %}
     
     <script>
@@ -531,14 +493,10 @@ Main page block:
         <li><a href="/vg/">Видеоигры</a></li>
         <li><a href="/po/">Политика</a></li>
         <li><a href="/a/">Аниме</a></li>
-        <li><a href="/d/">Отзывы и предложения</a></li>
-        <li><a href="/advice/">Советы и вопросы</a></li>
-        <li><a href="/art/">Искусство и медиа</a></li>
-        <li><a href="/hobby/">Хобби и увлечения</a></li>
-        <li><a href="/tech/">Технологии</a></li>
+        <li><a href="/d/">Отзывы</a></li>
         
         <li><a href="/news/">Новости</a></li>
-        <li><a href="/1chan/">1chan</a></li>
+        <li><a href="/1chan/">Колчок</a></li>
         
         <li style="font-weight:bold; margin-top:1em;"><a href="/login">{% if not user_id %}Вход{% else %}Выход{% endif %}</a></li>
         <li style="font-weight:bold;"><a href="/my-topics">Мои темы</a></li>
@@ -578,59 +536,19 @@ Main page block:
             
              <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link is-active">
-                Форумы
+                Борды
                 </a>
                 <div class="navbar-dropdown is-boxed">
-                   <a class="navbar-item" href="/">
-                   <b>Главная</b>
-                   </a>
-                   <a class="navbar-item" href="/int/">
-                   <b>International</b>
-                   </a>
-                   <a class="navbar-item" href="/vg/">
-                   Видеоигры
-                   </a>
-                   <a class="navbar-item" href="/po/">
-                   Политика
-                   </a>
-                   <a class="navbar-item" href="/anime/">
-                   Аниме
-                   </a>
+                   <a class="navbar-item" href="/"><b>Главная</b></a>
+                   <a class="navbar-item" href="/int/">International</a>
+                   <a class="navbar-item" href="/vg/">Видеоигры</a>
+                   <a class="navbar-item" href="/po/">Политика</a>
+                   <a class="navbar-item" href="/a/">Аниме</a>
+                   <a class="navbar-item" href="/d/">Отзывы и предложения</a>
+                   <a class="navbar-item" href="/news/">Новости</a>
+                    <a class="navbar-item" href="/1chan/">Колчок</a>
                   
-                   <a class="navbar-item" onclick="more_click(this);">
-                   ещё...
-                   </a>
-                   
-                   <a class="navbar-item hidden" href="/hw/">
-                   Компьютерное железо
-                   </a>
-                   <a class="navbar-item hidden" href="/ph/">
-                   Философия
-                   </a>
-                   <a class="navbar-item hidden" href="/d/">
-                   Отзывы и предложения
-                   </a>
-                   <a class="navbar-item hidden" href="/news/">
-                   Новости
-                   </a>
-                   <a class="navbar-item hidden" href="/advice/">
-                   Советы и вопросы
-                   </a>
-                   <a class="navbar-item hidden" href="/art/">
-                   Искусство и медиа
-                   </a>
-                   <a class="navbar-item hidden" href="/hobby/">
-                   Хобби и увлечения
-                   </a>
-                   <a class="navbar-item hidden" href="/tech/">
-                   Технологии
-                   </a>
-                  
-                   <!-- -->
-
-                   <a class="navbar-item hidden" href="/1chan/">
-                   1chan
-                   </a>
+                   <!--<a class="navbar-item" onclick="more_click(this);">ещё...</a>-->
                 </div>
              </div>
              <div class="navbar-item has-dropdown is-hoverable">
@@ -638,8 +556,8 @@ Main page block:
                 Справка
                 </a>
                 <div class="navbar-dropdown is-boxed">
-                   <a class="navbar-item" href="/about">
-                   О проекте
+                   <a class="navbar-item" href="/faq">
+                   FAQ
                    </a>
                    <a class="navbar-item" href="/rules">
                    Правила
@@ -647,20 +565,8 @@ Main page block:
                    <a class="navbar-item" href="/markup">
                    Разметка
                    </a>
-                   <a class="navbar-item" href="/faq">
-                   Вопросы
-                   </a>
-                   <a class="navbar-item" href="/why-us">
-                   Почему мы?
-                   </a>
                    <a class="navbar-item" href="/changelog/">
                    Changelog
-                   </a>
-                   <a class="navbar-item" href="/cloud" target="_blank">
-                   Google Диск
-                   </a>
-                   <a class="navbar-item" href="https://t.me/discoursanonymous" target="_blank">
-                   Telegram
                    </a>
                    <a class="navbar-item" href="/contact">
                    Обратная связь
@@ -675,14 +581,14 @@ Main page block:
                    <!--<a class="navbar-item" href="/login">
                    {% if not user_id %}Вход{% else %}Выход{% endif %}
                    </a>-->
+                   <a class="navbar-item" href="/settings">
+                   Настройки
+                   </a>
                    <a class="navbar-item" href="/my-topics">
                    Мои темы
                    </a>
                    <a class="navbar-item" onclick="quick_load();">
                    Уведомления
-                   </a>
-                   <a class="navbar-item" href="/settings">
-                   Настройки
                    </a>
                 </div>
              </div>

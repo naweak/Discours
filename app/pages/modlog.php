@@ -1,5 +1,4 @@
 <?php
-//die("Temporary unavailable due to migration to Phalcon framework");
 ob_start();
 
 $pdo = pdo("utf8");
@@ -12,15 +11,14 @@ $pdo = pdo("utf8");
     $sql->execute();
     $result = $sql->fetch();
   
-    //var_dump($result);
     echo "Всего банов: {$result[0]}<br>";
     ?>
   
     <table width=100% border style="margin-top:1em;">
         <tr>
-            <td>Номер&nbsp;действия</td>
+            <!--<td>Номер&nbsp;действия</td>-->
 						<td>Дата</td>
-            <td>Модератор</td>
+            <!--<td>Модератор</td>-->
             <td>Номер&nbsp;поста</td>
             <td width="100%">Текст поста</td>
             <td>Причина</td>
@@ -45,9 +43,9 @@ $pdo = pdo("utf8");
       foreach ($result as $row)
       {
         echo "<tr>";
-        echo "<td>{$row["action_id"]}</td>";
-				echo "<td>{$row["action_id"]}</td>";
-        echo "<td>{$row["mod_id"]}</td>";
+        //echo "<td>{$row["action_id"]}</td>";
+				echo "<td>".date("d.m.y", $row["timestamp"])."</td>";
+        //echo "<td>{$row["mod_id"]}</td>";
         echo "<td>{$row["post_id"]}</td>";
         
         $text_sample = $row["text_sample"];

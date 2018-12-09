@@ -1,13 +1,12 @@
 <?php
 ob_start();
 ?>
-<content>
+<content class="page">
 
   <h2>Контакты</h2>
   
-  <a href="https://discou.rs/topic/68">Тема для обратной связи</a><br>
-  <a href="https://t.me/discoursanonymous" target="_blank">Конференция в Telegram</a><br>
-  <a href="https://t.me/zefirov" target="_blank">ЛС в Telegram</a>
+  <a href="https://t.me/zefirov" target="_blank">ЛС в Telegram</a><br>
+  <a href="/changelog/">Блог разработки</a>
   
 </content>
 <?php
@@ -17,7 +16,7 @@ ob_end_clean();
 $twig_data = array
 (
   "html" => $html,
-  "title" => "Контакты"
+  "final_title" => "Контакты"
 );
 
 echo render($twig_data);

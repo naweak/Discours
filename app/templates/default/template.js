@@ -1,14 +1,13 @@
+window.percent_gradient_color = "#efefef";
+window.topic_userfile_html = '<i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>';
+window.error_timeout = 3000;
+window.new_topic_textarea_selector = "#text_new_topic";
+window.reply_form_selector = "div.contenteditable_textarea";
+
+bind_event_handlers();
+
 $(document).ready(function ()
-{
-    window.percent_gradient_color = "#efefef";
-    window.topic_userfile_html = '<i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>';
-  
-    /*window.onerror = function (msg, url, linenumber)
-    {
-      alert('Error message: '+msg+'\nURL: '+url+'\nLine Number: '+linenumber);
-      return true;
-    }*/
-  
+{ 
     on_resize();
 		link_preview_tree_init();
 	
@@ -50,339 +49,7 @@ $(document).ready(function ()
         }
       }, 5000);
     }
-
-    document.addEventListener("visibilitychange",
-    function ()
-    {
-      console.log("Visibility changed");
-      if (!document.hidden)
-      {
-        console.log("Turning off title notification");
-        pageTitleNotification.off();
-        setTimeout(function()
-        {
-          remove_highlight_from_new_replies();
-        }, 5000);
-      }
-    }
-    , false);
-  
-    function image_insert_notification ()
-    {
-      new Noty
-      ({
-        text: "Изображение вставлено",
-        layout: "topRight",
-        type: "success",
-        timeout: 1000,
-      }).show();
-    }
-  
-    function init_drag_and_drop ()
-    {     
-      function highlight_drag_and_drop (state)
-      {
-        var background = "#98FF98";
-        
-        if (state === false)
-        {
-          background = "";
-        }
-        
-        $("textarea_container").
-          css("background", background);
-        
-        $(".new_topic_form").parent().
-          css("background", background);
-        
-        //$("body").css("background", body_background);
-      }
-      
-      // Drag Enter:
-      $(document).on("dragenter", "body", function(e)
-      {
-        highlight_drag_and_drop(true);
-      });
-      
-      // Drag Leave:
-      $(document).on("dragleave", "body", function(e)
-      {
-        if (!e.originalEvent.clientX && !e.originalEvent.clientY)
-        {
-          // outside body / window
-          highlight_drag_and_drop(false);
-        }
-      });
-      
-      // Drag over:
-      $(document).on("dragover", "body", function(e)
-      {
-        // prevent default to allow drop
-        e.preventDefault();
-      });
-      
-      // Drop:
-      $(document).on("drop", "body", function(e)
-      {
-        // Console always show "files" as empty due to a bug:
-        // https://stackoverflow.com/questions/11573710/event-datatransfer-files-is-empty-when-ondrop-is-fired/38598624#comment50187250_11573873
-        
-        var files = e.originalEvent.dataTransfer.files;
-        var file = files[0];
-        var form;
-
-        if
-        (
-          $(e.target).closest(".new_topic_form").length ||
-          $(e.target).closest(".reply_form").length
-        )
-        {
-          if (typeof file !== "undefined")
-          {
-            if // new topic form
-            (
-              $(e.target).closest(".new_topic_form").length
-            )
-            {
-              form = $(e.target).closest(".new_topic_form");
-              $(form).find("[type='file']").get(0).files = files;
-              image_insert_notification();
-            }
-
-            if // reply form
-            (
-              $(e.target).closest(".reply_form").length
-            )
-            {
-              form = $(e.target).closest(".reply_form");
-              $(form).find(".controls").css("display", "block");
-              $(form).find("[type='file']").get(0).files = files;
-              image_insert_notification();
-            }
-          }
-          
-          else
-          {
-            alert ("Можно загружать только файлы.");
-          }
-        }
-        
-        highlight_drag_and_drop(false);
-        e.preventDefault();
-      });
-      
-      console.log("Drag-and-drop initiated");
-    }
-  
-    init_drag_and_drop();
-  
-    function init_paste ()
-    {
-      $(document).on("paste", "body", function(e)
-      {
-        if
-        (
-          typeof e.originalEvent.clipboardData.files !== "undefined" && 
-          e.originalEvent.clipboardData.files.length
-        )
-        {
-          if ($(e.target).closest("form").length)
-          {
-            var form = $(e.target).closest("form");
-            $(form).find("[type='file']").get(0).files = e.originalEvent.clipboardData.files;
-            image_insert_notification();
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }
-      });
-      
-      console.log("Paste initiated"); 
-    }
-  
-    init_paste();
-  
-    if(/iPhone|iPad|iPod/i.test(navigator.userAgent))
-    {
-      append_style(".reply_to_topic {margin-left: 2px !important;}");
-      append_style(".attach_button {margin-left: 3px !important;}");
-      append_style(".contenteditable_textarea {margin-left: 2px !important;}");
-    }
-
-    $("img.embedded").css("cursor", "pointer");
-    $("img.embedded").click(function ()
-		{
-        var win = window.open(this.src, "_blank");
-    });
-  
-    var input_file_label_html = $(".inputfile").next().html();
-  
-    $(document).on("change", ".inputfile", function(e) // image attach button
-    {
-      var label	 = $(this).next().get(0); // returns DOM element
-      var fileName = '';
-      if( this.files && this.files.length > 1 )
-        fileName = ( this.getAttribute( 'data-multiple-caption' ) || '' ).replace( '{count}', this.files.length );
-      else
-        fileName = e.target.value.split( '\\' ).pop();
-
-      if(fileName)
-      {
-        // label.innerHTML = fileName;
-        if (fileName.indexOf(".") > -1)
-        {
-          label.innerHTML = "<i class='fa fa-picture-o' aria-hidden='true'></i>" +
-            "&nbsp;" +
-            fileName.split('.').pop().toUpperCase() +
-            "-файл";
-        }
-        else
-        {
-          label.innerHTML = fileName;
-        }
-        label.style.fontWeight = "bold";
-      }
-      else
-      {
-        label.innerHTML = input_file_label_html;
-        label.style.fontWeight = "normal";
-      }
-    });
-
-    if (mobile())
-    {
-      $(document).on("focus", ".contenteditable_textarea", function(e) // content-editable div
-      {
-        $(".navbar").hide();
-        
-        var y = $(window).scrollTop(); // current position
-        var element = $(e.target).parent().parent().prev();
-        var element_y = $(element).offset().top;
-        var element_h = $(element).height();
-        var window_h = $(window).height();
-        var document_h = $(document).height();
-        
-        var scroll_to = element_y;
-        
-        if (scroll_to > document_h)
-        {
-          scroll_to = document_h;
-        }
-        
-        $(window).scrollTop(element_y);
-      });
-      
-      $(document).on("blur", ".contenteditable_textarea", function(e) // content-editable div
-      {
-        $(".navbar").show();
-      });
-    }
-
-    $(document).on("paste", ".contenteditable_textarea", function(e) // content-editable div
-    {
-      e.preventDefault();
-      var text = '';
-      if (e.clipboardData || e.originalEvent.clipboardData) {
-        text = (e.originalEvent || e).clipboardData.getData('text/plain');
-      } else if (window.clipboardData) {
-        text = window.clipboardData.getData('Text');
-      }
-      if
-      (
-        typeof e.originalEvent.clipboardData.files !== "undefined" && 
-        e.originalEvent.clipboardData.files.length
-      )
-      {
-        text = "";
-      }
-      if (document.queryCommandSupported('insertText')) {
-        document.execCommand('insertText', false, text);
-      } else {
-        document.execCommand('paste', false, text);
-      }
-    });
-  
-    // Probably some hack for outdated browsers
-    /*$(".contenteditable_textarea").focusout(function()
-    {
-      var element = $(this);        
-      if (!element.text().replace(" ", "").length)
-      {
-        element.empty();
-      }
-    });*/
-	
-		var scroll_speed = 1;
-		$("#up").click(function () // scroll up button
-		{
-        $("html, body").animate({scrollTop : 0}, scroll_speed);
-    });
-		$("#down").click(function () // scroll down button
-		{
-        $("html, body").animate({scrollTop : $(document).height()}, scroll_speed);
-    });
-	
-		window.onscroll = function()
-		{
-			if (!topic_id)
-			{
-				if($("#load_more_topics").is(":visible") && isScrolledIntoView($("#load_more_topics")))
-				{
-					$("#load_more_topics").hide();
-					load_more_topics(function () {$("#load_more_topics").show();});
-				}
-			}
-		}
-    
-    if($("content.news").length)
-    {
-      hashCode = function(s)
-      {
-        return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);              
-      }
-      var news_id = hashCode($("content.news .message .message-body").html());
-      console.log("News_id: "+news_id);
-      if ($.cookie("news_"+news_id) != "read")
-      {
-        $("content.news").css("display", "block");
-      }
-      $("content.news .message .message-header .delete").on("click tap", function()
-      {
-        if (is_admin)
-        {
-          alert("Admins cannot hide news.");
-          return 0;
-        }
-        $(this).parent().parent().hide();
-        $.cookie("news_"+news_id, "read");
-      });
-    }
-  
-    /*lightbox.option
-    ({
-      'resizeDuration': 20000,
-      'wrapAround': true
-    });*/
-    
-    bind_event_handlers();
 });
-
-// BUG: document.ready is only invoked after all images are loaded
-
-/*$(window).on("load", function() // called after all the content is loaded?
-{
-  console.log("Content loaded");
-  
-  var hash = get_hash();
-	if (hash && $(window).width() < 700) // if adaptive
-	{
-		scroll_to_reply(hash); // scroll to highlight_reply after all the content is loaded
-	}
-});*/
-
-window.new_topic_form_selector = "textarea.new_post";
-//window.reply_form_selector     = "textarea.reply";
-window.reply_form_selector = "div.contenteditable_textarea";
 
 function get_form_data (element)
 {
@@ -418,9 +85,12 @@ function ajax_form (args)
 			delete window.submit;
 		}
     // form.data.get() doesn't work in Safari
-    if (form_data.get("userfile").size === 0) // Prevent CloudFlare from returning "400 Bad Request"
+    if (form_data.get("userfile"))
     {
-      form_data.delete("userfile");
+      if (form_data.get("userfile").size === 0) // Prevent CloudFlare from returning "400 Bad Request"
+      {
+        form_data.delete("userfile");
+      }
     }
     if ($(form).find(".contenteditable_textarea").length)
     {
@@ -516,7 +186,7 @@ function bind_event_handlers ()
 {
 	console.log("Binding event handlers");
 
-	$(document).on("keydown", window.new_topic_form_selector, function(e)
+	$(document).on("keydown", window.new_topic_textarea_selector, function(e)
 	{
 		if (e.ctrlKey && e.keyCode == 13) // Ctrl-Enter pressed
 		{
@@ -547,53 +217,13 @@ function bind_event_handlers ()
 	{
 		console.log("Reply form focus");
 		$(this).next().css("display", "block");
-
-		/*if ($(window).width() > 700)  // normal design
-		{
-			autosize(this);
-		}
-
-		else // adaptive design
-		{
-			$(this).keypress(function()
-			{
-				autosize(this);
-				$(this).keypress(function(){});
-			});
-		}*/
 	});
-  
-  /*
-  // Intended use: fix the input form to the bottom of the screen
-  
-  $(document).on("keypress, input", window.reply_form_selector, function(event)
-	{
-    // fix
-  });
-  
-  $(document).on("blur", window.reply_form_selector, function()
-	{
-    // unfix
-  });*/
-
-	// if hidden, it's impossible to select a picture before writing text
-	//$(document).on("blur", window.reply_form_selector, function()
-	//{
-			/*if ($(this).val() === "")
-			{
-				$(this).next().css("display", "none");
-			}*/
-	//});
-
-	/*$(document).on("focus", window.new_topic_form_selector, function()
-	{
-		autosize(this);
-	});*/
   
   $(document).on("click tap", ".captcha_image", function()
 	{
     d = new Date();
-    $(this).attr("src", $(this).attr("src")+"&"+d.getTime());
+    //$(this).attr("src", $(this).attr("src")+"&"+d.getTime());
+    $(this).css("background-image", "url('/captcha?tag="+$(this).attr("captcha_tag")+"&rand="+d.getTime()+"')");
 	});
 	
 	$(document).on("click tap", "a.more", function()
@@ -604,11 +234,316 @@ function bind_event_handlers ()
 		$(this).remove();
 	});
   
-  $(document).on("focus", window.new_topic_form_selector, function ()
+  $(document).on("focus", window.new_topic_textarea_selector, function ()
   {
     $(".new_topic_form .captcha_div").css("display", "block");
-    console.log("Ddd");
   });
+  
+  document.addEventListener("visibilitychange",
+  function ()
+  {
+    console.log("Visibility changed");
+    if (!document.hidden)
+    {
+      console.log("Turning off title notification");
+      pageTitleNotification.off();
+      setTimeout(function()
+      {
+        remove_highlight_from_new_replies();
+      }, 5000);
+    }
+  }
+  , false);
+
+  function image_insert_notification ()
+  {
+    new Noty
+    ({
+      text: "Изображение вставлено",
+      layout: "topRight",
+      type: "success",
+      timeout: 1000,
+    }).show();
+  }
+
+  function init_drag_and_drop ()
+  {     
+    function highlight_drag_and_drop (state)
+    {
+      var background = "#98FF98";
+
+      if (state === false)
+      {
+        background = "";
+      }
+
+      $("textarea_container").
+        css("background", background);
+
+      $(".new_topic_form").parent().
+        css("background", background);
+
+      //$("body").css("background", body_background);
+    }
+
+    // Drag Enter:
+    $(document).on("dragenter", "body", function(e)
+    {
+      highlight_drag_and_drop(true);
+    });
+
+    // Drag Leave:
+    $(document).on("dragleave", "body", function(e)
+    {
+      if (!e.originalEvent.clientX && !e.originalEvent.clientY)
+      {
+        // outside body / window
+        highlight_drag_and_drop(false);
+      }
+    });
+
+    // Drag over:
+    $(document).on("dragover", "body", function(e)
+    {
+      // prevent default to allow drop
+      e.preventDefault();
+    });
+
+    // Drop:
+    $(document).on("drop", "body", function(e)
+    {
+      // Console always show "files" as empty due to a bug:
+      // https://stackoverflow.com/questions/11573710/event-datatransfer-files-is-empty-when-ondrop-is-fired/38598624#comment50187250_11573873
+
+      var files = e.originalEvent.dataTransfer.files;
+      var file = files[0];
+      var form;
+
+      if
+      (
+        $(e.target).closest(".new_topic_form").length ||
+        $(e.target).closest(".reply_form").length
+      )
+      {
+        if (typeof file !== "undefined")
+        {
+          if // new topic form
+          (
+            $(e.target).closest(".new_topic_form").length
+          )
+          {
+            form = $(e.target).closest(".new_topic_form");
+            if ($(form).find("[type='file']").length)
+            {
+              $(form).find("[type='file']").get(0).files = files;
+              image_insert_notification();
+            }
+          }
+
+          if // reply form
+          (
+            $(e.target).closest(".reply_form").length
+          )
+          {
+            form = $(e.target).closest(".reply_form");
+            $(form).find(".controls").css("display", "block");
+            if ($(form).find("[type='file']").length)
+            {
+              $(form).find("[type='file']").get(0).files = files;
+              image_insert_notification();
+            }
+          }
+        }
+
+        else
+        {
+          alert ("Можно загружать только файлы.");
+        }
+      }
+
+      highlight_drag_and_drop(false);
+      e.preventDefault();
+    });
+
+    console.log("Drag-and-drop initiated");
+  }
+
+  init_drag_and_drop();
+
+  function init_paste ()
+  {
+    $(document).on("paste", "body", function(e)
+    {
+      if
+      (
+        typeof e.originalEvent.clipboardData.files !== "undefined" && 
+        e.originalEvent.clipboardData.files.length
+      )
+      {
+        if ($(e.target).closest("form").length)
+        {
+          var form = $(e.target).closest("form");
+          if ($(form).find("[type='file']").length)
+          {
+            $(form).find("[type='file']").get(0).files = e.originalEvent.clipboardData.files;
+            image_insert_notification();
+          }
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    });
+
+    console.log("Paste initiated"); 
+  }
+
+  init_paste();
+  
+  $("img.embedded").css("cursor", "pointer");
+  $("img.embedded").click(function ()
+  {
+      var win = window.open(this.src, "_blank");
+  });
+
+  var input_file_label_html = $(".inputfile").next().html();
+
+  if(/iPhone|iPad|iPod/i.test(navigator.userAgent))
+  {
+    append_style(".reply_to_topic {margin-left: 2px !important;}");
+    append_style(".attach_button {margin-left: 3px !important;}");
+    append_style(".contenteditable_textarea {margin-left: 2px !important;}");
+  }
+
+  $(document).on("change", ".inputfile", function(e) // image attach button
+  {
+    var label	 = $(this).next().get(0); // returns DOM element
+    var fileName = '';
+    if( this.files && this.files.length > 1 )
+      fileName = ( this.getAttribute( 'data-multiple-caption' ) || '' ).replace( '{count}', this.files.length );
+    else
+      fileName = e.target.value.split( '\\' ).pop();
+
+    if(fileName)
+    {
+      // label.innerHTML = fileName;
+      if (fileName.indexOf(".") > -1)
+      {
+        label.innerHTML = "<i class='fa fa-picture-o' aria-hidden='true'></i>" +
+          "&nbsp;" +
+          fileName.split('.').pop().toUpperCase() +
+          "-файл";
+      }
+      else
+      {
+        label.innerHTML = fileName;
+      }
+      label.style.fontWeight = "bold";
+    }
+    else
+    {
+      label.innerHTML = input_file_label_html;
+      label.style.fontWeight = "normal";
+    }
+  });
+
+  if (mobile())
+  {
+    $(document).on("focus", ".contenteditable_textarea", function(e) // content-editable div
+    {
+      $(".navbar").hide();
+
+      var y = $(window).scrollTop(); // current position
+      var element = $(e.target).parent().parent().prev();
+      var element_y = $(element).offset().top;
+      var element_h = $(element).height();
+      var window_h = $(window).height();
+      var document_h = $(document).height();
+
+      var scroll_to = element_y;
+
+      if (scroll_to > document_h)
+      {
+        scroll_to = document_h;
+      }
+
+      $(window).scrollTop(element_y);
+    });
+
+    $(document).on("blur", ".contenteditable_textarea", function(e) // content-editable div
+    {
+      $(".navbar").show();
+    });
+  }
+
+  $(document).on("paste", ".contenteditable_textarea", function(e) // content-editable div
+  {
+    e.preventDefault();
+    var text = '';
+    if (e.clipboardData || e.originalEvent.clipboardData) {
+      text = (e.originalEvent || e).clipboardData.getData('text/plain');
+    } else if (window.clipboardData) {
+      text = window.clipboardData.getData('Text');
+    }
+    if
+    (
+      typeof e.originalEvent.clipboardData.files !== "undefined" && 
+      e.originalEvent.clipboardData.files.length
+    )
+    {
+      text = "";
+    }
+    if (document.queryCommandSupported('insertText')) {
+      document.execCommand('insertText', false, text);
+    } else {
+      document.execCommand('paste', false, text);
+    }
+  });
+
+  var scroll_speed = 1;
+  $("#up").click(function () // scroll up button
+  {
+      $("html, body").animate({scrollTop : 0}, scroll_speed);
+  });
+  $("#down").click(function () // scroll down button
+  {
+      $("html, body").animate({scrollTop : $(document).height()}, scroll_speed);
+  });
+
+  window.onscroll = function()
+  {
+    if (!topic_id)
+    {
+      if($("#load_more_topics").is(":visible") && isScrolledIntoView($("#load_more_topics")))
+      {
+        $("#load_more_topics").hide();
+        load_more_topics(function () {$("#load_more_topics").show();});
+      }
+    }
+  }
+
+  if($("content.news").length)
+  {
+    hashCode = function(s)
+    {
+      return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);              
+    }
+    var news_id = hashCode($("content.news .message .message-body").html());
+    console.log("News_id: "+news_id);
+    if ($.cookie("news_"+news_id) != "read")
+    {
+      $("content.news").css("display", "block");
+    }
+    $("content.news .message .message-header .delete").on("click tap", function()
+    {
+      if (is_admin)
+      {
+        alert("Admins cannot hide news.");
+        return 0;
+      }
+      $(this).parent().parent().hide();
+      $.cookie("news_"+news_id, "read");
+    });
+  }
 
 	// New topic form
 	ajax_form
@@ -622,6 +557,24 @@ function bind_event_handlers ()
 		"success": function success (data)
 		{
 			var form = success.form;
+      
+      function clear_new_topic_form ()
+      {
+        $(".new_topic_form").find("[name='title']").val("");
+        $(".new_topic_form").find("[name='name']").val("");
+
+        $(".new_topic_form").find("#text_new_topic").html("");
+
+        $(".new_topic_form").find(".picrandom").val($(".new_topic_form").find(".picrandom option:first").val());
+        $(".new_topic_form").find("[name='userfile']").val("");
+
+        $(".new_topic_form").find("[for='topic_userfile']").html(window.topic_userfile_html);
+        $(".new_topic_form").find("[for='topic_userfile']").css("font-weight", "normal");
+        
+        $(".new_topic_form").find(".captcha_image").trigger("tap");
+        $(".new_topic_form").find(".captcha_text").val("");
+      }
+      
 			console.log("Server response:");
 			console.log(data);
 			data = $.parseJSON(data);
@@ -644,11 +597,22 @@ function bind_event_handlers ()
 			}
 			else
 			{
-				var error_message_html = "<article class='message is-warning'><div class='message-header'><p>Ошибка</p><button class='delete' aria-label='delete' onclick='$(this).parent().parent().hide();'></button></div><div class='message-body'>"+data.error+"</div></article>";
+				/*var error_message_html = "<article class='message is-warning'><div class='message-header'><p>Ошибка</p><button class='delete' aria-label='delete' onclick='$(this).parent().parent().hide();'></button></div><div class='message-body'>"+data.error+"</div></article>";
 				$("#new_topic_form_error_message").html("");
 				var new_item = $(error_message_html).hide();
 				$("#new_topic_form_error_message").append(new_item);
-				new_item.slideDown(300);
+				new_item.slideDown(300);*/
+        
+        new Noty
+        ({
+          text: data.error,
+          layout: "topRight",
+          type: "error",
+          timeout: window.error_timeout,
+        }).show();
+        
+        $(".new_topic_form").find(".captcha_image").trigger("tap");
+        $(".new_topic_form").find(".captcha_text").val("");
 			}
 			$(form).find("input[type='submit']").prop("disabled", false);
 			$(form).find("label[for='topic_submit']").removeClass("is-loading");
@@ -777,12 +741,19 @@ function bind_event_handlers ()
 				$(form).find(".submit_button").removeClass("is-loading");
 				//alert(data.error);
         
-        //var error_message_html = "<article class='message is-warning'><div class='message-header'><p>Ошибка</p><button class='delete' aria-label='delete' onclick='$(this).parent().parent().hide();'></button></div><div class='message-body'>"+data.error+"</div></article>";
-				var error_message_html = "<div style='margin-bottom:7px;'>"+data.error+"</div>";
+				/*var error_message_html = "<div style='margin-bottom:7px;'>"+data.error+"</div>";
         $(form).find(".error").html("");
 				var new_item = $(error_message_html).hide();
 				$(form).find(".error").append(new_item);
-				new_item.slideDown(300);
+				new_item.slideDown(300);*/
+        
+        new Noty
+        ({
+          text: data.error,
+          layout: "topRight",
+          type: "error",
+          timeout: window.error_timeout,
+        }).show();
 			}
 			/*$(form).find("input[type='submit']").prop("disabled", false);
 			$(form).find(".submit_button").removeClass("is-loading");*/
@@ -810,25 +781,6 @@ function bind_event_handlers ()
 }
 
 /* Functions: */
-
-function clear_new_topic_form ()
-{
-	$(".new_topic_form").find("[name='title']").val("");
-	$(".new_topic_form").find("[name='name']").val("");
-	
-	var textarea = $(".new_topic_form").find("[name='text']");
-	textarea.val("");
-	autosize.update(textarea);
-	
-	$(".new_topic_form").find(".picrandom").val($(".new_topic_form").find(".picrandom option:first").val());
-	$(".new_topic_form").find("[name='userfile']").val("");
-	
-	$(".new_topic_form").find("[for='topic_userfile']").html(window.topic_userfile_html);
-  $(".new_topic_form").find("[for='topic_userfile']").css("font-weight", "normal");
-	
-	// resize textarea
-	$(".new_topic_form").find("[name='text']").trigger("paste");
-}
 
 function change_reply_to (topic_id, index)
 {

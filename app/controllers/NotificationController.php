@@ -75,7 +75,8 @@ class NotificationController extends Controller
     //echo "Text: " . strip_tags($post_object->text) . "<br>";
     //echo benchmark()."<br>";
     
-    $redirect_location = "/topic/".$notification_object->topic_id;
+    //$redirect_location = "/topic/".$notification_object->topic_id;
+    $redirect_location = "/".$notification_object->topic_id;
     if ($notification_object->topic_id != $post_object->post_id)
     {
       $redirect_location .= "#".$post_object->order_in_topic;

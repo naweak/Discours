@@ -36,14 +36,11 @@ $pages = ["login",
           
          "about",
          "rules",
-         "principles",
-         "modlog",
          "faq",
          "contact",
          "developers",
          "markup",
          "why-us",
-         "why-no-porn",
          "search"
 ];
 
@@ -51,6 +48,15 @@ foreach ($pages as $page)
 {
   route_page($page, $router);
 }
+
+$router->add
+(
+    "/backu",
+    [
+        "controller" => "page",
+        "page"       => "backup"
+    ]
+);
 
 // https://discou.rs/
 $router->add

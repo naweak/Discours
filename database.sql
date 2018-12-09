@@ -1,112 +1,222 @@
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*!40101 SET NAMES utf8mb4 */;
 
 --
--- Table structure for table `bans`
+-- База данных: `discours`
 --
 
-DROP TABLE IF EXISTS `bans`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `bans`
+--
+
 CREATE TABLE `bans` (
-  `ban_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ban_id` int(10) UNSIGNED NOT NULL,
   `ip` text COLLATE utf8_bin NOT NULL,
-  `expires` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`ban_id`)
+  `expires` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `forums`
+-- Структура таблицы `forums`
 --
 
-DROP TABLE IF EXISTS `forums`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `forums` (
-  `forum_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `forum_id` int(10) UNSIGNED NOT NULL,
   `title` text COLLATE utf8_bin NOT NULL,
-  PRIMARY KEY (`forum_id`)
+  `slug` text COLLATE utf8_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `modlog`
+-- Структура таблицы `invites`
 --
 
-DROP TABLE IF EXISTS `modlog`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `invites` (
+  `invite_id` int(10) UNSIGNED NOT NULL,
+  `invite_code` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `modlog`
+--
+
 CREATE TABLE `modlog` (
-  `action_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `mod_id` int(10) unsigned NOT NULL,
-  `timestamp` int(10) unsigned NOT NULL,
-  `post_id` int(10) unsigned NOT NULL,
-  `text_sample` text COLLATE utf8_bin NOT NULL,
-  `ip` text COLLATE utf8_bin NOT NULL,
-  `reason` text COLLATE utf8_bin NOT NULL,
-  `ban_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`action_id`)
+  `action_id` int(10) UNSIGNED NOT NULL,
+  `mod_id` int(10) UNSIGNED NOT NULL,
+  `timestamp` int(10) UNSIGNED NOT NULL,
+  `post_id` int(10) UNSIGNED NOT NULL,
+  `text_sample` text CHARACTER SET utf8 NOT NULL,
+  `ip` text CHARACTER SET utf8 NOT NULL,
+  `reason` text CHARACTER SET utf8 NOT NULL,
+  `ban_id` int(10) UNSIGNED NOT NULL,
+  `unlawful` text CHARACTER SET utf8 NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `notifications`
+-- Структура таблицы `notifications`
 --
 
-DROP TABLE IF EXISTS `notifications`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `notifications` (
-  `notification_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `recipient` text COLLATE utf8_bin NOT NULL,
-  `time` int(10) unsigned NOT NULL,
+  `notification_id` int(10) UNSIGNED NOT NULL,
+  `recipient_session_id` text COLLATE utf8_bin NOT NULL,
+  `recipient_user_id` int(10) NOT NULL COMMENT '-1 means session-only notification',
+  `time` int(10) UNSIGNED NOT NULL,
   `is_read` tinyint(1) NOT NULL,
-  `post_id` int(10) unsigned NOT NULL,
-  `text` text COLLATE utf8_bin NOT NULL,
-  PRIMARY KEY (`notification_id`)
+  `topic_id` int(10) UNSIGNED NOT NULL,
+  `post_id` int(10) UNSIGNED NOT NULL,
+  `text` text COLLATE utf8_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `posts`
+-- Структура таблицы `posts`
 --
 
-DROP TABLE IF EXISTS `posts`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `posts` (
-  `post_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `forum_id` int(10) unsigned NOT NULL DEFAULT '1',
-  `parent_topic` int(10) unsigned NOT NULL,
-  `creation_time` int(10) unsigned NOT NULL,
+  `post_id` int(10) UNSIGNED NOT NULL,
+  `forum_id` int(10) UNSIGNED NOT NULL DEFAULT '1',
+  `parent_topic` int(10) UNSIGNED NOT NULL,
+  `creation_time` int(10) UNSIGNED NOT NULL,
+  `deleted_by` int(10) UNSIGNED NOT NULL,
   `ip` text COLLATE utf8_bin NOT NULL,
-  `ord` bigint(20) unsigned NOT NULL,
-  `order_in_topic` int(10) unsigned NOT NULL,
-  `text` text COLLATE utf8_bin NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `session_id` text COLLATE utf8_bin NOT NULL,
+  `display_username` tinyint(1) NOT NULL DEFAULT '0',
+  `ord` bigint(20) UNSIGNED NOT NULL,
+  `order_in_topic` int(10) UNSIGNED NOT NULL,
+  `reply_to` int(10) UNSIGNED NOT NULL,
+  `text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `title` text COLLATE utf8_bin NOT NULL,
   `name` text COLLATE utf8_bin NOT NULL,
+  `flag` text COLLATE utf8_bin NOT NULL,
   `file_url` text COLLATE utf8_bin NOT NULL,
   `thumb_url` text COLLATE utf8_bin NOT NULL,
-  `thumb_w` int(10) unsigned NOT NULL,
-  `thumb_h` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`post_id`)
+  `thumb_w` int(10) UNSIGNED NOT NULL,
+  `thumb_h` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `users`
+--
+
+CREATE TABLE `users` (
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `username` text NOT NULL,
+  `password_hash` text NOT NULL,
+  `registration_time` int(10) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Индексы сохранённых таблиц
+--
+
+--
+-- Индексы таблицы `bans`
+--
+ALTER TABLE `bans`
+  ADD PRIMARY KEY (`ban_id`);
+
+--
+-- Индексы таблицы `forums`
+--
+ALTER TABLE `forums`
+  ADD PRIMARY KEY (`forum_id`);
+
+--
+-- Индексы таблицы `invites`
+--
+ALTER TABLE `invites`
+  ADD PRIMARY KEY (`invite_id`);
+
+--
+-- Индексы таблицы `modlog`
+--
+ALTER TABLE `modlog`
+  ADD PRIMARY KEY (`action_id`),
+  ADD KEY `post_id` (`post_id`);
+
+--
+-- Индексы таблицы `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`notification_id`);
+
+--
+-- Индексы таблицы `posts`
+--
+ALTER TABLE `posts`
+  ADD PRIMARY KEY (`post_id`),
+  ADD KEY `parent_topic` (`parent_topic`),
+  ADD KEY `forum_id` (`forum_id`),
+  ADD KEY `ord` (`ord`),
+  ADD KEY `creation_time` (`creation_time`);
+
+--
+-- Индексы таблицы `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`user_id`);
+
+--
+-- AUTO_INCREMENT для сохранённых таблиц
+--
+
+--
+-- AUTO_INCREMENT для таблицы `bans`
+--
+ALTER TABLE `bans`
+  MODIFY `ban_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4783;
+
+--
+-- AUTO_INCREMENT для таблицы `forums`
+--
+ALTER TABLE `forums`
+  MODIFY `forum_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+
+--
+-- AUTO_INCREMENT для таблицы `invites`
+--
+ALTER TABLE `invites`
+  MODIFY `invite_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
+
+--
+-- AUTO_INCREMENT для таблицы `modlog`
+--
+ALTER TABLE `modlog`
+  MODIFY `action_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24131;
+
+--
+-- AUTO_INCREMENT для таблицы `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `notification_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30180;
+
+--
+-- AUTO_INCREMENT для таблицы `posts`
+--
+ALTER TABLE `posts`
+  MODIFY `post_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66599;
+
+--
+-- AUTO_INCREMENT для таблицы `users`
+--
+ALTER TABLE `users`
+  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+COMMIT;
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
