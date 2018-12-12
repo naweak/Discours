@@ -916,13 +916,13 @@ class PostingController extends Controller
 				return $str;
 		}
 		$time = time();
-		$rand = random_int(1000, 9999);
-		$rand_str = random_str(12);
+		//$random_str = random_str(12);
+    $random_str = time().random_int(100, 999);
 		
 		//$new_file_name  = "{$time}_{$rand}.".$file_extension;
 		//$new_thumb_name = "{$time}_{$rand}_thumb.".$file_extension;
-		$new_file_name  = "{$rand_str}.".$file_extension;
-		$new_thumb_name = "{$rand_str}_thumb.".$file_extension;
+		$new_file_name  = "{$random_str}.".$file_extension;
+		$new_thumb_name = "{$random_str}_thumb.".$file_extension;
 		
 		copy ($tmp_name, UPLOAD_DIR."/".$new_file_name);
 		copy ($thumb_path, UPLOAD_DIR."/".$new_thumb_name);

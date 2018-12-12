@@ -161,7 +161,7 @@ New topic form:
                 <img src="/captcha?tag={{ tag }}" class="captcha" onclick="this.src = this.src+'&'+new Date().getTime();">
               </td>
               <td>
-                <input type="text" name="captcha_text" placeholder="Введите капчу" width="122px" height="50px">
+                <input type="text" class="captcha_text" name="captcha_text" size="35" placeholder="Введите капчу">
               </td>
             </tr>
 						<tr>
@@ -211,6 +211,7 @@ Main page block:
 		<title>{{ forum_title }}</title>
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 		<link rel="shortcut icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui">
 		<style type="text/css">
 			body {
 			margin: 0;
@@ -280,6 +281,13 @@ Main page block:
 			display: none
 			}
       
+      .adminbar
+      {
+        text-align:left;
+        clear:both;
+        float:left;
+      }
+      
       content.posting_error
       {
         display: block;
@@ -294,6 +302,11 @@ Main page block:
         -webkit-box-sizing: border-box;
         -moz-box-sizing: border-box;
         box-sizing: border-box;
+      }
+      
+      td.reply
+      {
+        word-break: break-all;
       }
       
       img.flag
@@ -311,22 +324,21 @@ Main page block:
       
       img.captcha
       {
-        min-width: 100%;
-        /*width: 122px;*/
-        height: 50px;
+        width: 75px;
+        height: 30px;
+      }
+      
+      .captcha_text
+      {
+        height: 20px;
+        font-size: 15px;
       }
 		</style>
     <link rel="stylesheet" type="text/css" href="/futaba.css" title="Futaba" />
-		<!--<link rel="alternate stylesheet" type="text/css" href="/css/burichan.css" title="Burichan" />
-		<link rel="alternate stylesheet" type="text/css" href="/css/gurochan.css" title="Gurochan" />
-		<link rel="alternate stylesheet" type="text/css" href="/css/photon.css" title="Photon" />
-		<link rel="alternate stylesheet" type="text/css" href="/css/style.css" title="Style" />
-		<link rel="alternate stylesheet" type="text/css" href="/css/tabs.css" title="Tabs" />
-		<link rel="alternate stylesheet" type="text/css" href="/css/winxp.blue.css" title="Winxp.blue" />-->
 		<script type="text/javascript">
 			var style_cookie = "wakabastyle";
 		</script>
-		<!--<script type="text/javascript" src="/wakaba3.js"></script>-->
+    <script type="text/javascript" src="/dollchan.js"></script>
 	</head>
 	<body>
     
@@ -335,7 +347,7 @@ Main page block:
     [<a href="javascript:set_stylesheet('Burichan')">Burichan</a>] [<a href="javascript:set_stylesheet('Futaba')">Futaba</a>] [<a href="javascript:set_stylesheet('Gurochan')">Gurochan</a>] [<a href="javascript:set_stylesheet('Photon')">Photon</a>] [<a href="javascript:set_stylesheet('Style')">Style</a>]
     [<a href="javascript:set_stylesheet('Tabs')">Tabs</a>] [<a href="javascript:set_stylesheet('Winxp.blue')">Winxp.blue</a>] - [<a href="/../" target="_top">Home</a>] [<a href="/wakaba.pl?task=admin">Manage</a>]
     -->
-    [<a href="/" target="_top">{% if lang == "en" %}Main Page{% else %}Главная{% endif %}</a>] - [<a href="/int/">int</a> / <a href="/vg/">vg</a> / <a href="/po/">po</a> / <a href="/a/">a</a> / <a href="/hw/">hw</a> / <a href="/ph/">ph</a> / <a href="/d/">d</a>]
+    [<a href="/" target="_top">{% if lang == "en" %}Main Page{% else %}Главная{% endif %}</a>] - [<a href="/int/">int</a> / <a href="/vg/">vg</a> / <a href="/po/">po</a> / <a href="/a/">a</a> / <a href="/d/">d</a> / <a href="/1chan/">1chan</a>]
   </div>
     
   <div class="notifications_bar" style="float:right;">
@@ -371,8 +383,6 @@ Main page block:
   <!--
 	<p class="footer"> - <a href="http://wakaba.c3.cx/">wakaba 3.0.7</a> + <a href="http://www.2chan.net/">futaba</a> + <a href="http://www.1chan.net/futallaby/">futallaby</a> -</p>
   -->
-
-  <script async type="text/javascript" src="/dollchan.js"></script>
     
 	</body>
 </html>

@@ -944,6 +944,11 @@ post_info
   background: transparent !important;
 }
 
+.night .captcha_text
+{
+  color: white;
+}
+
 /* / night theme */
 
 .post_footnote

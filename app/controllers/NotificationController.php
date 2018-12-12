@@ -81,6 +81,28 @@ class NotificationController extends Controller
     {
       $redirect_location .= "#".$post_object->order_in_topic;
     }
+    
+    if ($GLOBALS["domain"] == "dristach.cf")
+    {
+      $forum_obj = Forum::findFirst
+      (
+      [
+        "forum_id = :forum_id:",
+        "bind" =>
+        [
+          "forum_id" => $post_object->forum_id
+        ]
+      ]
+      );
+      
+      $redirect_location = "/".$forum_obj->slug."/res/".$notification_object->topic_id.".html";
+      
+      if ($notification_object->topic_id != $post_object->post_id)
+      {
+        $redirect_location .= "#".$post_object->post_id;
+      }
+    }
+    
     header("Location: $redirect_location");
     //echo "<a href='".$redirect_location."' target='_blank'>here</a>";
   }

@@ -3081,7 +3081,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 		'vidWinX': 'right: 0', 
 		'vidWinY': 'top: 0' 
 	};
-
+  
+  defaultCfg.replyWinDrag = 1;
+  defaultCfg.addYouTube = 1;
 
 	var Lng = {
 		cfgTab: {

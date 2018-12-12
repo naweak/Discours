@@ -92,11 +92,20 @@ function ajax_form (args)
         form_data.delete("userfile");
       }
     }
+    
+    function get_contenteditable_text (element)
+    {
+      return element.innerText;
+    }
+    
     if ($(form).find(".contenteditable_textarea").length)
     {
-      var text = $(form).find(".contenteditable_textarea").first().getPreText();
+      //var text = $(form).find(".contenteditable_textarea").first().getPreText();
+      var contenteditable = $(form).find(".contenteditable_textarea").get(0);
+      var text = get_contenteditable_text(contenteditable);
       form_data.append("text", text);
     }
+    
     if (typeof get_challenge_answer === "function")
     {
       var challenge_answer = get_challenge_answer();
@@ -720,7 +729,26 @@ function bind_event_handlers ()
 				
         if (mobile()) // scroll to post
         {
-          load_new_replies(parent_topic, function(){return clean_and_resize({post_id: data.post_id});}, false);
+          new Noty
+          ({
+            text: "Ответ отправлен",
+            layout: "topRight",
+            type: "success",
+            timeout: 1000,
+          }).show();
+          //load_new_replies(parent_topic, function(){return clean_and_resize({post_id: data.post_id});}, false);
+          //load_new_replies(parent_topic, clean_and_resize, false);
+          var order_in_topic = $(form).find("[name='reply_to']").val();
+          var reply_to_element = $("reply[order_in_topic='"+order_in_topic+"']");
+          if ($(reply_to_element).length)
+          {
+            var reply_to_post_id = $(reply_to_element).attr("id").match(/\d+/g);
+            load_new_replies(parent_topic, function(){return clean_and_resize({post_id: reply_to_post_id});}, false);
+          }
+          else
+          {
+            load_new_replies(parent_topic, function(){return clean_and_resize({post_id: data.post_id});}, false);
+          }
         }
         
         else // don't scroll to post
