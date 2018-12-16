@@ -85,6 +85,19 @@ h2
 <post_with_replies>
 <post>
   <h2 align="center">Уведомления</h2>
+  
+    <?php
+    if (is_admin())
+    {
+      $pdo = pdo();
+      $beginning_of_this_day = strtotime("midnight", time());
+      $sql = $pdo->query("SELECT COUNT(post_id) FROM posts WHERE creation_time >= $beginning_of_this_day");
+      $row = $sql->fetch();
+      $posts_today = $row[0];
+      echo "<style>h2 {margin-bottom: 0em;}</style>";
+      echo "<div align='center'>Постов за сегодня: $posts_today</div>";
+    }
+    ?>
 
     <div class="notifications">
       <?php

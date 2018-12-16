@@ -21,7 +21,6 @@ app/templates/test
 
 # Contains passwords:
 app/config/passwords/
-app/config/config.php
 app/config/domains.php
 app/config/tor.txt
 app/config/proxy.txt

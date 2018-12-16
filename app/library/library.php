@@ -95,12 +95,13 @@ function render ($twig_data, $twig_filesystem = DEFAULT_TWIG_FILESYSTEM, $twig_t
   }
   
   require_session();
+  
   $twig_data["is_admin"] = is_admin();
+  
   if (is_admin_fake(session_id()))
   {
     $twig_data["is_admin"] = true;
   }
-  $twig_data["is_mod"] = $twig_data["is_admin"];
   
   if (user_id())
   {

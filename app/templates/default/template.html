@@ -44,11 +44,11 @@ Topic with replies:
 
       <div class="forum_title">
         <a href="{{ topic.forum_href }}">{{ topic.forum_title }}</a>
-      </div>
-      
-      {% if topic.ord > 1800000000000 %}
+        
+        {% if topic.ord > 1800000000000 %}
           <span style="color:red;">пост закреплен</span>
-      {% endif %}
+        {% endif %}
+      </div>
 
       <div style="clear:both;padding:0px;"></div>
       
@@ -506,14 +506,10 @@ Main page block:
     
     <nav class="navbar is-transparent">
        <div class="mobile_navbar_buttons">
-        <!--{% if notifications_unread > 0 %}
-          <button class="button is-small is-outlined" style="font-weight:bold;" onclick="document.location='/notifications';">{{ notifications_unread }} увед.</button>
-        {% endif %}-->
-         
          <a class="navbar-item bell {% if notifications_unread == 0 %}no-notifications{% endif %}" href="/notifications" title="Уведомления">
            <i class="fa fa-bell-o bell-icon {% if notifications_unread == 0 %}no-notifications{% endif %}"></i>
            {% if notifications_unread > 0 %}
-           <span class="badge badge-danger">{{ notifications_unread }}</span>
+            <span class="badge badge-danger">{{ notifications_unread }}</span>
            {% endif %}
          </a>
        </div>
@@ -540,9 +536,6 @@ Main page block:
                 </a>
                 <div class="navbar-dropdown is-boxed">
                    <a class="navbar-item" href="/"><b>Главная</b></a>
-                   <a class="navbar-item" href="https://dristach.cf/">
-                    <b>Wakaba</b>
-                   </a>
                    <a class="navbar-item" href="/int/">International</a>
                    <a class="navbar-item" href="/vg/">Видеоигры</a>
                    <a class="navbar-item" href="/po/">Политика</a>
@@ -595,12 +588,6 @@ Main page block:
           </div>
          
           <div class="navbar-end">
-            <!--{% if notifications_unread > 0 %}
-            <a class="navbar-item" href="/notifications">
-              <b>{{ notifications_unread }} новых уведомлений</b>
-            </a>
-            {% endif %}-->
-            
             <a class="navbar-item username">
               {% if username %}
                 {{ username }}
@@ -610,7 +597,7 @@ Main page block:
             <a class="navbar-item bell {% if notifications_unread == 0 %}no-notifications{% endif %}" href="/notifications" title="Уведомления">
               <i class="fa fa-bell-o bell-icon {% if notifications_unread == 0 %}no-notifications{% endif %}"></i>
               {% if notifications_unread > 0 %}
-              <span class="badge badge-danger">{{ notifications_unread }}</span>
+                <span class="badge badge-danger">{{ notifications_unread }}</span>
               {% endif %}
             </a>
           </div>

@@ -292,14 +292,17 @@ class PostingController extends Controller
         $this->error("Код капчи не найден в базе.");
       }
       
-      if ($captcha_text == "")
+      if ($_SESSION["captcha_$captcha_tag"] !== "")
       {
-        $this->error("Пожалуйста, введите капчу.");
-      }
-      
-      if ($_SESSION["captcha_$captcha_tag"] != mb_strtolower($captcha_text))
-      {
-        $this->error("Капча введена неверно.");
+        if ($captcha_text == "")
+        {
+          $this->error("Пожалуйста, введите капчу.".$_SESSION["captcha_$captcha_tag"]." "."captcha_$captcha_tag");
+        }
+
+        if ($_SESSION["captcha_$captcha_tag"] != mb_strtolower($captcha_text))
+        {
+          $this->error("Капча введена неверно.");
+        }
       }
       
       unset($_SESSION["captcha_$captcha_tag"]);
@@ -601,7 +604,12 @@ class PostingController extends Controller
 					or ($allow_sage and !$request->getPost("sage")) // sage is alloed AND request contains sage
 			)
 			{
-				if ($parent_topic != 18520) // topic to report posts
+				if
+        (
+          $parent_topic != 18520 // topic to report posts
+          and
+          $parent_topic_object->ord < $ord * 1.5 // sticky topics
+        )
 				{
 					$parent_topic_object->ord = $ord;
 
@@ -653,6 +661,11 @@ class PostingController extends Controller
     {
       $admin_notified = true;
     }
+    
+    if (user_id() == 45)
+    {
+      $admin_notified = true;
+    }
 
     // Notify OP:
     if ($parent_topic)
@@ -699,11 +712,19 @@ class PostingController extends Controller
       }
     }
 
+    $admin_user_id = 45;
+    
     // Notify admin:
     if (!$admin_notified) // if admin not notified yet
     {
       $admin_notification = new Notification(); // notify admin
-      $admin_notification->notify("", 1, "Notification for admin", $post->post_id, $topic_id_for_notification);
+      $admin_notification->notify("", $admin_user_id, "Notification for admin", $post->post_id, $topic_id_for_notification);
+      
+      if ($topic_id_for_notification == $post->post_id) // new topic notification
+      {
+        $admin_notification = new Notification();
+        $admin_notification->notify("", 1, "Notification for admin", $post->post_id, $topic_id_for_notification);
+      }
     }
     
     $related_notification_query_bind =
