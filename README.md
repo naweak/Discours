@@ -59,7 +59,7 @@ npm install uglifycss -g
 
 ## Лицензия
 
-The Unlicense [http://unlicense.org](http://unlicense.org): Дискурс передан в общественное достояние.
+The Unlicense ([http://unlicense.org](http://unlicense.org)): исходный код передан в общественное достояние.
 
 ## Полезные ссылки
 
