@@ -259,8 +259,8 @@ class Post extends Model
     }
 		
 		$output["forum_title"] = $forum_title;
-    $output["forum_href"] = full_forum_href(@$forum_slug, $this->forum_id);
     $output["forum_slug"] = $forum_slug;
+    $output["forum_href"] = full_forum_href(@$forum_slug, $this->forum_id);
 		
 		if ($this->parent_topic == 0)
 		{
