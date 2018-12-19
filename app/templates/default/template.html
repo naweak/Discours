@@ -64,7 +64,7 @@ Topic with replies:
               <a class="report_post" href="/report" target="_blank">
                 Пожаловаться
               </a>
-              {% if is_mod %}
+              {% if is_admin %}
                 {# different code for topic and reply! #}
                 <!--<a class="move_post" onclick="move_post({{ topic.post_id }});">
                   На свалку
@@ -149,7 +149,6 @@ Topic with replies:
       {% for reply in topic.replies %}
         {{ block("reply") }}
         {% if loop.last == false %}
-        <!--<div class="hr"></div>-->
         <hr>
         {% endif %}
       {% endfor %}
@@ -204,7 +203,6 @@ Topic with replies:
       </textarea_container>
     </form>
     {% elseif topic_id %}
-    <!--<div class="hr"></div>-->
     <hr>
     <textarea_container>
       Пожалуйста, <a href="/login">войдите</a> или <a href="/contact">запросите инвайт</a>, чтобы оставить комментарий.
@@ -232,7 +230,7 @@ Reply:
             <a class="report_post" href="/report" target="_blank">
               Пожаловаться
             </a>
-            {% if is_mod %}
+            {% if is_admin %}
               {# different code for topic and reply! #}
               <a class="delete_post" onclick="delete_post({{ reply.post_id }});">
                 Удалить
@@ -307,7 +305,7 @@ New topic form:
 #}
 {% block new_topic_form %}
 {% if (root is defined) %}
-{% if is_mod or (forum_id != 9 and forum_id != 11) %}
+{% if is_admin or (forum_id != 9 and forum_id != 11) %}
   {% if (invite_only and user_id) or (not invite_only) %}
       <content class="new_topic_form_container">
       <div id="new_topic_form_error_message" style="margin-top:13px;"></div>
@@ -411,7 +409,7 @@ Main page block:
     
     <script>
       var topic_id = {% if topic_id %}{{ topic_id }}{% else %}0{% endif %};
-      var is_admin = {% if is_mod %}true{% else %}false{% endif %};
+      var is_admin = {% if is_admin %}true{% else %}false{% endif %};
                                                         
       var identity = parseInt("{{ identity }}");
       {{ identity_js|raw }}

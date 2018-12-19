@@ -57,6 +57,10 @@ if (file_exists($require_path))
 {
   require_once($require_path);
 }
+else
+{
+  define ("INVITE_ONLY", false);
+}
 
 $require_path = CONFIG_DIR."/challenge.php"; // Identity component
 if (file_exists($require_path))

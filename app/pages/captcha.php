@@ -1,5 +1,5 @@
 <?php
-$no_captcha = true;
+$no_captcha = false;
 
 session_start();
 

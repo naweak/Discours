@@ -67,47 +67,39 @@ class PostingController extends Controller
     {
     	$this->error("Некорректный HTTP-referer!");
     }
-		
-		if
-		(
-			in_array($forum_id, array(9, 11, 20))
-			and !$parent_topic
-			and !is_admin()
-		)
-		{
-			$this->error("Только администраторы могут создавать темы на этом форуме.");
-		}
-		
-		// Text
-    /* Somehow accepts one-letter strings like "a" */
-    if (mb_strlen($text) < $min_text_length)
+    
+    // Captcha check:
+    $check_captcha = true;
+    
+    if ($check_captcha)
     {
-			if (!isset($_FILES["userfile"]["tmp_name"]) or !is_uploaded_file($_FILES["userfile"]["tmp_name"]))
-			{
-				$this->error("Текст слишком короткий!");
-			}
-    }
+      $captcha_tag  = $request->getPost("captcha_tag");
+      $captcha_text = $request->getPost("captcha_text");
+      
+      if (!validate_captcha_tag($captcha_tag))
+      {
+        $this->error("Invalid captcha tag.");
+      }
+      
+      if (!isset($_SESSION["captcha_$captcha_tag"]))
+      {
+        $this->error("Код капчи не найден в базе.");
+      }
+      
+      if ($_SESSION["captcha_$captcha_tag"] !== "")
+      {
+        if ($captcha_text == "")
+        {
+          $this->error("Пожалуйста, введите капчу.".$_SESSION["captcha_$captcha_tag"]." "."captcha_$captcha_tag");
+        }
 
-    if (mb_strlen($text) > $max_text_length)
-    {
-    	$this->error("Текст слишком длинный (>$max_text_length)!");
-    }
-  
-    // Title:
-    if (mb_strlen($title) < $min_title_length and $title != "")
-    {
-    	$this->error("Заголовок слишком короткий (<$min_title_length)!");
-    }
-  
-    if (mb_strlen($title) > $max_title_length)
-    {
-    	$this->error("Заголовок слишком длинный (>$max_title_length)!");
-    }
-  
-    // Name:
-    if (mb_strlen($name) > $max_name_length )
-    {
-    	$this->error("Имя слишком длинное (>$max_name_length )!");
+        if ($_SESSION["captcha_$captcha_tag"] != mb_strtolower($captcha_text))
+        {
+          $this->error("Капча введена неверно.");
+        }
+      }
+      
+      unset($_SESSION["captcha_$captcha_tag"]);
     }
     
     // Check if user exists
@@ -200,10 +192,9 @@ class PostingController extends Controller
       }
     }
 
-    // All sorts of IP checks:
+    // Blacklist check:
     if ($check_blacklist)
-    {  
-      // Blacklist check:
+    {
       require_if_exists(CONFIG_DIR."/check_ip.php");
       if (function_exists("check_ip"))
       {
@@ -254,6 +245,37 @@ class PostingController extends Controller
         $this->error("Пожалуйста, используйте IPv4. <a href='//".MAIN_HOST."/register' target='_blank'>Регистрация</a> позволяет писать с IPv6.");
       }
     }
+    
+    // Text:
+    if (mb_strlen($text) < $min_text_length)
+    {
+			if (!isset($_FILES["userfile"]["tmp_name"]) or !is_uploaded_file($_FILES["userfile"]["tmp_name"]))
+			{
+				$this->error("Текст слишком короткий!");
+			}
+    }
+
+    if (mb_strlen($text) > $max_text_length)
+    {
+    	$this->error("Текст слишком длинный (>$max_text_length)!");
+    }
+  
+    // Title:
+    if (mb_strlen($title) < $min_title_length and $title != "")
+    {
+    	$this->error("Заголовок слишком короткий (<$min_title_length)!");
+    }
+  
+    if (mb_strlen($title) > $max_title_length)
+    {
+    	$this->error("Заголовок слишком длинный (>$max_title_length)!");
+    }
+  
+    // Name:
+    if (mb_strlen($name) > $max_name_length )
+    {
+    	$this->error("Имя слишком длинное (>$max_name_length )!");
+    }
 		
     // Get forum object:
 		$forum_obj = Forum::findFirst
@@ -274,38 +296,25 @@ class PostingController extends Controller
 			$this->error("Форум не найден.");
 		}
     
-    // Captcha check:
-    $check_captcha = true;
+    		
+		if
+		(
+			!is_admin() and
+      !$parent_topic and
+      in_array($forum_obj->slug, ["blog", "changelog"])
+		)
+		{
+			$this->error("Только администраторы могут создавать темы на этом форуме.");
+		}
     
-    if ($check_captcha)
+    if
+    (
+      is_admin() and
+      !$parent_topic and
+      !in_array($forum_obj->slug, ["blog", "changelog"])
+    )
     {
-      $captcha_tag  = $request->getPost("captcha_tag");
-      $captcha_text = $request->getPost("captcha_text");
-      
-      if (!validate_captcha_tag($captcha_tag))
-      {
-        $this->error("Invalid captcha tag.");
-      }
-      
-      if (!isset($_SESSION["captcha_$captcha_tag"]))
-      {
-        $this->error("Код капчи не найден в базе.");
-      }
-      
-      if ($_SESSION["captcha_$captcha_tag"] !== "")
-      {
-        if ($captcha_text == "")
-        {
-          $this->error("Пожалуйста, введите капчу.".$_SESSION["captcha_$captcha_tag"]." "."captcha_$captcha_tag");
-        }
-
-        if ($_SESSION["captcha_$captcha_tag"] != mb_strtolower($captcha_text))
-        {
-          $this->error("Капча введена неверно.");
-        }
-      }
-      
-      unset($_SESSION["captcha_$captcha_tag"]);
+      $this->error("Администраторы не могут создавать темы на этом форуме.");
     }
     
     if ($forum_obj->slug == "test" and !is_admin())
@@ -313,7 +322,7 @@ class PostingController extends Controller
       $this->error("Этот форум закрыт для постинга.");
 		}
     
-    if ($forum_obj->slug == "pr" and !in_array(user_id(), [1]))
+    if ($forum_obj->slug == "pr" and !is_admin())
     {
       $this->error("Этот форум закрыт для постинга.");
     }
@@ -417,6 +426,7 @@ class PostingController extends Controller
 				}
         
         if ($last_reply_object->text == $text and
+            $last_reply_object->parent_topic == $parent_topic and
             $text != "" and // lets posts several images in a row
             $last_reply_age < 60)
         {
@@ -478,7 +488,7 @@ class PostingController extends Controller
       return count($posts);
     }
     
-    $hourly_limit = 100; // max posts per hour per IP
+    $hourly_limit = 500; // max posts per hour per IP
     
     if (posts_by_ip_in_the_last_n_seconds($ip, 60*60) > $hourly_limit)
     {
@@ -556,7 +566,7 @@ class PostingController extends Controller
 		
 		else
 		{
-			if (!$parent_topic and $forum_id != 11 and $forum_id != 12) // changelog
+			if (!$parent_topic and $forum_obj->slug != "1chan" and $forum_obj->slug != "changelog") // changelog
 			{
 				$this->error("Прикрепите картинку для создания темы.");
 			}
@@ -641,7 +651,8 @@ class PostingController extends Controller
 			}
 		}
 
-    ### Notifications ###    
+    ### Notifications ###
+    $admin_user_id = 45;
     $admin_notified = false;
     $topic_id_for_notification = $parent_topic ? $parent_topic : $post->post_id;
    
@@ -662,7 +673,7 @@ class PostingController extends Controller
       $admin_notified = true;
     }
     
-    if (user_id() == 45)
+    if (user_id() == $admin_user_id)
     {
       $admin_notified = true;
     }
@@ -711,19 +722,25 @@ class PostingController extends Controller
         }
       }
     }
-
-    $admin_user_id = 45;
     
     // Notify admin:
     if (!$admin_notified) // if admin not notified yet
     {
-      $admin_notification = new Notification(); // notify admin
-      $admin_notification->notify("", $admin_user_id, "Notification for admin", $post->post_id, $topic_id_for_notification);
+      //$admin_notification = new Notification(); // notify admin
+      //$admin_notification->notify("", $admin_user_id, "Notification for admin", $post->post_id, $topic_id_for_notification);
       
-      if ($topic_id_for_notification == $post->post_id) // new topic notification
+      /*if ($topic_id_for_notification == $post->post_id) // new topic notification
       {
         $admin_notification = new Notification();
         $admin_notification->notify("", 1, "Notification for admin", $post->post_id, $topic_id_for_notification);
+      }*/
+      
+      $total_posts_in_topic_for_admin_notification = 3;
+      
+      if ($parent_topic and $total_posts_in_topic == $total_posts_in_topic_for_admin_notification - 1)
+      {
+        $admin_notification = new Notification();
+        $admin_notification->notify("", 1, "Notification for admin", $topic_id_for_notification, $topic_id_for_notification);
       }
     }
     
@@ -760,7 +777,7 @@ class PostingController extends Controller
     }
     ### / Notifications ###
 		
-		if ($forum_id == 11 and $parent_topic == 0) // if posting to Changelog
+		if ($forum_obj->slug == "changelog" and $parent_topic == 0) // if posting to Changelog
 		{
 			send_message_to_telegram_channel("@DiscoursChangelog", $post->get_plain_text()."\nОбсудить: https://".MAIN_HOST."/topic/".$post->post_id, TELEGRAM_TOKEN);
 		}

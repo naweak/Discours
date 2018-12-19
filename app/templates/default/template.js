@@ -738,12 +738,19 @@ function bind_event_handlers ()
           }).show();
           //load_new_replies(parent_topic, function(){return clean_and_resize({post_id: data.post_id});}, false);
           //load_new_replies(parent_topic, clean_and_resize, false);
-          var order_in_topic = $(form).find("[name='reply_to']").val();
-          var reply_to_element = $("reply[order_in_topic='"+order_in_topic+"']");
+          var order_in_topic = parseInt($(form).find("[name='reply_to']").val());
+          var reply_to_element = $(form).parent().find("reply[order_in_topic='"+order_in_topic+"']");
+  
           if ($(reply_to_element).length)
           {
-            var reply_to_post_id = $(reply_to_element).attr("id").match(/\d+/g);
-            load_new_replies(parent_topic, function(){return clean_and_resize({post_id: reply_to_post_id});}, false);
+            var scroll_to_element = reply_to_element;
+            var next_reply_element = $(form).parent().find("reply[order_in_topic='"+(order_in_topic+1)+"']");
+            if (next_reply_element.length)
+            {
+              scroll_to_element = next_reply_element;
+            }
+            var scroll_to_post_id = $(scroll_to_element).attr("id").match(/\d+/g);
+            load_new_replies(parent_topic, function(){return clean_and_resize({post_id: scroll_to_post_id});}, false);
           }
           else
           {
@@ -753,13 +760,6 @@ function bind_event_handlers ()
         
         else // don't scroll to post
         {
-          /*new Noty
-          ({
-            text: "Ответ отправлен",
-            layout: "topRight",
-            type: "success",
-            timeout: 1000,
-          }).show();*/
           load_new_replies(parent_topic, clean_and_resize, false);
         }
 			}
