@@ -177,12 +177,12 @@ Topic with replies:
         </noscript>
         
         <div class="contenteditable_textarea" contenteditable="true" id="text_{{ topic.post_id }}" spellcheck="false" placeholder="Написать ответ..."></div>
-        
+
         <div class="controls" style="margin-top: 7px;">
           {{ block("captcha") }}
           
           <div style="float:left;">
-            {% if forum_id != 12 %}
+            {% if topic.forum_slug != "1chan" %}
             <input id="reply_userfile_{{ topic.post_id }}" name="userfile" type="file" class="inputfile">
             <label for="reply_userfile_{{ topic.post_id }}" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>
             {% endif %}
@@ -190,12 +190,10 @@ Topic with replies:
             
           <div style="text-align:right;">
             <input id="reply_submit_{{ topic.post_id }}" type="submit" style="display:none;">
-            
-            {% if forum_id != 12 %}
+ 
             <div style="display:inline;margin-right:5px;">
               <label style="cursor:pointer;"><input name="sage" type="checkbox" style="display:none;"> <abbr class="sage" title="Не поднимать тему">sage</abbr></label>
             </div>
-            {% endif %}
             
             <label for="reply_submit_{{ topic.post_id }}" class="inputfile_label submit_button button is-small">Отправить</label>
           </div>
@@ -328,9 +326,9 @@ New topic form:
           <div class="contenteditable_textarea" contenteditable="true" id="text_new_topic" spellcheck="false" placeholder="Введите текст..."></div>
           
           {{ block("captcha") }}
-          
+
           <div style="float:left;">
-            {% if forum_id != 12 %}
+            {% if forum_slug != "1chan" %}
             <input id="topic_userfile" name="userfile" type="file" class="inputfile">
             <label for="topic_userfile" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>
             {% endif %}

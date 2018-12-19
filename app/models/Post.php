@@ -258,12 +258,9 @@ class Post extends Model
       $output["is_anonymous"] = true;
     }
 		
-		if (isset($forum_title))
-		{
-			$output["forum_title"] = $forum_title;
-		}
-
+		$output["forum_title"] = $forum_title;
     $output["forum_href"] = full_forum_href(@$forum_slug, $this->forum_id);
+    $output["forum_slug"] = $forum_slug;
 		
 		if ($this->parent_topic == 0)
 		{
