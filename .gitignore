@@ -18,6 +18,7 @@ app/config/check_ip.php
 app/config/challenge.php
 app/config/invite_only.php
 app/templates/test
+app/packs
 
 # Contains passwords:
 app/config/passwords/

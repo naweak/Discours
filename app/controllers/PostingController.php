@@ -3,6 +3,58 @@
 use Phalcon\Mvc\Controller;
 use Phalcon\Http\Request;
 
+/*
+$file->getTempName();
+$file_name = $file->getName();
+$file_size = $file->getSize(); // file size in bytes
+$file_type = $file->getRealType();
+$file_extension = strtolower($file->getExtension());
+*/
+
+class PseudoFile
+{
+  private $file_path;
+  private $temp_path;
+  
+  function setPath ($path)
+  {
+    $this->file_path = $path;
+  }
+  
+  function createTempFile ()
+  {
+    $path = tempnam(sys_get_temp_dir(), "random");
+    file_put_contents($path, file_get_contents($this->file_path));
+    $this->temp_path = $path;
+  }
+  
+  function getTempName ()
+  {
+    return $this->temp_path;
+  }
+  
+  function getName ()
+  {
+    return basename($this->file_path);
+  }
+  
+  function getSize ()
+  {
+    return filesize($this->file_path);
+  }
+  
+  function getRealType ()
+  {
+    return mime_content_type($this->file_path);
+  }
+  
+  function getExtension ()
+  {
+    $path_parts = pathinfo($this->file_path);
+    return $path_parts["extension"];
+  }
+}
+
 class PostingController extends Controller
 {
 
@@ -14,7 +66,7 @@ class PostingController extends Controller
 		$request = new Request();
 		
 		$reply_delay     = 5;
-		$new_topic_delay = 1*60;
+		$new_topic_delay = 5*60;
 		$min_title_length = 2;
 		$max_title_length = 255;
 		$max_name_length = 25;
@@ -90,7 +142,7 @@ class PostingController extends Controller
       {
         if ($captcha_text == "")
         {
-          $this->error("Пожалуйста, введите капчу.".$_SESSION["captcha_$captcha_tag"]." "."captcha_$captcha_tag");
+          $this->error("Пожалуйста, введите капчу.");
         }
 
         if ($_SESSION["captcha_$captcha_tag"] != mb_strtolower($captcha_text))
@@ -296,7 +348,11 @@ class PostingController extends Controller
 			$this->error("Форум не найден.");
 		}
     
-    		
+    if ($forum_obj->slug == "1chan")
+    {
+      $new_topic_delay = 3*60;
+    }
+    
 		if
 		(
 			!is_admin() and
@@ -311,7 +367,7 @@ class PostingController extends Controller
     (
       is_admin() and
       !$parent_topic and
-      !in_array($forum_obj->slug, ["blog", "changelog"])
+      !in_array($forum_obj->slug, ["blog", "changelog", "apachan"])
     )
     {
       $this->error("Администраторы не могут создавать темы на этом форуме.");
@@ -437,12 +493,7 @@ class PostingController extends Controller
 		
 		// New topic
     else
-    {
-      /*if ($forum_obj->slug == "1chan")
-      {
-        $new_topic_delay = 3*60;
-      }*/
-      
+    { 
       $last_topic_object = Post::findFirst
       (
       [
@@ -566,19 +617,66 @@ class PostingController extends Controller
 		
 		else
 		{
+      $random_image = $request->getPost("random_image");
+      
 			if (!$parent_topic and $forum_obj->slug != "1chan" and $forum_obj->slug != "changelog") // changelog
 			{
-				$this->error("Прикрепите картинку для создания темы.");
+        if ($forum_obj->slug != "apachan")
+        {
+				  $this->error("Прикрепите картинку для создания темы.");
+        }
+        else
+        {
+          if (!$random_image)
+          {
+            $this->error("Прикрепите картинку или выберете рандомпак для создания темы.");
+          }
+        }
 			}
+      
+      function random_file ($dir)
+      {
+        $files = glob($dir . "/*.*");
+        $file = array_rand($files);
+        return $files[$file];
+      }
+      
+      if ($random_image and $forum_obj->slug == "apachan")
+      {
+        if (!ctype_alnum($random_image))
+        {
+          $this->error("Random image not alphanumeric.");
+        }
+        
+        if (mb_strlen($random_image) > 20)
+        {
+          $this->error("Random image too long.");
+        }
+        
+        $random_image_dir = ROOT_DIR."/app/packs/".$random_image;
+        
+        if (!is_dir($random_image_dir))
+        {
+          $this->error("Random image directory not found.");
+        }
+        
+        $random_image_path = random_file($random_image_dir);
+        
+        if (!is_file($random_image_path))
+        {
+          $this->error("Random image could not be selected.");
+        }
+        
+        $pseudo_file = new PseudoFile;
+        $pseudo_file->setPath($random_image_path);
+        $pseudo_file->createTempFile();
+
+        $this->process_file($pseudo_file, $post);
+      }
 		}
 		
 		// Save new post
 		$ord = round(microtime(true) * 1000);
-    
-		/*if ($parent_topic == 62538) // make a sticky topic
-		{
-				$ord = $ord * 2;
-		}*/
 		
 		$post->creation_time = $time;
 		$post->ip = $ip;
@@ -868,7 +966,7 @@ class PostingController extends Controller
 	function process_file ($file, $post)
 	{
 		$tmp_name = $file->getTempName();
-		
+    
 		if (!$tmp_name)
 		{
 			$this->error("Cannot upload file!");

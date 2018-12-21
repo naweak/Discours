@@ -34,6 +34,21 @@ Captcha:
 {% endblock %}
 {#
 
+Random image:
+
+#}
+{% block random_image %}
+{% if root is defined %}
+<select name="random_image">
+<option value="" selected>без картинки</option>
+<option value="rakodil">ракодил</option>
+<option value="petrosyan">петросян</option>
+<option value="peka">пека</option>
+</select>
+{% endif %}
+{% endblock %}
+{#
+
 Topic with replies:
 
 #}
@@ -186,6 +201,10 @@ Topic with replies:
             <input id="reply_userfile_{{ topic.post_id }}" name="userfile" type="file" class="inputfile">
             <label for="reply_userfile_{{ topic.post_id }}" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>
             {% endif %}
+            
+            {% if topic.forum_slug == "apachan" %}
+            {{ block("random_image") }}
+            {% endif %}
           </div>
             
           <div style="text-align:right;">
@@ -331,6 +350,10 @@ New topic form:
             {% if forum_slug != "1chan" %}
             <input id="topic_userfile" name="userfile" type="file" class="inputfile">
             <label for="topic_userfile" class="attach_button"><i class="fa fa-picture-o" aria-hidden="true"></i> Картинка</label>
+            {% endif %}
+            
+            {% if forum_slug == "apachan" %}
+            {{ block("random_image") }}
             {% endif %}
           </div>
           
@@ -493,6 +516,7 @@ Main page block:
         
         <li><a href="/news/">Новости</a></li>
         <li><a href="/1chan/">Колчок</a></li>
+        <li><a href="/apachan/">Апачан</a></li>
         
         <li style="font-weight:bold; margin-top:1em;"><a href="/login">{% if not user_id %}Вход{% else %}Выход{% endif %}</a></li>
         <li style="font-weight:bold;"><a href="/my-topics">Мои темы</a></li>
@@ -538,7 +562,8 @@ Main page block:
                    <a class="navbar-item" href="/a/">Аниме</a>
                    <a class="navbar-item" href="/d/">Отзывы и предложения</a>
                    <a class="navbar-item" href="/news/">Новости</a>
-                    <a class="navbar-item" href="/1chan/">Колчок</a>
+                   <a class="navbar-item" href="/1chan/">Колчок</a>
+                   <a class="navbar-item" href="/apachan/">Апачан</a>
                   
                    <!--<a class="navbar-item" onclick="more_click(this);">ещё...</a>-->
                 </div>

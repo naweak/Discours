@@ -63,7 +63,7 @@ $di['db'] = function() {
 
 if (USE_ROUTES)
 {
-  $di->set('router', function() use ($config) {
+  $di->set('router', function() {
     $router = new \Phalcon\Mvc\Router(false);
     $router->removeExtraSlashes(false);
     include(ROUTES_FILE);

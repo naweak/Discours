@@ -10,14 +10,6 @@ $(document).ready(function ()
 { 
     on_resize();
 		link_preview_tree_init();
-	
-		var hash = get_hash();
-		if (hash)
-		{
-			console.log ("Highlighting reply: "+hash);
-			scroll_to_reply(hash);
-			highlight_reply(hash);
-		}
   
     if (topic_id !== 0)
     {
@@ -230,9 +222,11 @@ function bind_event_handlers ()
   
   $(document).on("click tap", ".captcha_image", function()
 	{
-    d = new Date();
+    var d = new Date();
     //$(this).attr("src", $(this).attr("src")+"&"+d.getTime());
     $(this).css("background-image", "url('/captcha?tag="+$(this).attr("captcha_tag")+"&rand="+d.getTime()+"')");
+    $(this).next().val(""); // clear text field
+    $(this).next().focus();
 	});
 	
 	$(document).on("click tap", "a.more", function()
@@ -582,6 +576,8 @@ function bind_event_handlers ()
         
         $(".new_topic_form").find(".captcha_image").trigger("tap");
         $(".new_topic_form").find(".captcha_text").val("");
+        
+        $(".new_topic_form").find("select").prop("selectedIndex", 0);
       }
       
 			console.log("Server response:");
@@ -1091,7 +1087,8 @@ function scroll_to_reply (order_in_topic)
   {
     $('html, body').animate
     ({
-      scrollTop: reply.offset().top - $(".navbar").height() - 10
+      //scrollTop: reply.offset().top - $(".navbar").height() - 10
+      scrollTop: reply.offset().top - $(".navbar").height()
     }, 1);
   }
 }
@@ -1358,6 +1355,15 @@ $(window).resize(function ()
 {
 	on_resize();
 });
+
+var hash = get_hash();
+if (hash)
+{
+  console.log ("Highlighting reply: "+hash);
+  scroll_to_reply(hash);
+  // highlight_reply() does not work before everything is loaded
+  $("reply[order_in_topic='"+hash+"']").addClass("highlighted");
+}
 
 /* END Page logic */
 

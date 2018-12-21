@@ -116,6 +116,11 @@ h2
           $plain_text = $topic_object->get_plain_text();
         }
         
+        if ($plain_text == "")
+        {
+          $plain_text = "Тема без текста";
+        }
+        
         $is_new_topic = false;
         
         foreach ($notifications_in_given_topic as $notification)
