@@ -5,8 +5,8 @@
 $start_microtime = microtime(true);
 
 // GENERAL DATA:
-define ("MAIN_HOST", "apachan.cf"); // 1.2.3.4 or localhost
-define ("FILE_HOST", "apachan.cf"); // in most cases, same as above
+define ("MAIN_HOST", "discou.rs"); // 1.2.3.4 or localhost
+define ("FILE_HOST", "dristatic.cf"); // in most cases, same as above
 define ("FILE_PROTOCOL", "https"); // http or https
 
 date_default_timezone_set("Europe/Moscow");

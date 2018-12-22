@@ -31,7 +31,7 @@ sudo apt-get install -y php7.2-phalcon
 sudo apt-get install -y php7.2-mbstring libapache2-mod-php7.2
 sudo apt-get install -y nodejs nodejs-legacy
 sudo apt-get install -y npm
-sudo apt-get install -y curl
+sudo apt-get install -y curl php7.2-curl
 sudo apt-get install -y memcached php7.2-memcached
 sudo apt-get install -y php7.2-gd
 sudo apt-get install -y imagemagick

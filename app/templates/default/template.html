@@ -412,9 +412,9 @@ Main page block:
     <!-- FontAwesome -->
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     
-    <link rel="icon" type="image/png" sizes="96x96" href="//static.disku.rs/favicon/favicon-32x32-new.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="{% if file_host %}//{{ file_host }}{% endif %}/favicon/favicon-32x32-new.png">
     
-    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <!--<script src='https://www.google.com/recaptcha/api.js'></script>-->
     
     {% if not user_id %}
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -552,7 +552,7 @@ Main page block:
             
              <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link is-active">
-                Борды
+                Доски
                 </a>
                 <div class="navbar-dropdown is-boxed">
                    <a class="navbar-item" href="/"><b>Главная</b></a>

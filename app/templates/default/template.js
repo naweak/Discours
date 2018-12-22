@@ -691,13 +691,16 @@ function bind_event_handlers ()
         $(form).parent().append("<hr>", reply_form.detach());
         
         var reply_to = $(form).find("[name='reply_to']").val();
-        if (topic_id)
+        if (mobile())
         {
-          if (reply_to === 0 || reply_to == "0" || !reply_to) // if replying to OP post
+          if (topic_id)
           {
-            // scroll to bottom
-            console.log("Scroll to bottom");
-            $(window).scrollTop($(document).height());
+            if (reply_to === 0 || reply_to == "0" || !reply_to) // if replying to OP post
+            {
+              // scroll to bottom
+              console.log("Scroll to bottom");
+              $(window).scrollTop($(document).height());
+            }
           }
         }
         
