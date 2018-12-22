@@ -21,6 +21,8 @@
 8) PHP GD
 9) cURL (опционально)
 
+Для работы с SSL используйте [Certbot](https://certbot.eff.org/lets-encrypt/ubuntuxenial-apache).
+
 Инструкции по установке несложно найти в интернете.
 
 Рекомендуемый дистрибутив — Ubuntu последней стабильной версии.
