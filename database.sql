@@ -1,17 +1,13 @@
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+SET time_zone = "+00:00";
+
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- База данных: `discours`
---
-
--- --------------------------------------------------------
-
---
--- Структура таблицы `bans`
---
 
 CREATE TABLE `bans` (
   `ban_id` int(10) UNSIGNED NOT NULL,
@@ -19,34 +15,16 @@ CREATE TABLE `bans` (
   `expires` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
--- --------------------------------------------------------
-
---
--- Структура таблицы `forums`
---
-
 CREATE TABLE `forums` (
   `forum_id` int(10) UNSIGNED NOT NULL,
   `title` text COLLATE utf8_bin NOT NULL,
   `slug` text COLLATE utf8_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
--- --------------------------------------------------------
-
---
--- Структура таблицы `invites`
---
-
 CREATE TABLE `invites` (
   `invite_id` int(10) UNSIGNED NOT NULL,
   `invite_code` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
--- --------------------------------------------------------
-
---
--- Структура таблицы `modlog`
---
 
 CREATE TABLE `modlog` (
   `action_id` int(10) UNSIGNED NOT NULL,
@@ -60,12 +38,6 @@ CREATE TABLE `modlog` (
   `unlawful` text CHARACTER SET utf8 NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
--- --------------------------------------------------------
-
---
--- Структура таблицы `notifications`
---
-
 CREATE TABLE `notifications` (
   `notification_id` int(10) UNSIGNED NOT NULL,
   `recipient_session_id` text COLLATE utf8_bin NOT NULL,
@@ -76,12 +48,6 @@ CREATE TABLE `notifications` (
   `post_id` int(10) UNSIGNED NOT NULL,
   `text` text COLLATE utf8_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-
--- --------------------------------------------------------
-
---
--- Структура таблицы `posts`
---
 
 CREATE TABLE `posts` (
   `post_id` int(10) UNSIGNED NOT NULL,
@@ -106,12 +72,6 @@ CREATE TABLE `posts` (
   `thumb_h` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
--- --------------------------------------------------------
-
---
--- Структура таблицы `users`
---
-
 CREATE TABLE `users` (
   `user_id` int(10) UNSIGNED NOT NULL,
   `username` text NOT NULL,
@@ -119,44 +79,23 @@ CREATE TABLE `users` (
   `registration_time` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
---
--- Индексы сохранённых таблиц
---
 
---
--- Индексы таблицы `bans`
---
 ALTER TABLE `bans`
   ADD PRIMARY KEY (`ban_id`);
 
---
--- Индексы таблицы `forums`
---
 ALTER TABLE `forums`
   ADD PRIMARY KEY (`forum_id`);
 
---
--- Индексы таблицы `invites`
---
 ALTER TABLE `invites`
   ADD PRIMARY KEY (`invite_id`);
 
---
--- Индексы таблицы `modlog`
---
 ALTER TABLE `modlog`
   ADD PRIMARY KEY (`action_id`),
   ADD KEY `post_id` (`post_id`);
 
---
--- Индексы таблицы `notifications`
---
 ALTER TABLE `notifications`
   ADD PRIMARY KEY (`notification_id`);
 
---
--- Индексы таблицы `posts`
---
 ALTER TABLE `posts`
   ADD PRIMARY KEY (`post_id`),
   ADD KEY `parent_topic` (`parent_topic`),
@@ -164,11 +103,31 @@ ALTER TABLE `posts`
   ADD KEY `ord` (`ord`),
   ADD KEY `creation_time` (`creation_time`);
 
---
--- Индексы таблицы `users`
---
 ALTER TABLE `users`
   ADD PRIMARY KEY (`user_id`);
+
+
+ALTER TABLE `bans`
+  MODIFY `ban_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `forums`
+  MODIFY `forum_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `invites`
+  MODIFY `invite_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `modlog`
+  MODIFY `action_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `notifications`
+  MODIFY `notification_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `posts`
+  MODIFY `post_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `users`
+  MODIFY `user_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

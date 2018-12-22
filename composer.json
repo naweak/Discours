@@ -1,0 +1,12 @@
+{
+    "name": "discours/discours",
+    "authors": [
+        {
+            "name": "author",
+            "email": "example@example.com"
+        }
+    ],
+    "require": {
+        "twig/twig": "^2.0"
+    }
+}

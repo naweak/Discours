@@ -8,6 +8,7 @@ public/phpinfo.php
 public/favicon
 public/logos
 /app/dashboard/crawler.php
+deploy.sh
 
 /websocket
 /webpack
@@ -21,7 +22,7 @@ app/templates/test
 app/packs
 
 # Contains passwords:
-app/config/passwords/
+app/config/passwords.txt
 app/config/domains.php
 app/config/tor.txt
 app/config/proxy.txt

@@ -19,7 +19,7 @@ define ("MAX_CHARS_TO_SHOW", 700); // maximum number of post characters to show 
 define ("ADMIN_FAKES_MD5", []); // MD5 hashes of session_id strings
 
 // SECRET DATA:
-$passwords = json_decode(file_get_contents(__DIR__."/passwords/passwords.txt"));
+$passwords = json_decode(file_get_contents(__DIR__."/passwords.txt"));
 
 define ("MYSQL_HOST", "localhost");
 define ("MYSQL_ENCODING", "utf8mb4");
