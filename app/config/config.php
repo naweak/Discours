@@ -5,9 +5,9 @@
 $start_microtime = microtime(true);
 
 // GENERAL DATA:
-define ("MAIN_HOST", "discou.rs");
-define ("FILE_HOST", "static.disku.rs");
-define ("FILE_PROTOCOL", "https");
+define ("MAIN_HOST", "discou.rs"); // 1.2.3.4 or localhost
+define ("FILE_HOST", "static.disku.rs"); // in most cases, same as above
+define ("FILE_PROTOCOL", "https"); // http or https
 
 date_default_timezone_set("Europe/Moscow");
 
