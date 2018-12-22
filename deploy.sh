@@ -16,8 +16,6 @@ if [ ! -f app/config/passwords.txt ];
 then
   mv app/config/example-passwords.txt app/config/passwords.txt
   echo "Please edit app/config/passwords.txt before continuing."
-  echo "Use 'discours' as mysql_database;"
-  echo "Use 'root' as mysql_username;"
   echo "Use your MySQL root password as 'mysql_password'"
   echo ""
   read -p "Press enter to continue... "
