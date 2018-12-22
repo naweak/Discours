@@ -1,6 +1,4 @@
 <?php
-die("Переезжаем на новый сервер. Дискурс будет работать гораздо быстрее, но нужно немного потерпеть.");
-
 // This is the configuration for discou.rs server
 // Please change to your project's values to make it work
 
