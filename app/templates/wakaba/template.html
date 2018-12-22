@@ -97,7 +97,7 @@ Reply:
           <span class="reflink"> 
           {% if not topic_id %}
           {# topic.forum_href is used because forum_slug is not cached in reply objects to increase performance #}
-          <a href="{{ topic.forum_href }}res/{{ reply.post_id }}.html#i{{ reply.post_id }}">No.{{ reply.post_id }}</a>
+          <a href="{{ topic.forum_href }}res/{{ reply.parent_topic }}.html#i{{ reply.post_id }}">No.{{ reply.post_id }}</a>
           {% else %}
           <a href="javascript:insert('>>{{ reply.post_id }}')">No.{{ reply.post_id }}</a>
           {% endif %}
