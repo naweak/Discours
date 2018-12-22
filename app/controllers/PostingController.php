@@ -1017,20 +1017,20 @@ class PostingController extends Controller
 		$thumb_path = tempnam(sys_get_temp_dir(), "thumb");
 		if ($post->forum_id != 3)
 		{
-			//exec("convert -thumbnail 150x150 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
-      exec("convert -thumbnail 300x300 $tmp_name\[0] $thumb_path"); // [0] means 1st frame
+      $browser_max_w = 150;
+      $browser_max_h = 150;
+      $dimensions = ($browser_max_w*2)."x".($browser_max_h*2);
+      exec("convert -thumbnail $dimensions $tmp_name\[0] $thumb_path"); // [0] means 1st frame
 		}
 		else // /test/
 		{
       $browser_max_w = 150;
       $browser_max_h = 150;
-      
       /*if ($post->parent_topic)
       {
         $browser_max_w = 150;
         $browser_max_h = 150;
       }*/
-      
       // image in browser will be 50% smaller because of CSS
       $dimensions = ($browser_max_w*2)."x".($browser_max_h*2);
 			exec("convert -thumbnail $dimensions $tmp_name\[0] $thumb_path"); // [0] means 1st frame

@@ -11,6 +11,15 @@ $(document).ready(function ()
     on_resize();
 		link_preview_tree_init();
   
+    var hash = get_hash();
+    if (hash)
+    {
+      console.log ("Highlighting reply: "+hash);
+      scroll_to_reply(hash);
+      // highlight_reply() does not work before everything is loaded
+      $("reply[order_in_topic='"+hash+"']").addClass("highlighted");
+    }
+  
     if (topic_id !== 0)
     {
       setInterval(function ()
@@ -684,6 +693,8 @@ function bind_event_handlers ()
         
         $(form).find(".captcha_image").trigger("tap");
         $(form).find(".captcha_text").val("");
+        
+        $(form).find("select").prop("selectedIndex", 0);
 	
 				var reply_form = $(form);
 				$(reply_form).prev().detach();
@@ -1090,8 +1101,7 @@ function scroll_to_reply (order_in_topic)
   {
     $('html, body').animate
     ({
-      //scrollTop: reply.offset().top - $(".navbar").height() - 10
-      scrollTop: reply.offset().top - $(".navbar").height()
+      scrollTop: reply.offset().top - $(".navbar").height() - 10
     }, 1);
   }
 }
@@ -1358,15 +1368,6 @@ $(window).resize(function ()
 {
 	on_resize();
 });
-
-var hash = get_hash();
-if (hash)
-{
-  console.log ("Highlighting reply: "+hash);
-  scroll_to_reply(hash);
-  // highlight_reply() does not work before everything is loaded
-  $("reply[order_in_topic='"+hash+"']").addClass("highlighted");
-}
 
 /* END Page logic */
 

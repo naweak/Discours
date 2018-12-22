@@ -210,9 +210,11 @@ Topic with replies:
           <div style="text-align:right;">
             <input id="reply_submit_{{ topic.post_id }}" type="submit" style="display:none;">
  
+            {% if topic.forum_slug != "apachan" %}
             <div style="display:inline;margin-right:5px;">
               <label style="cursor:pointer;"><input name="sage" type="checkbox" style="display:none;"> <abbr class="sage" title="Не поднимать тему">sage</abbr></label>
             </div>
+            {% endif %}
             
             <label for="reply_submit_{{ topic.post_id }}" class="inputfile_label submit_button button is-small">Отправить</label>
           </div>
@@ -695,22 +697,20 @@ Main page block:
       function test_click ()
       {
         $(".reply_form").css("position", "fixed")
-        .css("top", "3.25rem")
+        .css("bottom", "0")
         .css("left", "0px")
         .css("width", "100%")
+        .css("z-index", 10)
         .css("background", "yellow");
+        
+        $("body").css("padding-bottom", "150px");
       }
       </script>
       <!--<input type="button" value="test" onclick="test_click();">-->
     
       <footer>
         <div>Произведено командой Дискурса. Будем рады <a href="https://discou.rs/d/" target="_blank">отзывам</a>.</div>
-        <!--From discou.rs with love!-->
       </footer>
-    
-      <script>
-        /* do something */
-      </script>
   </body>
 </html>{% endif %}
 {% endblock %}

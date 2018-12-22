@@ -22,7 +22,7 @@
 # git commit -m ""
 # git push
 
-template="test"
+template="default"
 
 if  [[ -n "$1" ]]; then template=$1; fi
 
