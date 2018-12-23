@@ -88,6 +88,9 @@ composer install
 ./build.sh default
 
 echo ""
-echo "Enable OPcache in php.ini to increase performance"
+echo "- Change upload_max_filesize in php.ini to 10MB"
+echo "- Enable OPcache in php.ini to increase performance"
+echo "- Increase MySQL max_connections to prevent DDOS"
+echo ""
 echo "Enjoy your Discours!"
 echo ""

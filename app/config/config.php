@@ -1,6 +1,6 @@
 <?php
 // This is the configuration for discou.rs server
-// Please change to your project's values to make it work
+// Please change to your Project's values
 
 $start_microtime = microtime(true);
 
@@ -92,7 +92,6 @@ session_cache_expire ($session_lifetime*24*60); // Minutes
 ini_set("session.save_path", ROOT_DIR."/sessions");
 ini_set("session.gc_maxlifetime", $session_lifetime*24*3600);
 ini_set("session.cookie_lifetime", $session_lifetime*24*3600);
-//ini_set("session.cookie_domain", ".".MAIN_HOST); // session for subdomains
 
 function require_session ()
 {
