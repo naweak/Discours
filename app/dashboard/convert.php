@@ -3,7 +3,7 @@
 <body>
 <?php
 // This file is used to convert database from CP-1252 encoding to UTF-8
-die("BE SURE TO RESTRICT ACCESS TO THIS FILE!");
+die("403 Forbidden.");
 
 set_time_limit (600);
 

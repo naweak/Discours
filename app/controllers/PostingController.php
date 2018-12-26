@@ -363,15 +363,15 @@ class PostingController extends Controller
 			$this->error("Только администраторы могут создавать темы на этом форуме.");
 		}
     
-    if
+    /*if
     (
       is_admin() and
       !$parent_topic and
-      !in_array($forum_obj->slug, ["blog", "changelog", "apachan"])
+      !in_array($forum_obj->slug, ["blog", "changelog"])
     )
     {
       $this->error("Администраторы не могут создавать темы на этом форуме.");
-    }
+    }*/
     
     if ($forum_obj->slug == "test" and !is_admin())
 		{ 
@@ -750,7 +750,7 @@ class PostingController extends Controller
 		}
 
     ### Notifications ###
-    $admin_user_id = 45;
+    $admin_user_id = 1;
     $admin_notified = false;
     $topic_id_for_notification = $parent_topic ? $parent_topic : $post->post_id;
    
@@ -835,7 +835,38 @@ class PostingController extends Controller
       
       $total_posts_in_topic_for_admin_notification = 3;
       
-      if ($parent_topic and $total_posts_in_topic == $total_posts_in_topic_for_admin_notification - 1)
+      if
+      (
+        $forum_obj->slug != "d" and
+        $parent_topic and
+        $total_posts_in_topic == $total_posts_in_topic_for_admin_notification - 1
+      )
+      {
+        $replies_by_admin = Post::find
+        (
+        [
+          "parent_topic = :parent_topic: AND user_id = :admin_user_id:",
+
+          "bind" =>
+          [
+            "parent_topic" => $parent_topic,
+            "admin_user_id" => $admin_user_id
+          ]
+        ]
+        );
+        
+        if (!count($replies_by_admin))
+        {
+          $admin_notification = new Notification();
+          $admin_notification->notify("", 1, "Notification for admin", $topic_id_for_notification, $topic_id_for_notification);
+        }
+      }
+      
+      if
+      (
+        !$parent_topic and
+        $forum_obj->slug == "d"
+      )
       {
         $admin_notification = new Notification();
         $admin_notification->notify("", 1, "Notification for admin", $topic_id_for_notification, $topic_id_for_notification);

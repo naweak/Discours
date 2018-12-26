@@ -46,6 +46,8 @@ Random image:
 <option value="peka">пека</option>
 <option value="nomad">номад</option>
 <option value="mrazish">мразиш</option>
+<option value="slavik">славик</option>
+<option value="rooster">петух</option>
 </select>
 {% endif %}
 {% endblock %}
@@ -511,10 +513,8 @@ Main page block:
     <div id="mobile_menu" style="display:none;">
       <ol style="max-height:95%;overflow:auto;">
         <li style="font-weight:bold;"><a href="/">Главная</a></li>
-        <li><a href="/int/">International</a></li>
         
         <li><a href="/vg/">Видеоигры</a></li>
-        <li><a href="/po/">Политика</a></li>
         <li><a href="/a/">Аниме</a></li>
         <li><a href="/d/">Отзывы</a></li>
         
@@ -522,8 +522,8 @@ Main page block:
         <li><a href="/1chan/">Колчок</a></li>
         <li><a href="/apachan/">Апачан</a></li>
         
-        <li style="font-weight:bold; margin-top:1em;"><a href="/login">{% if not user_id %}Вход{% else %}Выход{% endif %}</a></li>
-        <li style="font-weight:bold;"><a href="/my-topics">Мои темы</a></li>
+        <!--<li style="font-weight:bold; margin-top:1em;"><a href="/login">{% if not user_id %}Вход{% else %}Выход{% endif %}</a></li>-->
+        <li style="font-weight:bold; margin-top:1em;"><a href="/my-topics">Мои темы</a></li>
         <li style="font-weight:bold;"><a href="/settings">Настройки</a></li>
       </ol>
     </div>
@@ -560,9 +560,7 @@ Main page block:
                 </a>
                 <div class="navbar-dropdown is-boxed">
                    <a class="navbar-item" href="/"><b>Главная</b></a>
-                   <a class="navbar-item" href="/int/">International</a>
                    <a class="navbar-item" href="/vg/">Видеоигры</a>
-                   <a class="navbar-item" href="/po/">Политика</a>
                    <a class="navbar-item" href="/a/">Аниме</a>
                    <a class="navbar-item" href="/d/">Отзывы и предложения</a>
                    <a class="navbar-item" href="/news/">Новости</a>

@@ -1,5 +1,5 @@
 echo "This script will install Discours along with Apache, PHP, MySQL, etc."
-echo "Please use it on a NEWLY CREATED SERVER because it can DAMAGE your existing dependencies."
+echo "Please use it on a NEWLY CREATED SERVER because IT CAN DAMAGE your existing dependencies."
 echo "E.g. it will install PHP7.2 while you already have PHP5."
 echo "USE THIS SCRIPT AT YOUR OWN RISK AND MAKE A BACKUP FOR GOD'S SAKE."
 echo ""
@@ -89,7 +89,8 @@ composer install
 
 echo ""
 echo "- Change upload_max_filesize in php.ini to 10MB"
-echo "- Enable OPcache in php.ini to increase performance"
+echo "- Enable OPcache in php.ini to improve performance"
+echo "- Run OPTIMIZE TABLE if importing data"
 echo "- Increase MySQL max_connections to prevent DDOS"
 echo ""
 echo "Enjoy your Discours!"

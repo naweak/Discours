@@ -42,8 +42,8 @@ function delete_forum ($forum_id)
   
   echo "Forum title: ".$forum_obj->title."<br>";
   
-  //$forum_obj->delete();
-  //echo "Forum deleted";
+  $forum_obj->delete();
+  echo "Forum deleted";
 }
 
 function delete_wipe ()
