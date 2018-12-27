@@ -279,7 +279,7 @@ class Post extends Model
 			$output["text_preview"] = str_replace("\n", "<br>", mb_substr($plain_text, 0, $max_chars_to_show));
 		}
     
-    if (count($lines) > $max_lines_to_show)
+    elseif (count($lines) > $max_lines_to_show)
     {
       $output["text_preview"] = "";
       $lines_to_show = [];
