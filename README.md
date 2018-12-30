@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="your_relative_path_here" width="250" height="250" title="Merry Christmas">
+  <img src="/public/christmas.png" width="250" height="250" title="Merry Christmas">
 </p>
 
 С наступающим...
