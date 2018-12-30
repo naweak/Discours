@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="your_relative_path_here" width="250" height="250" title="Merry Christmas">
+</p>
+
+С наступающим...
+
 # Дискурс
 
 В репозитории находятся исходники анонимного форума Дискурс (https://discou.rs/).
