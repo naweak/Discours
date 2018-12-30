@@ -42,40 +42,26 @@ $row = $sql->fetch();
 
 echo "Topics today: {$row[0]}<br>";
 
+echo "<hr>";
+
+function get_dir_size ($directory)
+{
+    $size = 0;
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory)) as $file)
+    {
+        $size += $file->getSize();
+    }
+    return $size;
+}
+
+$files_size_mb = round(get_dir_size(UPLOAD_DIR)/1048576, 2);
+
+echo "Files size: $files_size_mb&nbsp;MB<br>";
+
 $query = $pdo->query("SELECT COUNT(user_id) FROM users");
 $row = $query->fetch();
 
 echo "Users registered: {$row[0]}<br>";
-?>
-
-<?php
-/*$i = 0;
-$date = date('Y-m-d H:i:s', strtotime("-$i hour"));
-$beginning_of_this_hour_str = substr($date, 0, -5)."00:00";
-$beginning_of_this_hour = strtotime($beginning_of_this_hour_str);
-while ($i < 24)
-{
-	$end = strtotime("-$i hour", $beginning_of_this_hour);
-	$begin = strtotime("-".($i+1)." hour", $beginning_of_this_hour);
-	
-	echo date('d-m-Y H:i:s', $begin);
-	echo " - ";
-	echo date('d-m-Y H:i:s', $end);
-	echo ": ";
-	
-	// count number of posts here
-	$posts = Post::find("$begin < creation_time AND creation_time < $end AND deleted_by = 0");
-	
-	echo count($posts);
-	
-	echo "<br>";
-	if (date('H:i:s', $begin) == "00:00:00")
-	{
-		echo "-----------------------<br>";
-	}
-	
-	$i++;
-}*/
 ?>
 
 <hr>
@@ -94,19 +80,12 @@ var data = [];
 </script>
 
 <?php
-$i = 0;
-//$start_time = strtotime("midnight", strtotime("4 September 2017"));
+/*$i = 0;
 $start_time = strtotime("midnight", strtotime("-90 days"));
 $iterartion_time = $start_time;
 while (true)
 {
-  //echo date("d-m-Y H:i:s", $iterartion_time);
-  
   $last_post = Post::findFirst(["creation_time < $iterartion_time", "order" => "post_id DESC"]);
-  //echo " — ".$last_post->post_id;
-  
-  //echo "<br>";
-
   ?>
   <script>
   labels.push("<?php echo date("d-m-Y", $iterartion_time) ?>");
@@ -120,7 +99,7 @@ while (true)
     break;
   }
   $i++;
-}
+}*/
 ?>
 
 <script>

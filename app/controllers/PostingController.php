@@ -3,14 +3,6 @@
 use Phalcon\Mvc\Controller;
 use Phalcon\Http\Request;
 
-/*
-$file->getTempName();
-$file_name = $file->getName();
-$file_size = $file->getSize(); // file size in bytes
-$file_type = $file->getRealType();
-$file_extension = strtolower($file->getExtension());
-*/
-
 class PseudoFile
 {
   private $file_path;
@@ -23,7 +15,7 @@ class PseudoFile
   
   function createTempFile ()
   {
-    $path = tempnam(sys_get_temp_dir(), "random");
+    $path = tempnam(sys_get_temp_dir(), "pseudo");
     file_put_contents($path, file_get_contents($this->file_path));
     $this->temp_path = $path;
   }
@@ -1008,7 +1000,8 @@ class PostingController extends Controller
 		$file_size = $file->getSize(); // file size in bytes
 		$file_type = $file->getRealType();
 		$file_extension = strtolower($file->getExtension());
-		$max_file_size = 7 * 1048576; // in bytes
+    $bytes_in_mb = 1048576;
+		$max_file_size = 7 * $bytes_in_mb; // in bytes
     $max_file_width  = 8192;
     $max_file_height = 8192;
     $remove_exif = true;
@@ -1022,7 +1015,7 @@ class PostingController extends Controller
 		
 		if ($file_size > $max_file_size)
 		{
-			$this->error("File size ($file_size) exceeded the maximum of $max_file_size");
+      $this->error("File size (".round($file_size/$bytes_in_mb, 2)."MB) exceeded the maximum of ".round($max_file_size/$bytes_in_mb, 2)."MB");
 		}
 
 		$exif_imagetype = exif_imagetype($tmp_name);

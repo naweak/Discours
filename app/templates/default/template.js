@@ -684,7 +684,6 @@ function bind_event_handlers ()
 				/*var textarea = $(form).find("textarea");
 				//$(textarea).blur();
 				textarea.val("");
-				autosize.update(textarea);
 				textarea.trigger("paste"); // resize textarea*/
         $(form).find(".contenteditable_textarea").first().text("");
 				
@@ -739,13 +738,14 @@ function bind_event_handlers ()
 				
         if (mobile()) // scroll to post
         {
-          new Noty
+          /*new Noty
           ({
             text: "Ответ отправлен",
             layout: "topRight",
             type: "success",
             timeout: 1000,
-          }).show();
+          }).show();*/
+          
           //load_new_replies(parent_topic, function(){return clean_and_resize({post_id: data.post_id});}, false);
           //load_new_replies(parent_topic, clean_and_resize, false);
           var order_in_topic = parseInt($(form).find("[name='reply_to']").val());

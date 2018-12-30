@@ -1544,6 +1544,11 @@ textarea.new_post,
   outline: none;
 }
 
+.random_image
+{
+  margin-left: 2px;
+}
+
 /*post_with_replies
 {
   margin: 0px 0px;

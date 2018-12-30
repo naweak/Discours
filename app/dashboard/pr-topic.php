@@ -17,9 +17,9 @@ function rus2translit ($string)
         'л' => 'l',   'м' => 'm',   'н' => 'n',
         'о' => 'o',   'п' => 'p',   'р' => 'r',
         'с' => 's',   'т' => 't',   'у' => 'u',
-        'ф' => 'f',   'х' => 'h',   'ц' => 'c',
+        'ф' => 'f',   'х' => 'h',   'ц' => 'ts',
         'ч' => 'ch',  'ш' => 'sh',  'щ' => 'sch',
-        'ь' => '\'',  'ы' => 'y',   'ъ' => '\'',
+        'ь' => '',  'ы' => 'y',   'ъ' => '',
         'э' => 'e',   'ю' => 'yu',  'я' => 'ya',
         
         'А' => 'A',   'Б' => 'B',   'В' => 'V',
@@ -29,9 +29,9 @@ function rus2translit ($string)
         'Л' => 'L',   'М' => 'M',   'Н' => 'N',
         'О' => 'O',   'П' => 'P',   'Р' => 'R',
         'С' => 'S',   'Т' => 'T',   'У' => 'U',
-        'Ф' => 'F',   'Х' => 'H',   'Ц' => 'C',
+        'Ф' => 'F',   'Х' => 'H',   'Ц' => 'TS',
         'Ч' => 'Ch',  'Ш' => 'Sh',  'Щ' => 'Sch',
-        'Ь' => '\'',  'Ы' => 'Y',   'Ъ' => '\'',
+        'Ь' => '',  'Ы' => 'Y',   'Ъ' => '',
         'Э' => 'E',   'Ю' => 'Yu',  'Я' => 'Ya',
     );
     return strtr ($string, $converter);
@@ -47,6 +47,7 @@ function str2url ($str)
     $str = preg_replace('~[^-a-z0-9_]+~u', '-', $str);
     // удаляем начальные и конечные '-'
     $str = trim($str, "-");
+    $str = preg_replace("/[-]{2,}/", "-", $str);
     return $str;
 }
 
@@ -63,16 +64,11 @@ if (!$topic_object)
   die("Topic not found!");
 }
 
-$url = "https://".MAIN_HOST."/p/".$topic_object->post_id;
-
 $text = $topic_object->text;
 
-echo "Text: $text<br>";
-echo str2url($text);
+$slug = str2url($text);
 
-$slug = "srochnaya-novost-clickbait";
-
-$url .= "-".$slug;
+$url = "https://".MAIN_HOST."/".$topic_object->post_id."/".$slug;
 
 ob_start();
 ?>
@@ -80,7 +76,7 @@ ob_start();
 <h2>Пиар</h2>
 
 <content style="text-align:center;">
-URL: <?php echo $url; ?>
+<?php echo $url; ?>
 </content>
 
 <?php

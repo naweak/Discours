@@ -1,5 +1,4 @@
 global.$ = require("jquery-browserify");
-global.autosize = require("./autosize.js");
 global.Noty = require("noty");
 
 require("./select-range.js");

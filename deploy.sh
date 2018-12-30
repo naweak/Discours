@@ -88,10 +88,10 @@ composer install
 ./build.sh default
 
 echo ""
-echo "- Change upload_max_filesize in php.ini to 10MB"
+echo "- Set 'upload_max_filesize' and 'post_max_size' in php.ini to 20MB"
 echo "- Enable OPcache in php.ini to improve performance"
 echo "- Run OPTIMIZE TABLE if importing data"
-echo "- Increase MySQL max_connections to prevent DDOS"
+echo "- Increase MySQL 'max_connections' to prevent DDOS"
 echo ""
 echo "Enjoy your Discours!"
 echo ""
