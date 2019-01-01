@@ -68,6 +68,8 @@ echo ""
 read -p "Press enter to continue... "
 echo ""
 
+cp app/config/config.example.php app/config/config.php 
+
 echo "Please edit app/config/config.php (MAIN_HOST, FILE_HOST, FILE_PROTOCOL)"
 echo ""
 read -p "Press enter to continue... "
