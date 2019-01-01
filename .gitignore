@@ -42,3 +42,6 @@ cache/
 
 # Contains database dumps:
 backup/
+
+# Config
+app/config/config.php
