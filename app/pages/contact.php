@@ -4,10 +4,7 @@ ob_start();
 <content class="page">
 
   <h2>Контакты</h2>
-  
-  <a href="https://t.me/zefirov" target="_blank">ЛС в Telegram</a><br>
-  <a href="/changelog/">Блог разработки</a>
-  
+  <!-- вставить текст -->  
 </content>
 <?php
 $html = ob_get_contents();
