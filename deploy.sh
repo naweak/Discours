@@ -26,7 +26,7 @@ sudo add-apt-repository -y ppa:ondrej/php
 sudo apt-get update
 sudo apt-get install -y apache2
 sudo apt-get install -y mysql-server
-sudo apt-get install -y php libapache2-mod-php php-mcrypt php-mysql php-cli
+sudo apt-get install -y php libapache2-mod-php php-mcrypt php-mysql php-cli php7.2-mysql
 sudo apt-get install -y php7.2-phalcon
 sudo apt-get install -y php7.2-mbstring libapache2-mod-php7.2
 sudo apt-get install -y nodejs nodejs-legacy
