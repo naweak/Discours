@@ -11,6 +11,7 @@ define ("FILE_PROTOCOL", "https"); // http or https
 
 define ("REPLY_DELAY", 5); // Delay for reply
 define ("POSTS_DELAY", 30); // Delay for thread
+define("CAPTCHA_ENABLED", true);
 
 date_default_timezone_set("Europe/Moscow");
 
