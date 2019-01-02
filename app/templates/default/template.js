@@ -511,7 +511,7 @@ function bind_event_handlers ()
     }
   });
 
-  var scroll_speed = 1;
+  var scroll_speed = 1000;
   $("#up").click(function () // scroll up button
   {
       $("html, body").animate({scrollTop : 0}, scroll_speed);
