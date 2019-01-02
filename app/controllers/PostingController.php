@@ -113,7 +113,7 @@ class PostingController extends Controller
     }
     
     // Captcha check:
-    $check_captcha = true;
+    $check_captcha = CAPTCHA_ENABLED;
     
     if ($check_captcha)
     {
