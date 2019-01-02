@@ -57,8 +57,8 @@ class PostingController extends Controller
     
 		$request = new Request();
 		
-		$reply_delay     = 5;
-		$new_topic_delay = 5*60;
+		$reply_delay     = REPLY_DELAY;
+		$new_topic_delay = POSTS_DELAY;
 		$min_title_length = 2;
 		$max_title_length = 255;
 		$max_name_length = 25;

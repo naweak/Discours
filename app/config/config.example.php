@@ -9,6 +9,9 @@ define ("MAIN_HOST", "discou.rs"); // 1.2.3.4 or localhost
 define ("FILE_HOST", "dristatic.cf"); // in most cases, same as above
 define ("FILE_PROTOCOL", "https"); // http or https
 
+define ("REPLY_DELAY", 5);
+define ("POSTS_DELAY", 30);
+
 date_default_timezone_set("Europe/Moscow");
 
 define ("DEFAULT_CACHE_TIME", 24*60*60);
